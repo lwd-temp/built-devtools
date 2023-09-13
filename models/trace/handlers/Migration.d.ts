@@ -1,0 +1,32 @@
+import * as Animations from './AnimationHandler.js';
+import * as GPU from './GPUHandler.js';
+import * as LayoutShifts from './LayoutShiftsHandler.js';
+import * as Memory from './MemoryHandler.js';
+import * as NetworkRequests from './NetworkRequestsHandler.js';
+import * as PageLoadMetrics from './PageLoadMetricsHandler.js';
+import * as Screenshots from './ScreenshotsHandler.js';
+import type * as Renderer from './RendererHandler.js';
+import type * as Samples from './SamplesHandler.js';
+import * as UserInteractions from './UserInteractionsHandler.js';
+import * as UserTimings from './UserTimingsHandler.js';
+import * as Warnings from './WarningsHandler.js';
+import * as Workers from './WorkersHandler.js';
+import type * as Types from './types.js';
+export declare const ENABLED_TRACE_HANDLERS: {
+    Animations: typeof Animations;
+    UserTimings: typeof UserTimings;
+    PageLoadMetrics: typeof PageLoadMetrics;
+    UserInteractions: typeof UserInteractions;
+    LayoutShifts: typeof LayoutShifts;
+    Screenshots: typeof Screenshots;
+    GPU: typeof GPU;
+    Memory: typeof Memory;
+    NetworkRequests: typeof NetworkRequests;
+    Warnings: typeof Warnings;
+    Workers: typeof Workers;
+};
+export type EnabledHandlersDuringMigration = typeof ENABLED_TRACE_HANDLERS;
+export type PartialTraceData = Readonly<Types.EnabledHandlerDataWithMeta<EnabledHandlersDuringMigration>> & {
+    readonly Renderer?: Readonly<ReturnType<typeof Renderer['data']>>;
+    readonly Samples?: Readonly<ReturnType<typeof Samples['data']>>;
+};
