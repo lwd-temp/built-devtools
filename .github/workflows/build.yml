@@ -14,8 +14,9 @@ on:
   workflow_dispatch:
 
   # Cron: Every monday at 10:00 AM
-  schedule:
-    - cron: "0 10 * * 1"
+  # schedule:
+  #   - cron: "0 10 * * 1"
+  # Save our planet
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
