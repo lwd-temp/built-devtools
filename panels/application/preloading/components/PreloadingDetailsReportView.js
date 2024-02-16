@@ -14,6 +14,7 @@ import * as ReportView from '../../../../ui/components/report_view/report_view.j
 import * as RequestLinkIcon from '../../../../ui/components/request_link_icon/request_link_icon.js';
 import * as UI from '../../../../ui/legacy/legacy.js';
 import * as LitHtml from '../../../../ui/lit-html/lit-html.js';
+import * as VisualLogging from '../../../../ui/visual_logging/visual_logging.js';
 import * as PreloadingHelper from '../helper/helper.js';
 import preloadingDetailsReportViewStyles from './preloadingDetailsReportView.css.js';
 import * as PreloadingString from './PreloadingString.js';
@@ -46,27 +47,27 @@ const UIStrings = {
     /**
      *@description Description: status
      */
-    detailedStatusNotTriggered: 'Preloading attempt is not yet triggered.',
+    detailedStatusNotTriggered: 'Speculative load attempt is not yet triggered.',
     /**
      *@description Description: status
      */
-    detailedStatusPending: 'Preloading attempt is eligible but pending.',
+    detailedStatusPending: 'Speculative load attempt is eligible but pending.',
     /**
      *@description Description: status
      */
-    detailedStatusRunning: 'Preloading is running.',
+    detailedStatusRunning: 'Speculative load is running.',
     /**
      *@description Description: status
      */
-    detailedStatusReady: 'Preloading finished and the result is ready for the next navigation.',
+    detailedStatusReady: 'Speculative load finished and the result is ready for the next navigation.',
     /**
      *@description Description: status
      */
-    detailedStatusSuccess: 'Preloading finished and used for a navigation.',
+    detailedStatusSuccess: 'Speculative load finished and used for a navigation.',
     /**
      *@description Description: status
      */
-    detailedStatusFailure: 'Preloading failed.',
+    detailedStatusFailure: 'Speculative load failed.',
     /**
      *@description button: Contents of button to inspect prerendered page
      */
@@ -140,7 +141,8 @@ export class PreloadingDetailsReportView extends LegacyWrapper.LegacyWrapper.Wra
             // Disabled until https://crbug.com/1079231 is fixed.
             // clang-format off
             LitHtml.render(LitHtml.html `
-        <${ReportView.ReportView.Report.litTagName} .data=${{ reportTitle: 'Preloading Attempt' }}>
+        <${ReportView.ReportView.Report.litTagName} .data=${{ reportTitle: 'Speculative Loading Attempt' }}
+        jslog=${VisualLogging.section('preloading-details')}>
           <${ReportView.ReportView.ReportSectionHeader.litTagName}>${i18nString(UIStrings.detailsDetailedInformation)}</${ReportView.ReportView.ReportSectionHeader.litTagName}>
 
           ${this.#url()}
@@ -230,6 +232,7 @@ export class PreloadingDetailsReportView extends LegacyWrapper.LegacyWrapper.Wra
             .size=${"SMALL" /* Buttons.Button.Size.SMALL */}
             .variant=${"secondary" /* Buttons.Button.Variant.SECONDARY */}
             .disabled=${disabled}
+            jslog=${VisualLogging.action('inspect-prerendered-page').track({ click: true })}
           >
             ${i18nString(UIStrings.buttonInspect)}
           </${Buttons.Button.Button.litTagName}>
@@ -301,6 +304,7 @@ export class PreloadingDetailsReportView extends LegacyWrapper.LegacyWrapper.Wra
             color: 'var(--sys-color-primary)',
             'text-decoration': 'underline',
         })}
+            jslog=${VisualLogging.action('reveal-rule-set').track({ click: true })}
           >
             ${location}
           </button>

@@ -145,6 +145,7 @@ export declare class TargetBase {
     accessibilityAgent(): ProtocolProxyApi.AccessibilityApi;
     animationAgent(): ProtocolProxyApi.AnimationApi;
     auditsAgent(): ProtocolProxyApi.AuditsApi;
+    autofillAgent(): ProtocolProxyApi.AutofillApi;
     browserAgent(): ProtocolProxyApi.BrowserApi;
     backgroundServiceAgent(): ProtocolProxyApi.BackgroundServiceApi;
     cacheStorageAgent(): ProtocolProxyApi.CacheStorageApi;
@@ -194,6 +195,7 @@ export declare class TargetBase {
      */
     private unregisterDispatcher;
     registerAccessibilityDispatcher(dispatcher: ProtocolProxyApi.AccessibilityDispatcher): void;
+    registerAutofillDispatcher(dispatcher: ProtocolProxyApi.AutofillDispatcher): void;
     registerAnimationDispatcher(dispatcher: ProtocolProxyApi.AnimationDispatcher): void;
     registerAuditsDispatcher(dispatcher: ProtocolProxyApi.AuditsDispatcher): void;
     registerCSSDispatcher(dispatcher: ProtocolProxyApi.CSSDispatcher): void;

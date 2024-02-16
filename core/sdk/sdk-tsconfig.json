@@ -30,6 +30,7 @@
   },
   "files": [
     "../../../../../../front_end/core/sdk/AccessibilityModel.ts",
+    "../../../../../../front_end/core/sdk/AutofillModel.ts",
     "../../../../../../front_end/core/sdk/CPUProfileDataModel.ts",
     "../../../../../../front_end/core/sdk/CPUProfilerModel.ts",
     "../../../../../../front_end/core/sdk/CPUThrottlingManager.ts",
@@ -90,11 +91,14 @@
     "../../../../../../front_end/core/sdk/ScreenCaptureModel.ts",
     "../../../../../../front_end/core/sdk/Script.ts",
     "../../../../../../front_end/core/sdk/SecurityOriginManager.ts",
+    "../../../../../../front_end/core/sdk/ServerSentEvents.ts",
+    "../../../../../../front_end/core/sdk/ServerSentEventsProtocol.ts",
     "../../../../../../front_end/core/sdk/ServerTiming.ts",
     "../../../../../../front_end/core/sdk/ServiceWorkerCacheModel.ts",
     "../../../../../../front_end/core/sdk/ServiceWorkerManager.ts",
     "../../../../../../front_end/core/sdk/SourceMap.ts",
     "../../../../../../front_end/core/sdk/SourceMapManager.ts",
+    "../../../../../../front_end/core/sdk/SourceMapScopes.ts",
     "../../../../../../front_end/core/sdk/StorageBucketsModel.ts",
     "../../../../../../front_end/core/sdk/StorageKeyManager.ts",
     "../../../../../../front_end/core/sdk/Target.ts",
@@ -103,7 +107,8 @@
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {

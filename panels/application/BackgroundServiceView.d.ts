@@ -71,9 +71,6 @@ export declare class EventDataNode extends DataGrid.DataGrid.DataGridNode<EventD
     createPreview(): UI.Widget.VBox;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
 export interface RecordingState {
@@ -84,8 +81,8 @@ export interface EventData {
     id: number;
     timestamp: string;
     origin: string;
-    storageKey: string;
-    swScope: string;
-    eventName: string;
-    instanceId: string;
+    'storage-key': string;
+    'sw-scope': string;
+    'event-name': string;
+    'instance-id': string;
 }

@@ -3,9 +3,9 @@ import * as SDK from '../../core/sdk/sdk.js';
 import * as Workspace from '../../models/workspace/workspace.js';
 import type * as SourceFrame from '../../ui/legacy/components/source_frame/source_frame.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { type NavigatorView } from './NavigatorView.js';
 import { SourcesView } from './SourcesView.js';
-export declare class SourcesPanel extends UI.Panel.Panel implements UI.ContextMenu.Provider, SDK.TargetManager.Observer, UI.View.ViewLocationResolver {
+import { UISourceCodeFrame } from './UISourceCodeFrame.js';
+export declare class SourcesPanel extends UI.Panel.Panel implements UI.ContextMenu.Provider<Workspace.UISourceCode.UISourceCode | Workspace.UISourceCode.UILocation | SDK.RemoteObject.RemoteObject | SDK.NetworkRequest.NetworkRequest | UISourceCodeFrame>, SDK.TargetManager.Observer, UI.View.ViewLocationResolver {
     private readonly workspace;
     private readonly togglePauseAction;
     private readonly stepOverAction;
@@ -64,7 +64,7 @@ export declare class SourcesPanel extends UI.Panel.Panel implements UI.ContextMe
     showUISourceCode(uiSourceCode: Workspace.UISourceCode.UISourceCode, location?: SourceFrame.SourceFrame.RevealPosition, omitFocus?: boolean): void;
     private showEditor;
     showUILocation(uiLocation: Workspace.UISourceCode.UILocation, omitFocus?: boolean): void;
-    revealInNavigator(uiSourceCode: Workspace.UISourceCode.UISourceCode, skipReveal?: boolean): void;
+    revealInNavigator(uiSourceCode: Workspace.UISourceCode.UISourceCode, skipReveal?: boolean): Promise<void>;
     private addExperimentMenuItem;
     private populateNavigatorMenu;
     setIgnoreExecutionLineEvents(ignoreExecutionLineEvents: boolean): void;
@@ -92,11 +92,10 @@ export declare class SourcesPanel extends UI.Panel.Panel implements UI.ContextMe
     private breakpointsActiveStateChanged;
     private createDebugToolbar;
     private createDebugToolbarDrawer;
-    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Object): void;
+    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Workspace.UISourceCode.UISourceCode | Workspace.UISourceCode.UILocation | SDK.RemoteObject.RemoteObject | SDK.NetworkRequest.NetworkRequest | UISourceCodeFrame): void;
     private appendUISourceCodeItems;
     private appendUISourceCodeFrameItems;
-    appendUILocationItems(contextMenu: UI.ContextMenu.ContextMenu, object: Object): void;
-    private handleContextMenuReveal;
+    appendUILocationItems(contextMenu: UI.ContextMenu.ContextMenu, uiLocation: Workspace.UISourceCode.UILocation): void;
     private appendRemoteObjectItems;
     private appendNetworkRequestItems;
     private showFunctionDefinition;
@@ -112,60 +111,35 @@ export declare class SourcesPanel extends UI.Panel.Panel implements UI.ContextMe
 }
 export declare let lastModificationTimeout: number;
 export declare const minToolbarWidth = 215;
-export declare class UILocationRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): UILocationRevealer;
-    reveal(uiLocation: Object, omitFocus?: boolean): Promise<void>;
+export declare class UILocationRevealer implements Common.Revealer.Revealer<Workspace.UISourceCode.UILocation> {
+    reveal(uiLocation: Workspace.UISourceCode.UILocation, omitFocus?: boolean): Promise<void>;
 }
-export declare class UILocationRangeRevealer implements Common.Revealer.Revealer {
+export declare class UILocationRangeRevealer implements Common.Revealer.Revealer<Workspace.UISourceCode.UILocationRange> {
     #private;
     static instance(opts?: {
         forceNew: boolean;
     }): UILocationRangeRevealer;
-    reveal(uiLocationRange: Object, omitFocus?: boolean): Promise<void>;
+    reveal(uiLocationRange: Workspace.UISourceCode.UILocationRange, omitFocus?: boolean): Promise<void>;
 }
-export declare class DebuggerLocationRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): DebuggerLocationRevealer;
-    reveal(rawLocation: Object, omitFocus?: boolean): Promise<void>;
+export declare class DebuggerLocationRevealer implements Common.Revealer.Revealer<SDK.DebuggerModel.Location> {
+    reveal(rawLocation: SDK.DebuggerModel.Location, omitFocus?: boolean): Promise<void>;
 }
-export declare class UISourceCodeRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): UISourceCodeRevealer;
-    reveal(uiSourceCode: Object, omitFocus?: boolean): Promise<void>;
+export declare class UISourceCodeRevealer implements Common.Revealer.Revealer<Workspace.UISourceCode.UISourceCode> {
+    reveal(uiSourceCode: Workspace.UISourceCode.UISourceCode, omitFocus?: boolean): Promise<void>;
 }
-export declare class DebuggerPausedDetailsRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): DebuggerPausedDetailsRevealer;
-    reveal(_object: Object): Promise<void>;
+export declare class DebuggerPausedDetailsRevealer implements Common.Revealer.Revealer<SDK.DebuggerModel.DebuggerPausedDetails> {
+    reveal(_object: SDK.DebuggerModel.DebuggerPausedDetails): Promise<void>;
 }
 export declare class RevealingActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): RevealingActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
-export declare class WrapperView extends UI.Widget.VBox {
+export declare class QuickSourceView extends UI.Widget.VBox {
     private readonly view;
     constructor();
-    static instance(): WrapperView;
-    static isShowing(): boolean;
     wasShown(): void;
     willHide(): void;
     showViewInWrapper(): void;
-}
-export interface NavigatorViewRegistration {
-    navigatorView: () => NavigatorView;
-    viewId: string;
-    experiment?: string;
 }

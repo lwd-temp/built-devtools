@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import * as i18n from '../../core/i18n/i18n.js';
-import * as Root from '../../core/root/root.js';
 import * as UI from '../../ui/legacy/legacy.js';
 const UIStrings = {
     /**
      * @description Title for developer resources panel
      */
-    developerResources: 'Developer Resources',
+    developerResources: 'Developer resources',
     /**
      * @description Command for showing the developer resources panel
      */
-    showDeveloperResources: 'Show Developer Resources',
+    showDeveloperResources: 'Show Developer resources',
 };
 const str_ = i18n.i18n.registerUIStrings('panels/developer_resources/developer_resources-meta.ts', UIStrings);
 const i18nLazyString = i18n.i18n.getLazilyComputedLocalizedString.bind(undefined, str_);
@@ -25,12 +24,11 @@ async function loadDeveloperResourcesModule() {
 }
 UI.ViewManager.registerViewExtension({
     location: "drawer-view" /* UI.ViewManager.ViewLocationValues.DRAWER_VIEW */,
-    id: 'resource-loading-pane',
+    id: 'developer-resources',
     title: i18nLazyString(UIStrings.developerResources),
     commandPrompt: i18nLazyString(UIStrings.showDeveloperResources),
     order: 100,
     persistence: "closeable" /* UI.ViewManager.ViewPersistence.CLOSEABLE */,
-    experiment: Root.Runtime.ExperimentName.DEVELOPER_RESOURCES_VIEW,
     async loadView() {
         const DeveloperResources = await loadDeveloperResourcesModule();
         return new DeveloperResources.DeveloperResourcesView.DeveloperResourcesView();

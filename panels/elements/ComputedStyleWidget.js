@@ -33,19 +33,21 @@ import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
+import * as TreeOutline from '../../ui/components/tree_outline/tree_outline.js';
 import * as InlineEditor from '../../ui/legacy/components/inline_editor/inline_editor.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as LitHtml from '../../ui/lit-html/lit-html.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import * as ElementsComponents from './components/components.js';
-import computedStyleSidebarPaneStyles from './computedStyleSidebarPane.css.js';
 import { ComputedStyleModel } from './ComputedStyleModel.js';
+import computedStyleSidebarPaneStyles from './computedStyleSidebarPane.css.js';
 import { ImagePreviewPopover } from './ImagePreviewPopover.js';
 import { PlatformFontsWidget } from './PlatformFontsWidget.js';
 import { categorizePropertyName, DefaultCategoryOrder } from './PropertyNameCategories.js';
+import { ColorMatch, ColorMatcher } from './PropertyParser.js';
 import { StylePropertiesSection } from './StylePropertiesSection.js';
-import { StylesSidebarPane, StylesSidebarPropertyRenderer } from './StylesSidebarPane.js';
-import * as TreeOutline from '../../ui/components/tree_outline/tree_outline.js';
-import * as LitHtml from '../../ui/lit-html/lit-html.js';
+import { StylesSidebarPropertyRenderer } from './StylesSidebarPane.js';
 const UIStrings = {
     /**
      * @description Placeholder text for a text input used to filter which CSS properties show up in
@@ -106,8 +108,7 @@ function renderPropertyContents(node, propertyName, propertyValue) {
     if (valueFromCache) {
         return valueFromCache;
     }
-    const renderer = new StylesSidebarPropertyRenderer(null, node, propertyName, propertyValue);
-    renderer.setColorHandler(processColor);
+    const renderer = new StylesSidebarPropertyRenderer(null, node, propertyName, propertyValue, [ColorRenderer.matcher()]);
     const name = renderer.renderName();
     name.slot = 'name';
     const value = renderer.renderValue();
@@ -138,8 +139,7 @@ const createPropertyElement = (node, propertyName, propertyValue, traceable, inh
 };
 const createTraceElement = (node, property, isPropertyOverloaded, matchedStyles, linkifier) => {
     const trace = new ElementsComponents.ComputedStyleTrace.ComputedStyleTrace();
-    const renderer = new StylesSidebarPropertyRenderer(null, node, property.name, property.value);
-    renderer.setColorHandler(processColor);
+    const renderer = new StylesSidebarPropertyRenderer(null, node, property.name, property.value, [ColorRenderer.matcher()]);
     const valueElement = renderer.renderValue();
     valueElement.slot = 'trace-value';
     trace.appendChild(valueElement);
@@ -156,18 +156,25 @@ const createTraceElement = (node, property, isPropertyOverloaded, matchedStyles,
     };
     return trace;
 };
-const processColor = (text) => {
-    const swatch = new InlineEditor.ColorSwatch.ColorSwatch();
-    swatch.renderColor(text, true);
-    const valueElement = document.createElement('span');
-    valueElement.textContent = swatch.getText();
-    swatch.append(valueElement);
-    swatch.addEventListener(InlineEditor.ColorSwatch.ColorChangedEvent.eventName, (event) => {
-        const { data } = event;
-        valueElement.textContent = data.text;
-    });
-    return swatch;
-};
+class ColorRenderer extends ColorMatch {
+    render(_node, context) {
+        const swatch = new InlineEditor.ColorSwatch.ColorSwatch();
+        swatch.setReadonly(true);
+        swatch.renderColor(this.text, true);
+        const valueElement = document.createElement('span');
+        valueElement.textContent = swatch.getText();
+        swatch.append(valueElement);
+        swatch.addEventListener(InlineEditor.ColorSwatch.ColorChangedEvent.eventName, (event) => {
+            const { data } = event;
+            valueElement.textContent = data.text;
+        });
+        context.addControl('color', swatch);
+        return [swatch];
+    }
+    static matcher() {
+        return new ColorMatcher(text => new ColorRenderer(text));
+    }
+}
 const navigateToSource = (cssProperty, event) => {
     if (!event) {
         return;
@@ -203,22 +210,22 @@ export class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWidget {
         this.computedStyleModel = new ComputedStyleModel();
         this.computedStyleModel.addEventListener("ComputedStyleChanged" /* Events.ComputedStyleChanged */, this.update, this);
         this.showInheritedComputedStylePropertiesSetting =
-            Common.Settings.Settings.instance().createSetting('showInheritedComputedStyleProperties', false);
+            Common.Settings.Settings.instance().createSetting('show-inherited-computed-style-properties', false);
         this.showInheritedComputedStylePropertiesSetting.addChangeListener(this.update.bind(this));
-        this.groupComputedStylesSetting = Common.Settings.Settings.instance().createSetting('groupComputedStyles', false);
+        this.groupComputedStylesSetting = Common.Settings.Settings.instance().createSetting('group-computed-styles', false);
         this.groupComputedStylesSetting.addChangeListener(() => {
             this.update();
         });
         const hbox = this.contentElement.createChild('div', 'hbox styles-sidebar-pane-toolbar');
-        const filterContainerElement = hbox.createChild('div', 'styles-sidebar-pane-filter-box');
-        const filterInput = StylesSidebarPane.createPropertyFilterElement(i18nString(UIStrings.filter), hbox, this.filterComputedStyles.bind(this));
-        UI.ARIAUtils.setLabel(filterInput, i18nString(UIStrings.filterComputedStyles));
-        filterContainerElement.appendChild(filterInput);
+        const toolbar = new UI.Toolbar.Toolbar('styles-pane-toolbar', hbox);
+        const filterInput = new UI.Toolbar.ToolbarInput(i18nString(UIStrings.filter), i18nString(UIStrings.filterComputedStyles), 1, 1, undefined, undefined, false);
+        filterInput.addEventListener("TextChanged" /* UI.Toolbar.ToolbarInput.Event.TextChanged */, this.onFilterChanged, this);
+        toolbar.appendToolbarItem(filterInput);
         this.input = filterInput;
         this.filterRegex = null;
-        const toolbar = new UI.Toolbar.Toolbar('styles-pane-toolbar', hbox);
         toolbar.appendToolbarItem(new UI.Toolbar.ToolbarSettingCheckbox(this.showInheritedComputedStylePropertiesSetting, undefined, i18nString(UIStrings.showAll)));
         toolbar.appendToolbarItem(new UI.Toolbar.ToolbarSettingCheckbox(this.groupComputedStylesSetting, undefined, i18nString(UIStrings.group)));
+        this.contentElement.setAttribute('jslog', `${VisualLogging.pane('computed')}`);
         this.noMatchesElement = this.contentElement.createChild('div', 'gray-info-message');
         this.noMatchesElement.textContent = i18nString(UIStrings.noMatchingProperty);
         this.contentElement.appendChild(this.#computedStylesTree);
@@ -232,7 +239,6 @@ export class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWidget {
         }, () => this.computedStyleModel.node());
         const fontsWidget = new PlatformFontsWidget(this.computedStyleModel);
         fontsWidget.show(this.contentElement);
-        Common.Settings.Settings.instance().moduleSetting('colorFormat').addChangeListener(this.update.bind(this));
     }
     onResize() {
         const isNarrow = this.contentElement.offsetWidth < 260;
@@ -379,7 +385,7 @@ export class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWidget {
             const data = node.treeNodeData;
             if (data.tag === 'property') {
                 const trace = propertyTraces.get(data.propertyName);
-                const activeProperty = trace?.find(property => matchedStyles.propertyState(property) === SDK.CSSMatchedStyles.PropertyState.Active);
+                const activeProperty = trace?.find(property => matchedStyles.propertyState(property) === "Active" /* SDK.CSSMatchedStyles.PropertyState.Active */);
                 const propertyElement = createPropertyElement(domNode, data.propertyName, data.propertyValue, propertyTraces.has(data.propertyName), data.inherited, activeProperty, event => {
                     if (activeProperty) {
                         this.handleContextMenuEvent(matchedStyles, activeProperty, event);
@@ -388,7 +394,7 @@ export class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWidget {
                 return propertyElement;
             }
             if (data.tag === 'traceElement') {
-                const isPropertyOverloaded = matchedStyles.propertyState(data.property) === SDK.CSSMatchedStyles.PropertyState.Overloaded;
+                const isPropertyOverloaded = matchedStyles.propertyState(data.property) === "Overloaded" /* SDK.CSSMatchedStyles.PropertyState.Overloaded */;
                 const traceElement = createTraceElement(domNode, data.property, isPropertyOverloaded, matchedStyles, this.linkifier);
                 traceElement.addEventListener('contextmenu', this.handleContextMenuEvent.bind(this, matchedStyles, data.property));
                 return LitHtml.html `${traceElement}`;
@@ -459,6 +465,9 @@ export class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWidget {
             }
         }
         return result;
+    }
+    onFilterChanged(event) {
+        void this.filterComputedStyles(event.data ? new RegExp(Platform.StringUtilities.escapeForRegExp(event.data), 'i') : null);
     }
     async filterComputedStyles(regex) {
         this.filterRegex = regex;

@@ -16,7 +16,7 @@ export declare class CPUProfilerModel extends SDKModel<EventTypes> implements Pr
     isRecordingProfile(): boolean;
     startRecording(): Promise<unknown>;
     stopRecording(): Promise<Protocol.Profiler.Profile | null>;
-    startPreciseCoverage(jsCoveragePerBlock: boolean, preciseCoverageDeltaUpdateCallback: ((arg0: number, arg1: string, arg2: Array<Protocol.Profiler.ScriptCoverage>) => void) | null): Promise<unknown>;
+    startPreciseCoverage(jsCoveragePerBlock: boolean, preciseCoverageDeltaUpdateCallback: ((arg0: number, arg1: string, arg2: Array<Protocol.Profiler.ScriptCoverage>) => Promise<void>) | null): Promise<unknown>;
     takePreciseCoverage(): Promise<{
         timestamp: number;
         coverage: Array<Protocol.Profiler.ScriptCoverage>;
@@ -24,7 +24,7 @@ export declare class CPUProfilerModel extends SDKModel<EventTypes> implements Pr
     stopPreciseCoverage(): Promise<unknown>;
     preciseCoverageDeltaUpdate({ timestamp, occasion, result }: Protocol.Profiler.PreciseCoverageDeltaUpdateEvent): void;
 }
-export declare enum Events {
+export declare const enum Events {
     ConsoleProfileStarted = "ConsoleProfileStarted",
     ConsoleProfileFinished = "ConsoleProfileFinished"
 }

@@ -5,7 +5,8 @@ export declare class OverviewGrid {
     private readonly grid;
     private readonly window;
     constructor(prefix: string, calculator?: Calculator);
-    enableCreateBreadcrumbsButton(): void;
+    enableCreateBreadcrumbsButton(): HTMLElement;
+    set showingScreenshots(isShowing: boolean);
     clientWidth(): number;
     updateDividers(calculator: Calculator): void;
     addEventDividers(dividers: Element[]): void;
@@ -24,13 +25,17 @@ export declare const WindowScrollSpeedFactor = 0.3;
 export declare const ResizerOffset = 3.5;
 export declare const OffsetFromWindowEnds = 10;
 export declare class Window extends Common.ObjectWrapper.ObjectWrapper<EventTypes> {
+    #private;
     private parentElement;
     private calculator;
     private leftResizeElement;
     private rightResizeElement;
     private leftCurtainElement;
     private rightCurtainElement;
+    private breadcrumbButtonContainerElement;
     private createBreadcrumbButton;
+    private curtainsRange?;
+    private breadcrumbZoomIcon?;
     private overviewWindowSelector;
     private offsetLeft;
     private dragStartPoint;
@@ -41,9 +46,9 @@ export declare class Window extends Common.ObjectWrapper.ObjectWrapper<EventType
     private enabled?;
     private clickHandler?;
     private resizerParentOffsetLeft?;
-    private breadcrumbsEnabled;
     constructor(parentElement: Element, dividersLabelBarElement?: Element, calculator?: Calculator);
-    enableCreateBreadcrumbsButton(): void;
+    enableCreateBreadcrumbsButton(): HTMLElement;
+    set showingScreenshots(isShowing: boolean);
     private onRightResizeElementFocused;
     reset(): void;
     setEnabled(enabled: boolean): void;
@@ -67,14 +72,14 @@ export declare class Window extends Common.ObjectWrapper.ObjectWrapper<EventType
     private updateResizeElementPercentageLabels;
     private calculateWindowPosition;
     setWindow(windowLeft: number, windowRight: number): void;
-    private changeBreadcrumbButtonVisibility;
-    createBreadcrumb(): void;
     private updateCurtains;
+    private toggleZoomButtonDisplay;
+    private getWindowRange;
     private setWindowPosition;
     private onMouseWheel;
     zoom(factor: number, reference: number): void;
 }
-export declare enum Events {
+export declare const enum Events {
     WindowChanged = "WindowChanged",
     WindowChangedWithPosition = "WindowChangedWithPosition",
     BreadcrumbAdded = "BreadcrumbAdded"

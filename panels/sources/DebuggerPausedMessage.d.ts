@@ -4,6 +4,7 @@ import * as Protocol from '../../generated/protocol.js';
 import type * as Bindings from '../../models/bindings/bindings.js';
 import type * as BreakpointManager from '../../models/breakpoints/breakpoints.js';
 export declare class DebuggerPausedMessage {
+    #private;
     private readonly elementInternal;
     private contentElement;
     constructor();

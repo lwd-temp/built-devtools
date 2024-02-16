@@ -4,7 +4,6 @@ export declare class DeviceModeToolbar {
     private model;
     private readonly showMediaInspectorSetting;
     private readonly showRulersSetting;
-    private readonly experimentDualScreenSupport;
     private readonly deviceOutlineSetting;
     private readonly showDeviceScaleFactorSetting;
     private readonly showUserAgentTypeSetting;
@@ -14,6 +13,7 @@ export declare class DeviceModeToolbar {
     private readonly emulatedDevicesList;
     private readonly persistenceSetting;
     private spanButton;
+    private postureItem;
     private modeButton;
     private widthInput;
     private heightInput;
@@ -39,6 +39,8 @@ export declare class DeviceModeToolbar {
     private createExperimentalButton;
     private experimentalClicked;
     private fillOptionsToolbar;
+    private appendDevicePostureItems;
+    private currentDevicePosture;
     private appendScaleMenuItems;
     private onScaleMenuChanged;
     private onAutoAdjustScaleChanged;

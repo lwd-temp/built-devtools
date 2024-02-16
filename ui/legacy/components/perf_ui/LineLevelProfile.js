@@ -9,7 +9,7 @@ let performanceInstance;
 export class Performance {
     helper;
     constructor() {
-        this.helper = new Helper(SourceFrame.SourceFrame.DecoratorType.PERFORMANCE);
+        this.helper = new Helper("performance" /* SourceFrame.SourceFrame.DecoratorType.PERFORMANCE */);
     }
     static instance(opts = { forceNew: null }) {
         const { forceNew } = opts;
@@ -76,7 +76,7 @@ let memoryInstance;
 export class Memory {
     helper;
     constructor() {
-        this.helper = new Helper(SourceFrame.SourceFrame.DecoratorType.MEMORY);
+        this.helper = new Helper("memory" /* SourceFrame.SourceFrame.DecoratorType.MEMORY */);
     }
     static instance(opts = { forceNew: null }) {
         const { forceNew } = opts;
@@ -164,7 +164,7 @@ export class Helper {
                             debuggerModel.createRawLocationByURL(scriptIdOrUrl, line, 0) :
                             debuggerModel.createRawLocationByScriptId(String(scriptIdOrUrl), line, 0);
                         if (rawLocation) {
-                            pending.push(workspaceBinding.rawLocationToUILocation(rawLocation).then((uiLocation) => {
+                            pending.push(workspaceBinding.rawLocationToUILocation(rawLocation).then(uiLocation => {
                                 if (uiLocation) {
                                     let lineMap = decorationsBySource.get(uiLocation.uiSourceCode);
                                     if (!lineMap) {

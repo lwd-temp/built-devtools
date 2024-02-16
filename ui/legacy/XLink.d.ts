@@ -7,17 +7,14 @@ export declare class XLink extends XElement {
     private clickable;
     private readonly onClick;
     private readonly onKeyDown;
-    static create(url: string, linkText?: string, className?: string, preventClick?: boolean): HTMLElement;
+    static create(url: string, linkText?: string, className?: string, preventClick?: boolean, jsLogContext?: string): HTMLElement;
     constructor();
     static get observedAttributes(): string[];
     get href(): Platform.DevToolsPath.UrlString | null;
     attributeChangedCallback(attr: string, oldValue: string | null, newValue: string | null): void;
     private updateClick;
 }
-export declare class ContextMenuProvider implements Provider {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ContextMenuProvider;
-    appendApplicableItems(event: Event, contextMenu: ContextMenu, target: Object): void;
+export declare class ContextMenuProvider implements Provider<Node> {
+    appendApplicableItems(_event: Event, contextMenu: ContextMenu, target: Node): void;
 }
 export declare const sample: LitHtml.TemplateResult;

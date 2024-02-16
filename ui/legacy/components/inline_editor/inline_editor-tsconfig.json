@@ -56,7 +56,8 @@
     "../../../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
@@ -81,6 +82,9 @@
       "path": "../../../../panels/css_overview/bundle-tsconfig.json"
     },
     {
+      "path": "../../../../third_party/codemirror.next/bundle-tsconfig.json"
+    },
+    {
       "path": "../../../components/helpers/bundle-tsconfig.json"
     },
     {
@@ -91,6 +95,9 @@
     },
     {
       "path": "../../../lit-html/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../../visual_logging/bundle-tsconfig.json"
     }
   ]
 }

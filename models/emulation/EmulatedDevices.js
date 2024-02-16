@@ -6,7 +6,7 @@
 import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import { MaxDeviceSize, MinDeviceSize, Insets } from './DeviceModeModel.js';
+import { Insets, MaxDeviceSize, MinDeviceSize } from './DeviceModeModel.js';
 const UIStrings = {
     /**
      *@description Title of the Laptop with touch device
@@ -40,6 +40,7 @@ export class EmulatedDevice {
     userAgentMetadata;
     modes;
     isDualScreen;
+    isFoldableScreen;
     verticalSpanned;
     horizontalSpanned;
     #showInternal;
@@ -55,6 +56,7 @@ export class EmulatedDevice {
         this.userAgentMetadata = null;
         this.modes = [];
         this.isDualScreen = false;
+        this.isFoldableScreen = false;
         this.verticalSpanned = { width: 0, height: 0, outlineInsets: null, outlineImage: null, hinge: null };
         this.horizontalSpanned = { width: 0, height: 0, outlineInsets: null, outlineImage: null, hinge: null };
         this.#showInternal = _Show.Default;
@@ -179,11 +181,12 @@ export class EmulatedDevice {
             result.vertical = parseOrientation(parseValue(json['screen'], 'vertical', 'object'));
             result.horizontal = parseOrientation(parseValue(json['screen'], 'horizontal', 'object'));
             result.isDualScreen = parseValue(json, 'dual-screen', 'boolean', false);
-            if (result.isDualScreen) {
+            result.isFoldableScreen = parseValue(json, 'foldable-screen', 'boolean', false);
+            if (result.isDualScreen || result.isFoldableScreen) {
                 result.verticalSpanned = parseOrientation(parseValue(json['screen'], 'vertical-spanned', 'object', null));
                 result.horizontalSpanned = parseOrientation(parseValue(json['screen'], 'horizontal-spanned', 'object', null));
             }
-            if (result.isDualScreen && (!result.verticalSpanned || !result.horizontalSpanned)) {
+            if ((result.isDualScreen || result.isFoldableScreen) && (!result.verticalSpanned || !result.horizontalSpanned)) {
                 throw new Error('Emulated device \'' + result.title + '\'has dual screen without spanned orientations');
             }
             const modes = parseValue(json, 'modes', 'object', [
@@ -277,7 +280,7 @@ export class EmulatedDevice {
             'vertical-spanned': undefined,
             'horizontal-spanned': undefined,
         };
-        if (this.isDualScreen) {
+        if (this.isDualScreen || this.isFoldableScreen) {
             json['screen']['vertical-spanned'] = this.orientationToJSON(this.verticalSpanned);
             json['screen']['horizontal-spanned'] = this.orientationToJSON(this.horizontalSpanned);
         }
@@ -298,6 +301,7 @@ export class EmulatedDevice {
         }
         json['show-by-default'] = this.#showByDefault;
         json['dual-screen'] = this.isDualScreen;
+        json['foldable-screen'] = this.isFoldableScreen;
         json['show'] = this.#showInternal;
         if (this.userAgentMetadata) {
             json['user-agent-metadata'] = this.userAgentMetadata;
@@ -423,11 +427,11 @@ export class EmulatedDevicesList extends Common.ObjectWrapper.ObjectWrapper {
     #customInternal;
     constructor() {
         super();
-        this.#standardSetting = Common.Settings.Settings.instance().createSetting('standardEmulatedDeviceList', []);
+        this.#standardSetting = Common.Settings.Settings.instance().createSetting('standard-emulated-device-list', []);
         this.#standardInternal = new Set();
         this.listFromJSONV1(this.#standardSetting.get(), this.#standardInternal);
         this.updateStandardDevices();
-        this.#customSetting = Common.Settings.Settings.instance().createSetting('customEmulatedDeviceList', []);
+        this.#customSetting = Common.Settings.Settings.instance().createSetting('custom-emulated-device-list', []);
         this.#customInternal = new Set();
         if (!this.listFromJSONV1(this.#customSetting.get(), this.#customInternal)) {
             this.saveCustomDevices();
@@ -788,7 +792,7 @@ const emulatedDevices = [
     {
         'order': 34,
         'show-by-default': true,
-        'dual-screen': true,
+        'foldable-screen': true,
         'title': 'Galaxy Fold',
         'screen': {
             'horizontal': { 'width': 653, 'height': 280 },
@@ -805,6 +809,59 @@ const emulatedDevices = [
             { 'title': 'default', 'orientation': 'vertical', 'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 } },
             { 'title': 'default', 'orientation': 'horizontal', 'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 } },
             { 'title': 'spanned', 'orientation': 'vertical-spanned', 'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 } },
+            {
+                'title': 'spanned',
+                'orientation': 'horizontal-spanned',
+                'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 },
+            },
+        ],
+    },
+    {
+        'order': 35,
+        'show-by-default': true,
+        'foldable-screen': true,
+        'title': 'Asus Zenbook Fold',
+        'screen': {
+            'horizontal': { 'width': 1280, 'height': 853 },
+            'device-pixel-ratio': 1.5,
+            'vertical': { 'width': 853, 'height': 1280 },
+            'vertical-spanned': {
+                'width': 1706,
+                'height': 1280,
+                'hinge': {
+                    'width': 107,
+                    'height': 1280,
+                    'x': 800,
+                    'y': 0,
+                    'contentColor': { 'r': 38, 'g': 38, 'b': 38, 'a': 0.2 },
+                    'outlineColor': { 'r': 38, 'g': 38, 'b': 38, 'a': 0.7 },
+                },
+            },
+            'horizontal-spanned': {
+                'width': 1280,
+                'height': 1706,
+                'hinge': {
+                    'width': 1706,
+                    'height': 107,
+                    'x': 0,
+                    'y': 800,
+                    'contentColor': { 'r': 38, 'g': 38, 'b': 38, 'a': 0.2 },
+                    'outlineColor': { 'r': 38, 'g': 38, 'b': 38, 'a': 0.7 },
+                },
+            },
+        },
+        'capabilities': ['touch'],
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'user-agent-metadata': { 'platform': 'Windows', 'platformVersion': '11.0', 'architecture': '', 'model': 'UX9702AA', 'mobile': false },
+        'type': 'tablet',
+        'modes': [
+            { 'title': 'default', 'orientation': 'vertical', 'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 } },
+            { 'title': 'default', 'orientation': 'horizontal', 'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 } },
+            {
+                'title': 'spanned',
+                'orientation': 'vertical-spanned',
+                'insets': { 'left': 0, 'top': 0, 'right': 0, 'bottom': 0 },
+            },
             {
                 'title': 'spanned',
                 'orientation': 'horizontal-spanned',

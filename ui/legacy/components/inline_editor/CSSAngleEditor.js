@@ -4,6 +4,7 @@
 import * as Common from '../../../../core/common/common.js';
 import * as ComponentHelpers from '../../../components/helpers/helpers.js';
 import * as LitHtml from '../../../lit-html/lit-html.js';
+import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import cssAngleEditorStyles from './cssAngleEditor.css.js';
 import { get2DTranslationsForAngle, getAngleFromRadians, getNewAngleFromEvent, getRadiansFromAngle, } from './CSSAngleUtils.js';
 const { render, html } = LitHtml;
@@ -100,7 +101,7 @@ export class CSSAngleEditor extends HTMLElement {
         // Disabled until https://crbug.com/1079231 is fixed.
         // clang-format off
         render(html `
-      <div class="editor">
+      <div class="editor" jslog=${VisualLogging.cssAngleEditor().track({ click: true, drag: true })}>
         <span class="pointer"></span>
         <div
           class="clock"

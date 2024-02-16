@@ -1,5 +1,5 @@
-import * as UI from '../../ui/legacy/legacy.js';
 import type * as Protocol from '../../generated/protocol.js';
+import * as UI from '../../ui/legacy/legacy.js';
 export declare class PlayerMessagesView extends UI.Widget.VBox {
     private readonly headerPanel;
     private readonly bodyPanel;

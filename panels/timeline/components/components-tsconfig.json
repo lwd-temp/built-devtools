@@ -32,14 +32,19 @@
     "../../../../../../../front_end/panels/timeline/components/Breadcrumbs.ts",
     "../../../../../../../front_end/panels/timeline/components/BreadcrumbsUI.ts",
     "../../../../../../../front_end/panels/timeline/components/DetailsView.ts",
+    "../../../../../../../front_end/panels/timeline/components/InteractionBreakdown.ts",
     "../../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
       "path": "../../../core/i18n/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../../generated/generated-tsconfig.json"
     },
     {
       "path": "../../../models/trace/bundle-tsconfig.json"

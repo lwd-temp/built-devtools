@@ -36,14 +36,12 @@
     "../../../../../../front_end/panels/issues/AffectedElementsView.ts",
     "../../../../../../front_end/panels/issues/AffectedElementsWithLowContrastView.ts",
     "../../../../../../front_end/panels/issues/AffectedHeavyAdView.ts",
+    "../../../../../../front_end/panels/issues/AffectedMetadataAllowedSitesView.ts",
     "../../../../../../front_end/panels/issues/AffectedResourcesView.ts",
     "../../../../../../front_end/panels/issues/AffectedSharedArrayBufferIssueDetailsView.ts",
     "../../../../../../front_end/panels/issues/AffectedSourcesView.ts",
     "../../../../../../front_end/panels/issues/AffectedTrackingSitesView.ts",
     "../../../../../../front_end/panels/issues/AttributionReportingIssueDetailsView.ts",
-    "../../../../../../front_end/panels/issues/CSPViolationsListView.ts",
-    "../../../../../../front_end/panels/issues/CSPViolationsView.ts",
-    "../../../../../../front_end/panels/issues/ComboBoxOfCheckBoxes.ts",
     "../../../../../../front_end/panels/issues/CorsIssueDetailsView.ts",
     "../../../../../../front_end/panels/issues/GenericIssueDetailsView.ts",
     "../../../../../../front_end/panels/issues/HiddenIssuesRow.ts",
@@ -55,7 +53,8 @@
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {

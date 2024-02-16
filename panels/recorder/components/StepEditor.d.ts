@@ -124,7 +124,7 @@ export declare class StepEditor extends LitElement {
     isTypeEditable: boolean;
     disabled: boolean;
     constructor();
-    protected createRenderRoot(): Element | ShadowRoot;
+    protected createRenderRoot(): HTMLElement | DocumentFragment;
     set step(step: DeepImmutable<Models.Schema.Step>);
     protected render(): LitHtml.TemplateResult;
 }

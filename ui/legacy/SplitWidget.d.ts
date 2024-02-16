@@ -103,16 +103,16 @@ export declare class SplitWidget extends SplitWidget_base {
     private saveSetting;
     private forceUpdateLayout;
     private onZoomChanged;
-    createShowHideSidebarButton(showTitle: Common.UIString.LocalizedString, hideTitle: Common.UIString.LocalizedString, shownString: Common.UIString.LocalizedString, hiddenString: Common.UIString.LocalizedString): ToolbarButton;
+    createShowHideSidebarButton(showTitle: Common.UIString.LocalizedString, hideTitle: Common.UIString.LocalizedString, shownString: Common.UIString.LocalizedString, hiddenString: Common.UIString.LocalizedString, jslogContext?: string): ToolbarButton;
     toggleSidebar(): void;
     private updateShowHideSidebarButton;
 }
-export declare enum ShowMode {
+export declare const enum ShowMode {
     Both = "Both",
     OnlyMain = "OnlyMain",
     OnlySidebar = "OnlySidebar"
 }
-export declare enum Events {
+export declare const enum Events {
     SidebarSizeChanged = "SidebarSizeChanged",
     ShowModeChanged = "ShowModeChanged"
 }

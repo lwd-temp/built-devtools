@@ -1,4 +1,5 @@
 import * as Common from '../../core/common/common.js';
+import * as Root from '../../core/root/root.js';
 import * as UI from '../../ui/legacy/legacy.js';
 export declare class SettingsScreen extends UI.Widget.VBox implements UI.View.ViewLocationResolver {
     private readonly tabbedLocation;
@@ -27,11 +28,9 @@ export declare class GenericSettingsTab extends SettingsTab {
     private readonly syncSection;
     private readonly settingToControl;
     constructor();
-    static instance(opts?: {
-        forceNew: null;
-    }): GenericSettingsTab;
     static isSettingVisible(setting: Common.Settings.SettingRegistration): boolean;
     wasShown(): void;
+    willHide(): void;
     private updateSyncSection;
     private createExtensionSection;
     private createSectionElement;
@@ -43,25 +42,18 @@ export declare class ExperimentsSettingsTab extends SettingsTab {
     private readonly experimentToControl;
     constructor();
     private renderExperiments;
-    static instance(opts?: {
-        forceNew: null;
-    }): ExperimentsSettingsTab;
     private createExperimentsWarningSubsection;
     private createExperimentCheckbox;
     highlightObject(experiment: Object): void;
     setFilter(filterText: string): void;
+    wasShown(): void;
+    willHide(): void;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
-export declare class Revealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean;
-    }): Revealer;
-    reveal(object: Object): Promise<void>;
+export declare class Revealer implements Common.Revealer.Revealer<Root.Runtime.Experiment | Common.Settings.Setting<unknown>> {
+    reveal(object: Root.Runtime.Experiment | Common.Settings.Setting<unknown>): Promise<void>;
 }
 export interface ShowSettingsScreenOptions {
     name?: string;

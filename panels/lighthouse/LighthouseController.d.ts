@@ -1,7 +1,8 @@
 import * as Common from '../../core/common/common.js';
-import * as Platform from '../../core/platform/platform.js';
+import * as Host from '../../core/host/host.js';
+import type * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import { type ProtocolService, type LighthouseRun } from './LighthouseProtocolService.js';
+import { type LighthouseRun, type ProtocolService } from './LighthouseProtocolService.js';
 import { type RunnerResult } from './LighthouseReporterTypes.js';
 export declare class LighthouseController extends Common.ObjectWrapper.ObjectWrapper<EventTypes> implements SDK.TargetManager.SDKModelObserver<SDK.ServiceWorkerManager.ServiceWorkerManager> {
     private readonly protocolService;
@@ -72,6 +73,7 @@ export interface Preset {
     description: () => Common.UIString.LocalizedString;
     plugin: boolean;
     supportedModes: string[];
+    userMetric: Host.UserMetrics.LighthouseCategoryUsed;
 }
 export interface RuntimeSetting {
     setting: Common.Settings.Setting<string | boolean>;

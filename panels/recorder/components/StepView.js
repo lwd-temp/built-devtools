@@ -2,12 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import * as i18n from '../../../core/i18n/i18n.js';
+import * as Platform from '../../../core/platform/platform.js';
 import * as Buttons from '../../../ui/components/buttons/buttons.js';
 import * as ComponentHelpers from '../../../ui/components/helpers/helpers.js';
 import * as IconButton from '../../../ui/components/icon_button/icon_button.js';
+import * as Menus from '../../../ui/components/menus/menus.js';
 import * as UI from '../../../ui/legacy/legacy.js';
 import * as LitHtml from '../../../ui/lit-html/lit-html.js';
-import * as Menus from '../../../ui/components/menus/menus.js';
+import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
 import * as Models from '../models/models.js';
 import stepViewStyles from './stepView.css.js';
 import { TimelineSection, } from './TimelineSection.js';
@@ -218,6 +220,10 @@ export class StepView extends HTMLElement {
     #extensionConverters;
     #isSelected = false;
     #recorderSettings;
+    constructor() {
+        super();
+        this.setAttribute('jslog', `${VisualLogging.section('step-view')}`);
+    }
     set data(data) {
         const prevState = this.#state;
         this.#step = data.step;
@@ -473,7 +479,7 @@ export class StepView extends HTMLElement {
         if (this.#step) {
             for (const converter of this.#builtInConverters || []) {
                 actions.push({
-                    id: COPY_ACTION_PREFIX + converter.getId(),
+                    id: COPY_ACTION_PREFIX + Platform.StringUtilities.toKebabCase(converter.getId()),
                     label: converter.getFormatName(),
                     group: 'copy',
                     groupTitle: i18nString(UIStrings.copyAs),
@@ -481,7 +487,7 @@ export class StepView extends HTMLElement {
             }
             for (const converter of this.#extensionConverters || []) {
                 actions.push({
-                    id: COPY_ACTION_PREFIX + converter.getId(),
+                    id: COPY_ACTION_PREFIX + Platform.StringUtilities.toKebabCase(converter.getId()),
                     label: converter.getFormatName(),
                     group: 'copy',
                     groupTitle: i18nString(UIStrings.copyAs),
@@ -523,6 +529,7 @@ export class StepView extends HTMLElement {
         on-render=${ComponentHelpers.Directives.nodeRenderedCallback(node => {
             this.#actionsMenuButton = node;
         })}
+        jslog=${VisualLogging.dropDown('step-actions').track({ click: true })}
         .data=${{
             variant: "toolbar" /* Buttons.Button.Variant.TOOLBAR */,
             iconName: 'dots-vertical',
@@ -545,6 +552,7 @@ export class StepView extends HTMLElement {
               ${LitHtml.Directives.repeat(item.actions, item => item.id, item => {
                 return LitHtml.html `<${Menus.Menu.MenuItem.litTagName}
                       .value=${item.id}
+                      jslog=${VisualLogging.action().track({ click: true }).context(`${item.id}`)}
                     >
                       ${item.label}
                     </${Menus.Menu.MenuItem.litTagName}>
@@ -626,23 +634,22 @@ export class StepView extends HTMLElement {
             <path d="M1.5 1.5L6.5 6.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M1.5 6.5L6.5 1.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </g>
-          <path @click=${this.#onBreakpointClick.bind(this)} class="breakpoint-icon" d="M2.5 5.5H17.7098L21.4241 12L17.7098 18.5H2.5V5.5Z"/>
+          <path @click=${this.#onBreakpointClick.bind(this)} jslog=${VisualLogging.action('breakpoint').track({ click: true })} class="breakpoint-icon" d="M2.5 5.5H17.7098L21.4241 12L17.7098 18.5H2.5V5.5Z"/>
         </svg>
         <div class="summary">
           <div class="title-container ${isExpandable ? 'action' : ''}"
             @click=${isExpandable && this.#toggleShowDetails.bind(this)}
             @keydown=${isExpandable && this.#onToggleShowDetailsKeydown.bind(this)}
             tabindex="0"
+            jslog=${VisualLogging.sectionHeader().track({ click: true })}
             aria-role=${isExpandable ? 'button' : ''}
             aria-label=${isExpandable ? 'Show details for step' : ''}
           >
             ${isExpandable
             ? LitHtml.html `<${IconButton.Icon.Icon.litTagName}
                     class="chevron"
-                    .data=${{
-                iconName: 'triangle-down',
-                color: 'var(--sys-color-on-surface)',
-            }}>
+                    jslog=${VisualLogging.expand().track({ click: true })}
+                    name="triangle-down">
                   </${IconButton.Icon.Icon.litTagName}>`
             : ''}
             <div class="title">

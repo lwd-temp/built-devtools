@@ -56,7 +56,6 @@ export declare class Spectrum extends Spectrum_base {
     private colorOffset?;
     private closeButton?;
     private paletteContainerMutable?;
-    private eyeDropperExperimentEnabled?;
     private shadesCloseHandler?;
     private dragElement?;
     private dragHotSpotX?;
@@ -127,7 +126,7 @@ export declare const ChangeSource: {
     Model: string;
     Other: string;
 };
-export declare enum Events {
+export declare const enum Events {
     ColorChanged = "ColorChanged",
     SizeChanged = "SizeChanged"
 }

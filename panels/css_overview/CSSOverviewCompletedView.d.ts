@@ -1,10 +1,10 @@
 import * as Common from '../../core/common/common.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
+import type * as Protocol from '../../generated/protocol.js';
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import type * as Protocol from '../../generated/protocol.js';
 import { type OverviewController, type PopulateNodesEventNodes, type PopulateNodesEventNodeTypes } from './CSSOverviewController.js';
 import { type UnusedDeclaration } from './CSSOverviewUnusedDeclarations.js';
 export type NodeStyleStats = Map<string, Set<number>>;
@@ -44,7 +44,7 @@ export interface OverviewData {
     unusedDeclarations: Map<string, UnusedDeclaration[]>;
 }
 export type FontInfo = Map<string, Map<string, Map<string, number[]>>>;
-export declare class CSSOverviewCompletedView extends UI.Panel.PanelWithSidebar {
+export declare class CSSOverviewCompletedView extends UI.Widget.VBox {
     #private;
     constructor(controller: OverviewController);
     wasShown(): void;
@@ -55,9 +55,7 @@ export declare class CSSOverviewCompletedView extends UI.Panel.PanelWithSidebar 
 declare const DetailsView_base: (new (...args: any[]) => {
     "__#13@#events": Common.ObjectWrapper.ObjectWrapper<EventTypes>;
     addEventListener<T extends Events.TabClosed>(eventType: T, listener: (arg0: Common.EventTarget.EventTargetEvent<EventTypes[T], any>) => void, thisObject?: Object | undefined): Common.EventTarget.EventDescriptor<EventTypes, T>;
-    once<T_1 extends Events.TabClosed>(eventType: T_1): Promise<EventTypes[T_1]>; /**
-     *@description Title of font info subsection in the CSS Overview Panel
-     */
+    once<T_1 extends Events.TabClosed>(eventType: T_1): Promise<EventTypes[T_1]>;
     removeEventListener<T_2 extends Events.TabClosed>(eventType: T_2, listener: (arg0: Common.EventTarget.EventTargetEvent<EventTypes[T_2], any>) => void, thisObject?: Object | undefined): void;
     hasEventListeners(eventType: Events.TabClosed): boolean;
     dispatchEventToListeners<T_3 extends Events.TabClosed>(eventType: Platform.TypeScriptUtilities.NoUnion<T_3>, ...eventData: Common.EventTarget.EventPayloadToRestParameters<EventTypes, T_3>): void;

@@ -1,7 +1,9 @@
 // Copyright (c) 2015 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import * as IconButton from '../../ui/components/icon_button/icon_button.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import { AnimationUI } from './AnimationUI.js';
 export class AnimationGroupPreviewUI {
     #model;
@@ -13,10 +15,12 @@ export class AnimationGroupPreviewUI {
     constructor(model) {
         this.#model = model;
         this.element = document.createElement('div');
+        this.element.setAttribute('jslog', `${VisualLogging.item('animations.buffer-preview').track({ click: true })}`);
         this.element.classList.add('animation-buffer-preview');
         this.element.createChild('div', 'animation-paused fill');
-        this.#removeButtonInternal = this.element.createChild('div', 'animation-remove-button');
-        this.#removeButtonInternal.textContent = '\u2715';
+        this.#removeButtonInternal = this.element.createChild('button', 'animation-remove-button');
+        this.#removeButtonInternal.setAttribute('jslog', `${VisualLogging.action('animations.remove-preview').track({ click: true })}`);
+        this.#removeButtonInternal.appendChild(IconButton.Icon.create('cross'));
         this.#replayOverlayElement = this.element.createChild('div', 'animation-buffer-preview-animation');
         this.#svg = UI.UIUtils.createSVGChild(this.element, 'svg');
         this.#svg.setAttribute('width', '100%');

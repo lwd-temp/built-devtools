@@ -1,9 +1,11 @@
+import type * as Platform from '../../core/platform/platform.js';
 import type * as ProtocolProxyApi from '../../generated/protocol-proxy-api.js';
 import * as Protocol from '../../generated/protocol.js';
+import { type CSSModel } from './CSSModel.js';
 import { DeferredDOMNode, DOMModel, type DOMNode } from './DOMModel.js';
 import { type RemoteObject } from './RemoteObject.js';
-import { type Target } from './Target.js';
 import { SDKModel } from './SDKModel.js';
+import { type Target } from './Target.js';
 export interface HighlightColor {
     r: number;
     g: number;
@@ -25,6 +27,11 @@ export interface Hinge {
     y: number;
     contentColor: HighlightColor;
     outlineColor: HighlightColor;
+}
+export declare const enum EmulatedOSType {
+    WindowsOS = "Windows",
+    MacOS = "Mac",
+    LinuxOS = "Linux"
 }
 export declare class OverlayModel extends SDKModel<EventTypes> implements ProtocolProxyApi.OverlayDispatcher {
     #private;
@@ -75,6 +82,10 @@ export declare class OverlayModel extends SDKModel<EventTypes> implements Protoc
     private delayedHideHighlight;
     highlightFrame(frameId: Protocol.Page.FrameId): void;
     showHingeForDualScreen(hinge: Hinge | null): void;
+    setWindowControlsPlatform(selectedPlatform: EmulatedOSType): void;
+    setWindowControlsThemeColor(themeColor: string): void;
+    getWindowControlsConfig(): Protocol.Overlay.WindowControlsOverlayConfig;
+    toggleWindowControlsToolbar(show: boolean): Promise<void>;
     private buildHighlightConfig;
     nodeHighlightRequested({ nodeId }: Protocol.Overlay.NodeHighlightRequestedEvent): void;
     static setInspectNodeHandler(handler: (arg0: DOMNode) => void): void;
@@ -83,8 +94,21 @@ export declare class OverlayModel extends SDKModel<EventTypes> implements Protoc
     inspectModeCanceled(): void;
     static inspectNodeHandler: ((node: DOMNode) => void) | null;
     getOverlayAgent(): ProtocolProxyApi.OverlayApi;
+    hasStyleSheetText(url: Platform.DevToolsPath.UrlString): Promise<boolean>;
 }
-export declare enum Events {
+export declare class WindowControls {
+    #private;
+    constructor(cssModel: CSSModel);
+    get selectedPlatform(): string;
+    set selectedPlatform(osType: EmulatedOSType);
+    get themeColor(): string;
+    set themeColor(color: string);
+    get config(): Protocol.Overlay.WindowControlsOverlayConfig;
+    initializeStyleSheetText(url: Platform.DevToolsPath.UrlString): Promise<boolean>;
+    toggleEmulatedOverlay(showOverlay: boolean): Promise<void>;
+    transformStyleSheetforTesting(x: number, y: number, width: number, height: number, originalStyleSheet: string | undefined): string | undefined;
+}
+export declare const enum Events {
     InspectModeWillBeToggled = "InspectModeWillBeToggled",
     ExitedInspectMode = "InspectModeExited",
     HighlightNodeRequested = "HighlightNodeRequested",

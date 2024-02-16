@@ -18,6 +18,7 @@ export declare class ConsoleViewMessage implements ConsoleViewportElement {
     private selectableChildren;
     private readonly messageResized;
     protected elementInternal: HTMLElement | null;
+    protected consoleRowWrapper: HTMLElement | null;
     private readonly previewFormatter;
     private searchRegexInternal;
     protected messageIcon: IconButton.Icon.Icon | null;
@@ -40,6 +41,7 @@ export declare class ConsoleViewMessage implements ConsoleViewportElement {
     private requestResolver;
     private issueResolver;
     constructor(consoleMessage: SDK.ConsoleModel.ConsoleMessage, linkifier: Components.Linkifier.Linkifier, requestResolver: Logs.RequestResolver.RequestResolver, issueResolver: IssuesManager.IssueResolver.IssueResolver, onResize: (arg0: Common.EventTarget.EventTargetEvent<UI.TreeOutline.TreeElement>) => void);
+    setInsight(insight: HTMLElement): void;
     element(): HTMLElement;
     wasShown(): void;
     onResize(): void;
@@ -96,6 +98,9 @@ export declare class ConsoleViewMessage implements ConsoleViewportElement {
     contentElement(): HTMLElement;
     toMessageElement(): HTMLElement;
     updateMessageElement(): void;
+    shouldShowInsights(): boolean;
+    getExplainLabel(): string;
+    getExplainActionId(): string;
     private shouldRenderAsWarning;
     private updateMessageIcon;
     setAdjacentUserCommandResult(adjacentUserCommandResult: boolean): void;
@@ -106,6 +111,7 @@ export declare class ConsoleViewMessage implements ConsoleViewportElement {
     showRepeatCountElement(): void;
     get text(): string;
     toExportString(): string;
+    toMessageTextString(): string;
     setSearchRegex(regex: RegExp | null): void;
     searchRegex(): RegExp | null;
     searchCount(): number;

@@ -1,6 +1,7 @@
+import * as Platform from '../../core/platform/platform.js';
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { CoverageType, type URLCoverageInfo } from './CoverageModel.js';
+import { CoverageType, SourceURLCoverageInfo, type URLCoverageInfo } from './CoverageModel.js';
 export declare function coverageTypeToString(type: CoverageType): string;
 export declare class CoverageListView extends UI.Widget.VBox {
     private readonly nodeForCoverageInfo;
@@ -9,8 +10,11 @@ export declare class CoverageListView extends UI.Widget.VBox {
     private dataGrid;
     constructor(isVisibleFilter: (arg0: URLCoverageInfo) => boolean);
     update(coverageInfo: URLCoverageInfo[]): void;
+    updateSourceNodes(sourcesURLCoverageInfo: Map<Platform.DevToolsPath.UrlString, SourceURLCoverageInfo>, maxSize: number, node: GridNode): void;
+    createSourceNodes(sourcesURLCoverageInfo: Map<Platform.DevToolsPath.UrlString, SourceURLCoverageInfo>, maxSize: number, node: GridNode): Promise<void>;
     reset(): void;
     updateFilterAndHighlight(highlightRegExp: RegExp | null): void;
+    private appendNodeByType;
     selectByUrl(url: string): void;
     private onOpenedNode;
     private onKeyDown;

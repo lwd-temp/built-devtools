@@ -10,10 +10,11 @@ import * as ComponentHelpers from '../../../../ui/components/helpers/helpers.js'
 import * as IconButton from '../../../../ui/components/icon_button/icon_button.js';
 import * as LegacyWrapper from '../../../../ui/components/legacy_wrapper/legacy_wrapper.js';
 import * as LitHtml from '../../../../ui/lit-html/lit-html.js';
+import * as VisualLogging from '../../../../ui/visual_logging/visual_logging.js';
 import * as NetworkForward from '../../../network/forward/forward.js';
 import * as PreloadingHelper from '../helper/helper.js';
-import ruleSetGridStyles from './ruleSetGrid.css.js';
 import * as PreloadingString from './PreloadingString.js';
+import ruleSetGridStyles from './ruleSetGrid.css.js';
 const UIStrings = {
     /**
      *@description Column header: Short URL of rule set.
@@ -38,7 +39,7 @@ const UIStrings = {
     /**
      *@description button: Title of button to reveal preloading attempts with filter by selected rule set
      */
-    buttonRevealPreloadsAssociatedWithRuleSet: 'Reveal preloads associated with this rule set',
+    buttonRevealPreloadsAssociatedWithRuleSet: 'Reveal speculative loads associated with this rule set',
 };
 const str_ = i18n.i18n.registerUIStrings('panels/application/preloading/components/RuleSetGrid.ts', UIStrings);
 export const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
@@ -62,7 +63,7 @@ export class RuleSetGrid extends LegacyWrapper.LegacyWrapper.WrappableComponent 
         const reportsGridData = {
             columns: [
                 {
-                    id: 'ruleSet',
+                    id: 'rule-set',
                     title: i18nString(UIStrings.ruleSet),
                     widthWeighting: 20,
                     hideable: false,
@@ -84,7 +85,8 @@ export class RuleSetGrid extends LegacyWrapper.LegacyWrapper.WrappableComponent 
         // Disabled until https://crbug.com/1079231 is fixed.
         // clang-format off
         LitHtml.render(LitHtml.html `
-      <div class="ruleset-container">
+      <div class="ruleset-container"
+      jslog=${VisualLogging.pane('preloading-rules')}>
         <${DataGrid.DataGridController.DataGridController.litTagName} .data=${reportsGridData}>
         </${DataGrid.DataGridController.DataGridController.litTagName}>
       </div>
@@ -98,7 +100,7 @@ export class RuleSetGrid extends LegacyWrapper.LegacyWrapper.WrappableComponent 
             cells: [
                 { columnId: 'id', value: row.ruleSet.id },
                 {
-                    columnId: 'ruleSet',
+                    columnId: 'rule-set',
                     value: '',
                     renderer: () => ruleSetRenderer(row.ruleSet, pageURL),
                 },
@@ -138,6 +140,7 @@ function ruleSetRenderer(ruleSet, pageURL) {
             'padding-inline-start': '0',
             'padding-inline-end': '0',
         })}
+        jslog=${VisualLogging.action('reveal-in-elements-panel').track({ click: true })}
       >
         <${IconButton.Icon.Icon.litTagName}
           .data=${{
@@ -169,7 +172,7 @@ function ruleSetRenderer(ruleSet, pageURL) {
             if (request === null) {
                 return;
             }
-            const requestLocation = NetworkForward.UIRequestLocation.UIRequestLocation.tab(request, NetworkForward.UIRequestLocation.UIRequestTabs.Preview, { clearFilter: false });
+            const requestLocation = NetworkForward.UIRequestLocation.UIRequestLocation.tab(request, "preview" /* NetworkForward.UIRequestLocation.UIRequestTabs.Preview */, { clearFilter: false });
             await Common.Revealer.reveal(requestLocation);
         };
         // Disabled until https://crbug.com/1079231 is fixed.
@@ -234,7 +237,7 @@ function statusRenderer(preloadsStatusSummary, ruleSet) {
             'padding-inline-start': '0',
             'padding-inline-end': '0',
         })}
-      >
+        jslog=${VisualLogging.action('reveal-preloads').track({ click: true })}>
         ${preloadsStatusSummary}
       </button>
     `;

@@ -419,7 +419,6 @@ const colorAwareProperties = new Set([
     '-webkit-mask-box-image-source',
     '-webkit-mask-image',
     '-webkit-tap-highlight-color',
-    '-webkit-text-decoration-color',
     '-webkit-text-emphasis',
     '-webkit-text-emphasis-color',
     '-webkit-text-fill-color',
@@ -995,7 +994,6 @@ const extraPropertyValues = {
     '-webkit-border-start-width': { values: ['medium', 'thick', 'thin'] },
     '-webkit-logical-height': { values: ['-webkit-fill-available', 'min-content', 'max-content', 'fit-content'] },
     '-webkit-logical-width': { values: ['-webkit-fill-available', 'min-content', 'max-content', 'fit-content'] },
-    '-webkit-margin-collapse': { values: ['collapse', 'separate', 'discard'] },
     '-webkit-mask-box-image': { values: ['repeat', 'stretch', 'space', 'round'] },
     '-webkit-mask-box-image-repeat': { values: ['repeat', 'stretch', 'space', 'round'] },
     '-webkit-mask-clip': { values: ['text', 'border', 'border-box', 'content', 'content-box', 'padding', 'padding-box'] },
@@ -1034,6 +1032,25 @@ const extraPropertyValues = {
     '-webkit-transform-origin-x': { values: ['left', 'right', 'center'] },
     '-webkit-transform-origin-y': { values: ['top', 'bottom', 'center'] },
     'width': { values: ['-webkit-fill-available'] },
+    'contain-intrinsic-width': { values: ['auto none', 'auto 100px'] },
+    'contain-intrinsic-height': { values: ['auto none', 'auto 100px'] },
+    'contain-intrinsic-size': { values: ['auto none', 'auto 100px'] },
+    'contain-intrinsic-inline-size': { values: ['auto none', 'auto 100px'] },
+    'contain-intrinsic-block-size': { values: ['auto none', 'auto 100px'] },
+    // Due to some compatibility issues[1] with Chrome's implementation[2],
+    // only a few legacy values are added here.
+    // [1]: https://github.com/w3c/csswg-drafts/issues/9102#issuecomment-1807453214
+    // [2]: https://chromium-review.googlesource.com/c/chromium/src/+/4232738
+    'white-space': {
+        values: [
+            'normal',
+            'pre',
+            'pre-wrap',
+            'pre-line',
+            'nowrap',
+            'break-spaces', // equal to: `break-spaces wrap`, Chrome 76, crbug.com/767634#c28
+        ],
+    },
 };
 // Weight of CSS properties based on their usage from https://www.chromestatus.com/metrics/css/popularity
 const Weight = new Map([
@@ -1248,7 +1265,6 @@ const Weight = new Map([
     ['-webkit-filter', 159],
     ['-webkit-font-feature-settings', 59],
     ['-webkit-font-smoothing', 177],
-    ['-webkit-highlight', 1],
     ['-webkit-line-break', 45],
     ['-webkit-line-clamp', 126],
     ['-webkit-margin-after', 67],
@@ -1256,7 +1272,6 @@ const Weight = new Map([
     ['-webkit-margin-collapse', 14],
     ['-webkit-margin-end', 65],
     ['-webkit-margin-start', 100],
-    ['-webkit-margin-top-collapse', 78],
     ['-webkit-mask', 19],
     ['-webkit-mask-box-image', 72],
     ['-webkit-mask-image', 88],

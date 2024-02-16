@@ -1,6 +1,6 @@
-import type * as Components from '../utils/utils.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as UI from '../../legacy.js';
+import type * as Components from '../utils/utils.js';
 export declare const getObjectPropertiesSectionFrom: (element: Element) => ObjectPropertiesSection | undefined;
 export declare class ObjectPropertiesSection extends UI.TreeOutline.TreeOutlineInShadow {
     private readonly object;
@@ -17,7 +17,7 @@ export declare class ObjectPropertiesSection extends UI.TreeOutline.TreeOutlineI
     static createNameElement(name: string | null, isPrivate?: boolean): Element;
     static valueElementForFunctionDescription(description?: string, includePreview?: boolean, defaultName?: string): Element;
     static createPropertyValueWithCustomSupport(value: SDK.RemoteObject.RemoteObject, wasThrown: boolean, showPreview: boolean, parentElement?: Element, linkifier?: Components.Linkifier.Linkifier, isSyntheticProperty?: boolean, variableName?: string): ObjectPropertyValue;
-    static appendMemoryIcon(element: Element, obj: SDK.RemoteObject.RemoteObject, expression?: string): void;
+    static appendMemoryIcon(element: Element, object: SDK.RemoteObject.RemoteObject, expression?: string): void;
     static createPropertyValue(value: SDK.RemoteObject.RemoteObject, wasThrown: boolean, showPreview: boolean, parentElement?: Element, linkifier?: Components.Linkifier.Linkifier, isSyntheticProperty?: boolean, variableName?: string): ObjectPropertyValue;
     static formatObjectAsFunction(func: SDK.RemoteObject.RemoteObject, element: Element, linkify: boolean, includePreview?: boolean): Promise<void>;
     static isDisplayableProperty(property: SDK.RemoteObject.RemoteObjectProperty, parentProperty?: SDK.RemoteObject.RemoteObjectProperty): boolean;
@@ -140,7 +140,7 @@ export declare class Renderer implements UI.UIUtils.Renderer {
         tree: UI.TreeOutline.TreeOutline | null;
     } | null>;
 }
-export declare class ObjectPropertyValue implements UI.ContextMenu.Provider {
+export declare class ObjectPropertyValue implements UI.ContextMenu.Provider<Object> {
     element: Element;
     constructor(element: Element);
     appendApplicableItems(_event: Event, _contextMenu: UI.ContextMenu.ContextMenu, _object: Object): void;

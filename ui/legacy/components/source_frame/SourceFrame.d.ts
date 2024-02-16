@@ -16,6 +16,8 @@ export type EventTypes = {
     [Events.EditorUpdate]: CodeMirror.ViewUpdate;
     [Events.EditorScroll]: void;
 };
+type FormatFn = (lineNo: number, state: CodeMirror.EditorState) => string;
+export declare const LINE_NUMBER_FORMATTER: CodeMirror.Facet<FormatFn, FormatFn>;
 declare const SourceFrameImpl_base: (new (...args: any[]) => {
     "__#13@#events": Common.ObjectWrapper.ObjectWrapper<EventTypes>;
     addEventListener<T extends keyof EventTypes>(eventType: T, listener: (arg0: Common.EventTarget.EventTargetEvent<EventTypes[T], any>) => void, thisObject?: Object | undefined): Common.EventTarget.EventDescriptor<EventTypes, T>;
@@ -151,7 +153,7 @@ export interface Transformer {
         columnNumber: number;
     };
 }
-export declare enum DecoratorType {
+export declare const enum DecoratorType {
     PERFORMANCE = "performance",
     MEMORY = "memory",
     COVERAGE = "coverage"

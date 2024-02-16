@@ -35,18 +35,19 @@ export declare class ResourceCategory {
     title: () => Platform.UIString.LocalizedString;
     shortTitle: () => Platform.UIString.LocalizedString;
     constructor(title: () => Platform.UIString.LocalizedString, shortTitle: () => Platform.UIString.LocalizedString);
+    static categoryByTitle(title: string): ResourceCategory | null;
 }
 export declare const resourceCategories: {
     XHR: ResourceCategory;
-    Script: ResourceCategory;
+    Document: ResourceCategory;
     Stylesheet: ResourceCategory;
+    Script: ResourceCategory;
+    Font: ResourceCategory;
     Image: ResourceCategory;
     Media: ResourceCategory;
-    Font: ResourceCategory;
-    Document: ResourceCategory;
+    Manifest: ResourceCategory;
     WebSocket: ResourceCategory;
     Wasm: ResourceCategory;
-    Manifest: ResourceCategory;
     Other: ResourceCategory;
 };
 /**

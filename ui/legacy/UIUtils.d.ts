@@ -15,6 +15,7 @@ export declare const StyleValueDelimiters = " \u00A0\t\n\"':;,/()";
 export declare function getValueModificationDirection(event: Event): string | null;
 export declare function modifiedFloatNumber(number: number, event: Event, modifierMultiplier?: number): number | null;
 export declare function createReplacementString(wordString: string, event: Event, customNumberHandler?: ((arg0: string, arg1: number, arg2: string) => string)): string | null;
+export declare function isElementValueModification(event: Event): boolean;
 export declare function handleElementValueModifications(event: Event, element: Element, finishHandler?: ((arg0: string, arg1: string) => void), suggestionHandler?: ((arg0: string) => boolean), customNumberHandler?: ((arg0: string, arg1: number, arg2: string) => string)): boolean;
 export declare function openLinkExternallyLabel(): string;
 export declare function copyLinkAddressLabel(): string;
@@ -60,11 +61,15 @@ export declare function initializeUIUtils(document: Document): void;
 export declare function beautifyFunctionName(name: string): string;
 export declare const createTextChild: (element: Element | DocumentFragment, text: string) => Text;
 export declare const createTextChildren: (element: Element | DocumentFragment, ...childrenText: string[]) => void;
-export declare function createTextButton(text: string, eventHandler?: ((arg0: Event) => void), className?: string, primary?: boolean, alternativeEvent?: string): HTMLButtonElement;
-export declare function createInput(className?: string, type?: string): HTMLInputElement;
+export declare function createTextButton(text: string, clickHandler?: ((arg0: Event) => void), opts?: {
+    className?: string;
+    jslogContext?: string;
+    primary?: boolean;
+}): HTMLButtonElement;
+export declare function createInput(className?: string, type?: string, jslogContext?: string): HTMLInputElement;
 export declare function createSelect(name: string, options: string[] | Map<string, string[]>[] | Set<string>): HTMLSelectElement;
 export declare function createLabel(title: string, className?: string, associatedControl?: Element): Element;
-export declare function createRadioLabel(name: string, title: string, checked?: boolean): DevToolsRadioButton;
+export declare function createRadioLabel(name: string, title: string, checked?: boolean, jslogContext?: string): DevToolsRadioButton;
 export declare function createIconLabel(options: {
     title?: string;
     iconName: string;
@@ -79,7 +84,7 @@ export declare class CheckboxLabel extends HTMLSpanElement {
     checkboxElement: HTMLInputElement;
     textElement: HTMLElement;
     constructor();
-    static create(title?: string, checked?: boolean, subtitle?: string): CheckboxLabel;
+    static create(title?: string, checked?: boolean, subtitle?: string, jslogContext?: string): CheckboxLabel;
     private static lastId;
     static constructorInternal: (() => Element) | null;
 }
@@ -129,7 +134,6 @@ export declare function addReferrerToURL(url: Platform.DevToolsPath.UrlString): 
  */
 export declare function addReferrerToURLIfNecessary(url: Platform.DevToolsPath.UrlString): Platform.DevToolsPath.UrlString;
 export declare function loadImage(url: string): Promise<HTMLImageElement | null>;
-export declare function loadImageFromData(data: string | null): Promise<HTMLImageElement | null>;
 export declare function createFileSelectorElement(callback: (arg0: File) => void): HTMLInputElement;
 export declare const MaxLengthForDisplayedURLs = 150;
 export declare class MessageDialog {

@@ -30,17 +30,17 @@
 import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import * as IconButton from '../components/icon_button/icon_button.js';
 import * as ARIAUtils from './ARIAUtils.js';
 import { ContextMenu } from './ContextMenu.js';
 import { Constraints, Size } from './Geometry.js';
-import { Icon } from './Icon.js';
+import tabbedPaneStyles from './tabbedPane.css.legacy.js';
 import { Toolbar } from './Toolbar.js';
 import { Tooltip } from './Tooltip.js';
 import { installDragHandle, invokeOnceAfterBatchUpdate } from './UIUtils.js';
 import { VBox } from './Widget.js';
 import { ZoomManager } from './ZoomManager.js';
-import tabbedPaneStyles from './tabbedPane.css.legacy.js';
 const UIStrings = {
     /**
      *@description The aria label for the button to open more tabs at the right tabbed pane in Elements tools
@@ -210,6 +210,8 @@ export class TabbedPane extends Common.ObjectWrapper.eventMixin(VBox) {
         console.assert(!this.tabsById.has(id), `Tabbed pane already contains a tab with id '${id}'`);
         this.tabsById.set(id, tab);
         tab.tabElement.tabIndex = -1;
+        const context = id === 'console-view' ? 'console' : id;
+        tab.tabElement.setAttribute('jslog', `${VisualLogging.panelTabHeader().track({ click: true, drag: true }).context(context)}`);
         if (index !== undefined) {
             this.tabs.splice(index, 0, tab);
         }
@@ -524,7 +526,8 @@ export class TabbedPane extends Common.ObjectWrapper.eventMixin(VBox) {
     createDropDownButton() {
         const dropDownContainer = document.createElement('div');
         dropDownContainer.classList.add('tabbed-pane-header-tabs-drop-down-container');
-        const chevronIcon = Icon.create('chevron-double-right', 'chevron-icon');
+        dropDownContainer.setAttribute('jslog', `${VisualLogging.dropDown('more-tabs').track({ click: true })}`);
+        const chevronIcon = IconButton.Icon.create('chevron-double-right', 'chevron-icon');
         const moreTabsString = i18nString(UIStrings.moreTabs);
         dropDownContainer.title = moreTabsString;
         ARIAUtils.markAsMenuButton(dropDownContainer);
@@ -846,8 +849,6 @@ export class TabbedPane extends Common.ObjectWrapper.eventMixin(VBox) {
         nextTabElement.focus();
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
 export var Events;
 (function (Events) {
     Events["TabInvoked"] = "TabInvoked";
@@ -866,8 +867,7 @@ export class TabbedPaneTab {
     shown;
     measuredWidth;
     tabElementInternal;
-    iconContainer;
-    icon;
+    icon = null;
     widthInternal;
     delegate;
     titleElement;
@@ -881,7 +881,6 @@ export class TabbedPaneTab {
         this.tooltipInternal = tooltip;
         this.viewInternal = view;
         this.shown = false;
-        this.iconContainer = null;
     }
     get id() {
         return this.idInternal;
@@ -970,16 +969,13 @@ export class TabbedPaneTab {
         tabIcons.set(tabElement, iconContainer);
     }
     createMeasureClone(original) {
-        if ('data' in original && original.data.width && original.data.height) {
-            // Cloning doesn't work for the icon component because the shadow
-            // root isn't copied, but it is sufficient to create a div styled
-            // to be the same size.
-            const fakeClone = document.createElement('div');
-            fakeClone.style.width = original.data.width;
-            fakeClone.style.height = original.data.height;
-            return fakeClone;
-        }
-        return original.cloneNode(true);
+        // Cloning doesn't work for the icon component because the shadow
+        // root isn't copied, but it is sufficient to create a div styled
+        // to be the same size.
+        const fakeClone = document.createElement('div');
+        fakeClone.style.width = original.style.width;
+        fakeClone.style.height = original.style.height;
+        return fakeClone;
     }
     createTabElement(measuring) {
         const tabElement = document.createElement('div');
@@ -1023,6 +1019,7 @@ export class TabbedPaneTab {
     createCloseIconButton() {
         const closeIconContainer = document.createElement('div');
         closeIconContainer.classList.add('close-button', 'tabbed-pane-close-button');
+        closeIconContainer.setAttribute('jslog', `${VisualLogging.close().track({ click: true })}`);
         const closeIcon = new IconButton.Icon.Icon();
         closeIcon.data = {
             iconName: 'cross',

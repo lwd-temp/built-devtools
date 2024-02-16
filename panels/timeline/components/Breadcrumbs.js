@@ -15,22 +15,24 @@ export function flattenBreadcrumbs(initialBreadcrumb) {
 }
 export class Breadcrumbs {
     initialBreadcrumb;
-    #lastBreadcrumb;
+    lastBreadcrumb;
     constructor(initialTraceWindow) {
         this.initialBreadcrumb = {
             window: initialTraceWindow,
             child: null,
         };
-        this.#lastBreadcrumb = this.initialBreadcrumb;
+        this.lastBreadcrumb = this.initialBreadcrumb;
     }
     add(newBreadcrumbTraceWindow) {
-        if (this.isTraceWindowWithinTraceWindow(newBreadcrumbTraceWindow, this.#lastBreadcrumb.window)) {
+        if (this.isTraceWindowWithinTraceWindow(newBreadcrumbTraceWindow, this.lastBreadcrumb.window)) {
             const newBreadcrumb = {
                 window: newBreadcrumbTraceWindow,
                 child: null,
             };
-            this.#lastBreadcrumb.child = newBreadcrumb;
-            this.#lastBreadcrumb = newBreadcrumb;
+            // To add a new Breadcrumb to the Breadcrumbs Linked List, set the child of last breadcrumb
+            // to the new breadcrumb and update the last Breadcrumb
+            this.lastBreadcrumb.child = newBreadcrumb;
+            this.lastBreadcrumb = this.lastBreadcrumb.child;
         }
         else {
             throw new Error('Can not add a breadcrumb that is equal to or is outside of the parent breadcrumb TimeWindow');
@@ -43,12 +45,8 @@ export class Breadcrumbs {
     }
     // Make breadcrumb active by removing all of its children and making it the last breadcrumb
     makeBreadcrumbActive(newLastBreadcrumb) {
-        let breadcrumbsIter = this.initialBreadcrumb;
-        while (breadcrumbsIter !== newLastBreadcrumb && breadcrumbsIter.child !== null) {
-            breadcrumbsIter = breadcrumbsIter.child;
-        }
-        breadcrumbsIter.child = null;
-        this.#lastBreadcrumb = breadcrumbsIter;
+        this.lastBreadcrumb = newLastBreadcrumb;
+        this.lastBreadcrumb.child = null;
     }
 }
 //# sourceMappingURL=Breadcrumbs.js.map

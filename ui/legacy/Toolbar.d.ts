@@ -1,6 +1,8 @@
 import * as Common from '../../core/common/common.js';
 import * as Host from '../../core/host/host.js';
 import * as Platform from '../../core/platform/platform.js';
+import * as Root from '../../core/root/root.js';
+import * as Adorners from '../components/adorners/adorners.js';
 import { type Action } from './ActionRegistration.js';
 import { ContextMenu } from './ContextMenu.js';
 import { type Suggestion } from './SuggestBox.js';
@@ -17,7 +19,7 @@ export declare class Toolbar {
     setCompactLayout(enable: boolean): void;
     static createLongPressActionButton(action: Action, toggledOptions: ToolbarButton[], untoggledOptions: ToolbarButton[]): ToolbarButton;
     static createActionButton(action: Action, options?: ToolbarButtonOptions | undefined): ToolbarButton;
-    static createActionButtonForId(actionId: string, options?: ToolbarButtonOptions | undefined): ToolbarButton;
+    static createActionButtonForId(actionId: string, options?: ToolbarButtonOptions): ToolbarButton;
     gripElementForResize(): Element;
     makeWrappable(growVertically?: boolean): void;
     makeVertical(): void;
@@ -77,14 +79,11 @@ export declare class ToolbarButton extends ToolbarItem<ToolbarButton.EventTypes>
     private textElement;
     private text?;
     private glyph?;
-    private icon?;
-    /**
-     * TODO(crbug.com/1126026): remove glyph parameter in favor of icon.
-     */
-    constructor(title: string, glyphOrIcon?: string | HTMLElement, text?: string);
+    private adorner?;
+    constructor(title: string, glyphOrAdorner?: string | Adorners.Adorner.Adorner, text?: string, jslogContext?: string);
     focus(): void;
     setText(text: string): void;
-    setGlyphOrIcon(glyphOrIcon: string | HTMLElement): void;
+    setGlyphOrAdorner(glyphOrAdorner: string | Adorners.Adorner.Adorner): void;
     setGlyph(glyph: string): void;
     setBackgroundImage(iconURL: string): void;
     setSecondary(): void;
@@ -94,7 +93,7 @@ export declare class ToolbarButton extends ToolbarItem<ToolbarButton.EventTypes>
     protected mouseDown(event: MouseEvent): void;
 }
 export declare namespace ToolbarButton {
-    enum Events {
+    const enum Events {
         Click = "Click",
         MouseDown = "MouseDown"
     }
@@ -106,7 +105,7 @@ export declare namespace ToolbarButton {
 export declare class ToolbarInput extends ToolbarItem<ToolbarInput.EventTypes> {
     private prompt;
     private readonly proxyElement;
-    constructor(placeholder: string, accessiblePlaceholder?: string, growFactor?: number, shrinkFactor?: number, tooltip?: string, completions?: ((arg0: string, arg1: string, arg2?: boolean | undefined) => Promise<Suggestion[]>), dynamicCompletions?: boolean);
+    constructor(placeholder: string, accessiblePlaceholder?: string, growFactor?: number, shrinkFactor?: number, tooltip?: string, completions?: ((arg0: string, arg1: string, arg2?: boolean | undefined) => Promise<Suggestion[]>), dynamicCompletions?: boolean, jslogContext?: string);
     applyEnabledState(enabled: boolean): void;
     setValue(value: string, notify?: boolean): void;
     value(): string;
@@ -116,7 +115,7 @@ export declare class ToolbarInput extends ToolbarItem<ToolbarInput.EventTypes> {
     private updateEmptyStyles;
 }
 export declare namespace ToolbarInput {
-    enum Event {
+    const enum Event {
         TextChanged = "TextChanged",
         EnterPressed = "EnterPressed"
     }
@@ -127,9 +126,9 @@ export declare namespace ToolbarInput {
 }
 export declare class ToolbarToggle extends ToolbarButton {
     private toggledInternal;
-    private readonly untoggledGlyphOrIcon;
-    private readonly toggledGlyphOrIcon;
-    constructor(title: string, glyphOrIcon?: string | HTMLElement, toggledGlyphOrIcon?: string | HTMLElement);
+    private readonly untoggledGlyph;
+    private readonly toggledGlyph;
+    constructor(title: string, glyph?: string, toggledGlyph?: string, jslogContext?: string);
     toggled(): boolean;
     setToggled(toggled: boolean): void;
     setDefaultWithRedColor(withRedColor: boolean): void;
@@ -140,8 +139,7 @@ export declare class ToolbarMenuButton extends ToolbarButton {
     private readonly contextMenuHandler;
     private readonly useSoftMenu;
     private triggerTimeout?;
-    private lastTriggerTime?;
-    constructor(contextMenuHandler: (arg0: ContextMenu) => void, useSoftMenu?: boolean);
+    constructor(contextMenuHandler: (arg0: ContextMenu) => void, useSoftMenu?: boolean, jslogContext?: string);
     mouseDown(event: MouseEvent): void;
     private trigger;
     clicked(event: Event): void;
@@ -150,7 +148,7 @@ export declare class ToolbarSettingToggle extends ToolbarToggle {
     private readonly defaultTitle;
     private readonly setting;
     private willAnnounceState;
-    constructor(setting: Common.Settings.Setting<boolean>, glyph: string, title: string, toggledGlyph?: string);
+    constructor(setting: Common.Settings.Setting<boolean>, glyph: string, title: string, toggledGlyph?: string, jslogContext?: string);
     private settingChanged;
     clicked(event: Event): void;
 }
@@ -165,7 +163,7 @@ export interface ItemsProvider {
 }
 export declare class ToolbarComboBox extends ToolbarItem<void> {
     protected selectElementInternal: HTMLSelectElement;
-    constructor(changeHandler: ((arg0: Event) => void) | null, title: string, className?: string);
+    constructor(changeHandler: ((arg0: Event) => void) | null, title: string, className?: string, jslogContext?: string);
     selectElement(): HTMLSelectElement;
     size(): number;
     options(): HTMLOptionElement[];
@@ -197,7 +195,7 @@ export declare class ToolbarSettingComboBox extends ToolbarComboBox {
 }
 export declare class ToolbarCheckbox extends ToolbarItem<void> {
     inputElement: HTMLInputElement;
-    constructor(text: string, tooltip?: string, listener?: ((arg0: MouseEvent) => void));
+    constructor(text: string, tooltip?: string, listener?: ((arg0: MouseEvent) => void), jslogContext?: string);
     checked(): boolean;
     setChecked(value: boolean): void;
     applyEnabledState(enabled: boolean): void;
@@ -214,11 +212,12 @@ export interface ToolbarItemRegistration {
     label?: () => Platform.UIString.LocalizedString;
     showLabel?: boolean;
     actionId?: string;
-    condition?: string;
+    condition?: Root.Runtime.Condition;
     loadItem?: (() => Promise<Provider>);
     experiment?: string;
+    jslog?: string;
 }
-export declare enum ToolbarItemLocation {
+export declare const enum ToolbarItemLocation {
     FILES_NAVIGATION_TOOLBAR = "files-navigator-toolbar",
     MAIN_TOOLBAR_RIGHT = "main-toolbar-right",
     MAIN_TOOLBAR_LEFT = "main-toolbar-left",

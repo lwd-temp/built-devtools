@@ -161,7 +161,7 @@ export declare const enum BreakpointOrigin {
 export declare namespace Breakpoint {
     type State = Position[];
     namespace State {
-        function equals(stateA?: State | null, stateB?: State | null): boolean;
+        function subset(stateA?: State | null, stateB?: State | null): boolean;
     }
 }
 declare class Storage {

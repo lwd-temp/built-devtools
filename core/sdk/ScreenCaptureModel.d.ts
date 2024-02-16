@@ -46,7 +46,6 @@ export declare class ScreenCaptureModel extends SDKModel<void> implements Protoc
     compilationCacheProduced(_params: Protocol.Page.CompilationCacheProducedEvent): void;
     downloadWillBegin(_params: Protocol.Page.DownloadWillBeginEvent): void;
     downloadProgress(): void;
-    prerenderAttemptCompleted(_params: Protocol.Preload.PrerenderAttemptCompletedEvent): void;
     prefetchStatusUpdated(_params: Protocol.Preload.PrefetchStatusUpdatedEvent): void;
     prerenderStatusUpdated(_params: Protocol.Preload.PrerenderStatusUpdatedEvent): void;
 }

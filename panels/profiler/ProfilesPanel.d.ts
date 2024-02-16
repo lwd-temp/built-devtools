@@ -1,9 +1,10 @@
 import * as Common from '../../core/common/common.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { type DataDisplayDelegate, type ProfileHeader, type ProfileType } from './ProfileHeader.js';
+import { type DataDisplayDelegate, ProfileHeader, type ProfileType } from './ProfileHeader.js';
 import { ProfileLauncherView } from './ProfileLauncherView.js';
 import { ProfileSidebarTreeElement } from './ProfileSidebarTreeElement.js';
 export declare class ProfilesPanel extends UI.Panel.PanelWithSidebar implements DataDisplayDelegate {
+    #private;
     readonly profileTypes: ProfileType[];
     profilesItemTreeElement: ProfilesSidebarTreeElement;
     sidebarTree: UI.TreeOutline.TreeOutlineInShadow;
@@ -11,7 +12,6 @@ export declare class ProfilesPanel extends UI.Panel.PanelWithSidebar implements 
     readonly toolbarElement: HTMLDivElement;
     toggleRecordAction: UI.ActionRegistration.Action;
     readonly toggleRecordButton: UI.Toolbar.ToolbarButton;
-    clearResultsButton: UI.Toolbar.ToolbarButton;
     readonly profileViewToolbar: UI.Toolbar.Toolbar;
     profileGroups: {};
     launcherView: ProfileLauncherView;
@@ -40,7 +40,6 @@ export declare class ProfilesPanel extends UI.Panel.PanelWithSidebar implements 
     reset(): void;
     showLauncherView(): void;
     registerProfileType(profileType: ProfileType): void;
-    handleContextMenuEvent(event: Event): void;
     showLoadFromFileDialog(): void;
     addProfileHeader(profile: ProfileHeader): void;
     removeProfileHeader(profile: ProfileHeader): void;
@@ -52,6 +51,7 @@ export declare class ProfilesPanel extends UI.Panel.PanelWithSidebar implements 
     closeVisibleView(): void;
     focus(): void;
     wasShown(): void;
+    willHide(): void;
 }
 export declare class ProfileTypeSidebarSection extends UI.TreeOutline.TreeElement {
     dataDisplayDelegate: DataDisplayDelegate;
@@ -94,4 +94,7 @@ export declare class JSProfilerPanel extends ProfilesPanel implements UI.ActionR
     wasShown(): void;
     willHide(): void;
     handleAction(_context: UI.Context.Context, _actionId: string): boolean;
+}
+export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
+    handleAction(context: UI.Context.Context, actionId: string): boolean;
 }

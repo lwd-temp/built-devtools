@@ -52,14 +52,9 @@ export declare class ProtocolMonitorDataGrid extends ProtocolMonitorDataGrid_bas
     private readonly filterParser;
     private readonly suggestionBuilder;
     private readonly textFilterUI;
-    private messages;
-    private isRecording;
     readonly selector: UI.Toolbar.ToolbarComboBox;
     constructor(splitWidget: UI.SplitWidget.SplitWidget);
     onCommandSend(command: string, parameters: object, target?: string): void;
-    static instance(opts?: {
-        forceNew: null | boolean;
-    }): ProtocolMonitorImpl;
     wasShown(): void;
     private setRecording;
     private targetToString;
@@ -70,9 +65,6 @@ export declare class ProtocolMonitorDataGrid extends ProtocolMonitorDataGrid_bas
 export declare class ProtocolMonitorImpl extends UI.Widget.VBox {
     #private;
     constructor();
-    static instance(opts?: {
-        forceNew: null | boolean;
-    }): ProtocolMonitorImpl;
 }
 export declare class CommandAutocompleteSuggestionProvider {
     #private;
@@ -92,9 +84,10 @@ export declare class InfoWidget extends UI.Widget.VBox {
         response: DataGrid.DataGridUtils.Cell | undefined;
         target: DataGrid.DataGridUtils.Cell | undefined;
         type: 'sent' | 'received' | undefined;
+        selectedTab: 'request' | 'response' | undefined;
     } | null): void;
 }
-export declare enum Events {
+export declare const enum Events {
     CommandSent = "CommandSent",
     CommandChange = "CommandChange"
 }

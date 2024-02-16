@@ -33,7 +33,7 @@ import * as HeapSnapshotModel from '../../models/heap_snapshot_model/heap_snapsh
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { AllocationGridNode, HeapSnapshotConstructorNode, HeapSnapshotGenericObjectNode, HeapSnapshotRetainingObjectNode, HeapSnapshotObjectNode, HeapSnapshotDiffNode, } from './HeapSnapshotGridNodes.js';
+import { AllocationGridNode, HeapSnapshotConstructorNode, HeapSnapshotDiffNode, HeapSnapshotGenericObjectNode, HeapSnapshotObjectNode, HeapSnapshotRetainingObjectNode, } from './HeapSnapshotGridNodes.js';
 const UIStrings = {
     /**
      *@description Text in Heap Snapshot Data Grids of a profiler tool
@@ -173,7 +173,7 @@ export class HeapSnapshotSortableDataGrid extends Common.ObjectWrapper.eventMixi
         this.nameFilter = null;
         this.nodeFilterInternal = new HeapSnapshotModel.HeapSnapshotModel.NodeFilter();
         this.addEventListener(HeapSnapshotSortableDataGridEvents.SortingComplete, this.sortingComplete, this);
-        this.addEventListener(DataGrid.DataGrid.Events.SortingChanged, this.sortingChanged, this);
+        this.addEventListener("SortingChanged" /* DataGrid.DataGrid.Events.SortingChanged */, this.sortingChanged, this);
         this.setRowContextMenuCallback(this.populateContextMenu.bind(this));
     }
     async setDataSource(_snapshot, _nodeIndex) {
@@ -209,7 +209,7 @@ export class HeapSnapshotSortableDataGrid extends Common.ObjectWrapper.eventMixi
     }
     wasShown() {
         if (this.nameFilter) {
-            this.nameFilter.addEventListener(UI.Toolbar.ToolbarInput.Event.TextChanged, this.onNameFilterChanged, this);
+            this.nameFilter.addEventListener("TextChanged" /* UI.Toolbar.ToolbarInput.Event.TextChanged */, this.onNameFilterChanged, this);
             this.updateVisibleNodes(true);
         }
         if (this.populatedAndSorted) {
@@ -223,14 +223,13 @@ export class HeapSnapshotSortableDataGrid extends Common.ObjectWrapper.eventMixi
     }
     willHide() {
         if (this.nameFilter) {
-            this.nameFilter.removeEventListener(UI.Toolbar.ToolbarInput.Event.TextChanged, this.onNameFilterChanged, this);
+            this.nameFilter.removeEventListener("TextChanged" /* UI.Toolbar.ToolbarInput.Event.TextChanged */, this.onNameFilterChanged, this);
         }
     }
     populateContextMenu(contextMenu, gridNode) {
         const node = gridNode;
         node.populateContextMenu(contextMenu, this.dataDisplayDelegateInternal, this.heapProfilerModel());
-        if (node instanceof HeapSnapshotGenericObjectNode && node.linkElement &&
-            !contextMenu.containsTarget(node.linkElement)) {
+        if (node instanceof HeapSnapshotGenericObjectNode && node.linkElement) {
             contextMenu.appendApplicableItems(node.linkElement);
         }
     }
@@ -348,8 +347,6 @@ export class HeapSnapshotSortableDataGrid extends Common.ObjectWrapper.eventMixi
         parent.removeChildren();
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
 export var HeapSnapshotSortableDataGridEvents;
 (function (HeapSnapshotSortableDataGridEvents) {
     HeapSnapshotSortableDataGridEvents["ContentShown"] = "ContentShown";
@@ -577,9 +574,9 @@ export class HeapSnapshotContainmentDataGrid extends HeapSnapshotSortableDataGri
         const dataGridParameters = { displayName, columns };
         super(heapProfilerModel, dataDisplayDelegate, dataGridParameters);
     }
-    async setDataSource(snapshot, nodeIndex) {
+    async setDataSource(snapshot, nodeIndex, nodeId) {
         this.snapshot = snapshot;
-        const node = new HeapSnapshotModel.HeapSnapshotModel.Node(-1, 'root', 0, nodeIndex || snapshot.rootNodeIndex, 0, 0, '');
+        const node = new HeapSnapshotModel.HeapSnapshotModel.Node(nodeId ?? -1, 'root', 0, nodeIndex || snapshot.rootNodeIndex, 0, 0, '');
         this.setRootNode(this.createRootNode(snapshot, node));
         void this.rootNode().sort();
     }
@@ -635,14 +632,12 @@ export class HeapSnapshotRetainmentDataGrid extends HeapSnapshotContainmentDataG
         this.rootNode().removeChildren();
         this.resetSortingCache();
     }
-    async setDataSource(snapshot, nodeIndex) {
-        await super.setDataSource(snapshot, nodeIndex);
+    async setDataSource(snapshot, nodeIndex, nodeId) {
+        await super.setDataSource(snapshot, nodeIndex, nodeId);
         this.rootNode().expand();
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
 // TODO(crbug.com/1228674): Remove this enum, it is only used in web tests.
-// eslint-disable-next-line rulesdir/const_enum
 export var HeapSnapshotRetainmentDataGridEvents;
 (function (HeapSnapshotRetainmentDataGridEvents) {
     HeapSnapshotRetainmentDataGridEvents["ExpandRetainersComplete"] = "ExpandRetainersComplete";

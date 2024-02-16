@@ -29,19 +29,24 @@
     "useUnknownInCatchVariables": false
   },
   "files": [
+    "../../../../../../front_end/panels/timeline/ActiveFilters.ts",
     "../../../../../../front_end/panels/timeline/AnimationsTrackAppender.ts",
     "../../../../../../front_end/panels/timeline/AppenderUtils.ts",
+    "../../../../../../front_end/panels/timeline/BenchmarkEvents.ts",
     "../../../../../../front_end/panels/timeline/CLSLinkifier.ts",
     "../../../../../../front_end/panels/timeline/CompatibilityTracksAppender.ts",
     "../../../../../../front_end/panels/timeline/CountersGraph.ts",
     "../../../../../../front_end/panels/timeline/EventUICategory.ts",
     "../../../../../../front_end/panels/timeline/EventsTimelineTreeView.ts",
     "../../../../../../front_end/panels/timeline/GPUTrackAppender.ts",
+    "../../../../../../front_end/panels/timeline/Initiators.ts",
     "../../../../../../front_end/panels/timeline/InteractionsTrackAppender.ts",
+    "../../../../../../front_end/panels/timeline/IsolateSelector.ts",
     "../../../../../../front_end/panels/timeline/LayoutShiftsTrackAppender.ts",
     "../../../../../../front_end/panels/timeline/NetworkTrackAppender.ts",
     "../../../../../../front_end/panels/timeline/PerformanceModel.ts",
     "../../../../../../front_end/panels/timeline/SaveFileFormatter.ts",
+    "../../../../../../front_end/panels/timeline/SourceMapsResolver.ts",
     "../../../../../../front_end/panels/timeline/ThreadAppender.ts",
     "../../../../../../front_end/panels/timeline/TimelineController.ts",
     "../../../../../../front_end/panels/timeline/TimelineDetailsView.ts",
@@ -65,7 +70,8 @@
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
@@ -93,6 +99,9 @@
       "path": "../../models/trace/bundle-tsconfig.json"
     },
     {
+      "path": "../../models/workspace/bundle-tsconfig.json"
+    },
+    {
       "path": "../coverage/bundle-tsconfig.json"
     },
     {
@@ -103,6 +112,12 @@
     },
     {
       "path": "../profiler/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../services/trace_bounds/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../ui/components/menus/bundle-tsconfig.json"
     },
     {
       "path": "../../ui/components/panel_feedback/bundle-tsconfig.json"

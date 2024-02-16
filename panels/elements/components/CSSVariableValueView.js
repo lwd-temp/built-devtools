@@ -17,6 +17,11 @@ const UIStrings = {
      *@example {<color>} type
      */
     invalidPropertyValue: 'Invalid property value, expected type {type}',
+    /**
+     *@description Text displayed in a tooltip shown when hovering over a var() CSS function in the Styles pane when the custom property in this function does not exist. The parameter is the name of the property.
+     *@example {--my-custom-property-name} PH1
+     */
+    sIsNotDefined: '{PH1} is not defined',
 };
 const str_ = i18n.i18n.registerUIStrings('panels/elements/components/CSSVariableValueView.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
@@ -51,11 +56,13 @@ export class CSSVariableParserError extends HTMLElement {
 export class CSSVariableValueView extends HTMLElement {
     static litTagName = LitHtml.literal `devtools-css-variable-value-view`;
     #shadow = this.attachShadow({ mode: 'open' });
+    variableName;
     value;
     details;
-    constructor(value, details) {
+    constructor({ variableName, value, details, }) {
         super();
         this.#shadow.adoptedStyleSheets = [cssVariableValueViewStyles];
+        this.variableName = variableName;
         this.value = value;
         this.details = details;
         this.#render();
@@ -73,8 +80,9 @@ export class CSSVariableValueView extends HTMLElement {
           ${getLinkSection(this.details)}
         </div>` :
             '';
+        const valueText = this.value ?? i18nString(UIStrings.sIsNotDefined, { PH1: this.variableName });
         render(html `<div class="variable-value-popup-wrapper">
-               ${this.value}
+               ${valueText}
              </div>
              ${registrationView}
              `, this.#shadow, {

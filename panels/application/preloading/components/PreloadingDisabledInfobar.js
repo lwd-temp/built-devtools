@@ -16,25 +16,25 @@ const UIStrings = {
     /**
      *@description Infobar text for disabled case
      */
-    infobarPreloadingIsDisabled: 'Preloading is disabled',
+    infobarPreloadingIsDisabled: 'Speculative loading is disabled',
     /**
      *@description Infobar text for force-enabled case
      */
-    infobarPreloadingIsForceEnabled: 'Preloading is force-enabled',
+    infobarPreloadingIsForceEnabled: 'Speculative loading is force-enabled',
     /**
      *@description Title for dialog
      */
-    titleReasonsPreventingPreloading: 'Reasons preventing preloading',
+    titleReasonsPreventingPreloading: 'Reasons preventing speculative loading',
     /**
      *@description Header in dialog
      */
-    headerDisabledByPreference: 'User settings or extension',
+    headerDisabledByPreference: 'User settings or extensions',
     /**
      *@description Description in dialog
      *@example {Preload pages settings (linked to chrome://settings/preloading)} PH1
      *@example {Extensions settings (linked to chrome://extensions)} PH2
      */
-    descriptionDisabledByPreference: 'Preloading is disabled because of user settings or an extension. Go to {PH1} to update your preference. Go to {PH2} to disable any extension that blocks preloading.',
+    descriptionDisabledByPreference: 'Speculative loading is disabled because of user settings or an extension. Go to {PH1} to update your preference. Go to {PH2} to disable any extension that blocks speculative loading.',
     /**
      *@description Text of link
      */
@@ -50,7 +50,7 @@ const UIStrings = {
     /**
      *@description Description in dialog
      */
-    descriptionDisabledByDataSaver: 'Preloading is disabled because of the operating system\'s Data Saver mode.',
+    descriptionDisabledByDataSaver: 'Speculative loading is disabled because of the operating system\'s Data Saver mode.',
     /**
      *@description Header in dialog
      */
@@ -58,7 +58,7 @@ const UIStrings = {
     /**
      *@description Description in dialog
      */
-    descriptionDisabledByBatterySaver: 'Preloading is disabled because of the operating system\'s Battery Saver mode.',
+    descriptionDisabledByBatterySaver: 'Speculative loading is disabled because of the operating system\'s Battery Saver mode.',
     /**
      *@description Header in dialog
      */
@@ -150,7 +150,7 @@ export class PreloadingDisabledInfobar extends LegacyWrapper.LegacyWrapper.Wrapp
     }
     #dialogContents() {
         const LINK = 'https://developer.chrome.com/blog/prerender-pages/';
-        const learnMoreLink = UI.XLink.XLink.create(LINK, i18nString(UIStrings.footerLearnMore));
+        const learnMoreLink = UI.XLink.XLink.create(LINK, i18nString(UIStrings.footerLearnMore), undefined, undefined, 'learn-more');
         const iconLink = UI.Fragment.html `
       <x-link class="icon-link devtools-link" tabindex="0" href="${LINK}"></x-link>
     `;
@@ -195,7 +195,7 @@ export class PreloadingDisabledInfobar extends LegacyWrapper.LegacyWrapper.Wrapp
     }
     #maybeDisalebByPreference() {
         const preloadingSettingLink = new ChromeLink.ChromeLink.ChromeLink();
-        preloadingSettingLink.href = 'chrome://settings/cookies';
+        preloadingSettingLink.href = 'chrome://settings/performance';
         preloadingSettingLink.textContent = i18nString(UIStrings.preloadingPagesSettings);
         const extensionsSettingLink = new ChromeLink.ChromeLink.ChromeLink();
         extensionsSettingLink.href = 'chrome://extensions';

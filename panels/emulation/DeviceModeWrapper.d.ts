@@ -1,5 +1,5 @@
-import * as UI from '../../ui/legacy/legacy.js';
 import type * as Protocol from '../../generated/protocol.js';
+import * as UI from '../../ui/legacy/legacy.js';
 import { type InspectedPagePlaceholder } from './InspectedPagePlaceholder.js';
 export declare class DeviceModeWrapper extends UI.Widget.VBox {
     private readonly inspectedPagePlaceholder;
@@ -19,7 +19,4 @@ export declare class DeviceModeWrapper extends UI.Widget.VBox {
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
     handleAction(context: UI.Context.Context, actionId: string): boolean;
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
 }

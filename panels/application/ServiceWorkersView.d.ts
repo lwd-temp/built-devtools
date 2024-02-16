@@ -34,6 +34,7 @@ export declare class Section {
     private readonly periodicSyncTagNameSetting;
     private readonly toolbar;
     private readonly updateCycleView;
+    private readonly routerView;
     private readonly networkRequests;
     private readonly updateButton;
     private readonly deleteButton;
@@ -44,6 +45,7 @@ export declare class Section {
     private readonly clientInfoCache;
     private readonly throttler;
     private updateCycleField?;
+    private routerField?;
     constructor(manager: SDK.ServiceWorkerManager.ServiceWorkerManager, section: UI.ReportView.Section, registration: SDK.ServiceWorkerManager.ServiceWorkerRegistration);
     private createSyncNotificationField;
     scheduleUpdate(): void;
@@ -55,6 +57,7 @@ export declare class Section {
     private createLink;
     private unregisterButtonClicked;
     private createUpdateCycleField;
+    private maybeCreateRouterField;
     private updateButtonClicked;
     private networkRequestsClicked;
     private push;

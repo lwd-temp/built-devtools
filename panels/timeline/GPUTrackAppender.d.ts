@@ -1,9 +1,9 @@
 import * as TraceEngine from '../../models/trace/trace.js';
-import { type TrackAppender, type TrackAppenderName, type CompatibilityTracksAppender, type HighlightedEntryInfo } from './CompatibilityTracksAppender.js';
+import { type CompatibilityTracksAppender, type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName } from './CompatibilityTracksAppender.js';
 export declare class GPUTrackAppender implements TrackAppender {
     #private;
     readonly appenderName: TrackAppenderName;
-    constructor(compatibilityBuilder: CompatibilityTracksAppender, traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData);
+    constructor(compatibilityBuilder: CompatibilityTracksAppender, traceParsedData: TraceEngine.Handlers.Types.TraceParseData);
     /**
      * Appends into the flame chart data the data corresponding to the
      * GPU track.

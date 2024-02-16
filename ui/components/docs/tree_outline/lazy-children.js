@@ -74,7 +74,7 @@ const data = {
     ],
 };
 const component = new TreeOutline.TreeOutline.TreeOutline();
-component.setAttribute('toplevelbordercolor', 'var(--color-syntax-1)');
+component.setAttribute('toplevelbordercolor', 'var(--sys-color-token-property-special)');
 component.data = data;
 document.getElementById('container')?.appendChild(component);
 document.getElementById('recursively-expand')?.addEventListener('click', () => {

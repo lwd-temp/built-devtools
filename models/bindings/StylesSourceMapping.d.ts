@@ -8,6 +8,7 @@ import { type SourceMapping } from './CSSWorkspaceBinding.js';
 export declare class StylesSourceMapping implements SourceMapping {
     #private;
     constructor(cssModel: SDK.CSSModel.CSSModel, workspace: Workspace.Workspace.WorkspaceImpl);
+    addSourceMap(sourceUrl: Platform.DevToolsPath.UrlString, sourceMapUrl: Platform.DevToolsPath.UrlString): void;
     rawLocationToUILocation(rawLocation: SDK.CSSModel.CSSLocation): Workspace.UISourceCode.UILocation | null;
     uiLocationToRawLocations(uiLocation: Workspace.UISourceCode.UILocation): SDK.CSSModel.CSSLocation[];
     private acceptsHeader;
@@ -16,7 +17,7 @@ export declare class StylesSourceMapping implements SourceMapping {
     private styleSheetChanged;
     dispose(): void;
 }
-export declare class StyleFile implements TextUtils.ContentProvider.ContentProvider {
+export declare class StyleFile implements TextUtils.ContentProvider.SafeContentProvider {
     #private;
     headers: Set<SDK.CSSStyleSheetHeader.CSSStyleSheetHeader>;
     uiSourceCode: Workspace.UISourceCode.UISourceCode;
@@ -32,8 +33,10 @@ export declare class StyleFile implements TextUtils.ContentProvider.ContentProvi
     contentURL(): Platform.DevToolsPath.UrlString;
     contentType(): Common.ResourceType.ResourceType;
     requestContent(): Promise<TextUtils.ContentProvider.DeferredContent>;
+    requestContentData(): Promise<TextUtils.ContentData.ContentDataOrError>;
     searchInContent(query: string, caseSensitive: boolean, isRegex: boolean): Promise<TextUtils.ContentProvider.SearchMatch[]>;
     static readonly updateTimeout = 200;
     getHeaders(): Set<SDK.CSSStyleSheetHeader.CSSStyleSheetHeader>;
     getUiSourceCode(): Workspace.UISourceCode.UISourceCode;
+    addSourceMap(sourceUrl: Platform.DevToolsPath.UrlString, sourceMapUrl: Platform.DevToolsPath.UrlString): void;
 }

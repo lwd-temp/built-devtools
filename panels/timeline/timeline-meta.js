@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 import * as Common from '../../core/common/common.js';
+import * as i18n from '../../core/i18n/i18n.js';
 import * as Root from '../../core/root/root.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import * as i18n from '../../core/i18n/i18n.js';
 const UIStrings = {
     /**
      *@description Text for the performance of something
@@ -119,12 +119,12 @@ UI.ViewManager.registerViewExtension({
 });
 UI.ViewManager.registerViewExtension({
     location: "panel" /* UI.ViewManager.ViewLocationValues.PANEL */,
-    id: 'js_profiler',
+    id: 'js-profiler',
     title: i18nLazyString(UIStrings.javascriptProfiler),
     commandPrompt: i18nLazyString(UIStrings.showJavascriptProfiler),
     persistence: "closeable" /* UI.ViewManager.ViewPersistence.CLOSEABLE */,
     order: 65,
-    experiment: Root.Runtime.ExperimentName.JS_PROFILER_TEMP_ENABLE,
+    experiment: "jsProfilerTemporarilyEnable" /* Root.Runtime.ExperimentName.JS_PROFILER_TEMP_ENABLE */,
     async loadView() {
         const Profiler = await loadProfilerModule();
         return Profiler.ProfilesPanel.JSProfilerPanel.instance();
@@ -132,7 +132,7 @@ UI.ViewManager.registerViewExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.toggle-recording',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     iconClass: "record-start" /* UI.ActionRegistration.IconClass.START_RECORDING */,
     toggleable: true,
     toggledIconClass: "record-stop" /* UI.ActionRegistration.IconClass.STOP_RECORDING */,
@@ -142,7 +142,7 @@ UI.ActionRegistration.registerActionExtension({
     },
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     options: [
         {
@@ -171,11 +171,11 @@ UI.ActionRegistration.registerActionExtension({
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
     },
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     title: i18nLazyString(UIStrings.startProfilingAndReloadPage),
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     bindings: [
         {
@@ -189,14 +189,14 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     actionId: 'timeline.save-to-file',
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
     },
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.saveProfile),
     bindings: [
@@ -211,14 +211,14 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     actionId: 'timeline.load-from-file',
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
     },
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.loadProfile),
     bindings: [
@@ -234,14 +234,14 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.jump-to-previous-frame',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     title: i18nLazyString(UIStrings.previousFrame),
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
     },
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     bindings: [
         {
@@ -251,14 +251,14 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.jump-to-next-frame',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     title: i18nLazyString(UIStrings.nextFrame),
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
     },
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     bindings: [
         {
@@ -270,9 +270,9 @@ UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.show-history',
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     title: i18nLazyString(UIStrings.showRecentTimelineSessions),
     contextTypes() {
         return maybeRetrieveContextTypes(Timeline => [Timeline.TimelinePanel.TimelinePanel]);
@@ -290,10 +290,10 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.previous-recording',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.previousRecording),
     contextTypes() {
@@ -312,10 +312,10 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.next-recording',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     async loadActionDelegate() {
         const Timeline = await loadTimelineModule();
-        return Timeline.TimelinePanel.ActionDelegate.instance();
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.nextRecording),
     contextTypes() {
@@ -334,7 +334,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'profiler.js-toggle-recording',
-    category: UI.ActionRegistration.ActionCategory.JAVASCRIPT_PROFILER,
+    category: "JAVASCRIPT_PROFILER" /* UI.ActionRegistration.ActionCategory.JAVASCRIPT_PROFILER */,
     title: i18nLazyString(UIStrings.startStopRecording),
     iconClass: "record-start" /* UI.ActionRegistration.IconClass.START_RECORDING */,
     toggleable: true,
@@ -359,11 +359,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.PERFORMANCE,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "PERFORMANCE" /* Common.Settings.SettingCategory.PERFORMANCE */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.hideChromeFrameInLayersView),
-    settingName: 'frameViewerHideChromeWindow',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'frame-viewer-hide-chrome-window',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: false,
 });
 Common.Linkifier.registerLinkifier({
@@ -376,12 +376,12 @@ Common.Linkifier.registerLinkifier({
     },
 });
 UI.ContextMenu.registerItem({
-    location: UI.ContextMenu.ItemLocation.TIMELINE_MENU_OPEN,
+    location: "timelineMenu/open" /* UI.ContextMenu.ItemLocation.TIMELINE_MENU_OPEN */,
     actionId: 'timeline.load-from-file',
     order: 10,
 });
 UI.ContextMenu.registerItem({
-    location: UI.ContextMenu.ItemLocation.TIMELINE_MENU_OPEN,
+    location: "timelineMenu/open" /* UI.ContextMenu.ItemLocation.TIMELINE_MENU_OPEN */,
     actionId: 'timeline.save-to-file',
     order: 15,
 });

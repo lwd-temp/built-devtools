@@ -5,7 +5,7 @@ import * as Protocol from '../../generated/protocol.js';
 import * as NetworkForward from '../../panels/network/forward/forward.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { NetworkGroupNode, NetworkRequestNode, type NetworkLogViewInterface, type NetworkNode, type EventTypes } from './NetworkDataGridNode.js';
+import { type EventTypes, NetworkGroupNode, type NetworkLogViewInterface, type NetworkNode, NetworkRequestNode } from './NetworkDataGridNode.js';
 import { NetworkLogViewColumns } from './NetworkLogViewColumns.js';
 import { type NetworkTimeCalculator } from './NetworkTimeCalculator.js';
 declare const NetworkLogView_base: (new (...args: any[]) => {
@@ -50,11 +50,12 @@ export declare class NetworkLogView extends NetworkLogView_base implements SDK.T
     private readonly textFilterUI;
     private readonly invertFilterUI;
     private readonly dataURLFilterUI;
-    private resourceCategoryFilterUI;
+    private readonly moreFiltersDropDownUI;
     private readonly onlyBlockedResponseCookiesFilterUI;
     private readonly onlyBlockedRequestsUI;
     private readonly onlyThirdPartyFilterUI;
     private readonly hideChromeExtensionsUI;
+    private readonly resourceCategoryFilterUI;
     private readonly filterParser;
     private readonly suggestionBuilder;
     private dataGrid;
@@ -62,6 +63,7 @@ export declare class NetworkLogView extends NetworkLogView_base implements SDK.T
     private readonly filterBar;
     private readonly textFilterSetting;
     constructor(filterBar: UI.FilterBar.FilterBar, progressBarContainer: Element, networkLogLargeRowsSetting: Common.Settings.Setting<boolean>);
+    getMoreFiltersDropdown(): MoreFiltersDropDownUI | undefined;
     private updateGroupByFrame;
     private static sortSearchValues;
     private static negativeFilter;
@@ -161,7 +163,8 @@ export declare class NetworkLogView extends NetworkLogView_base implements SDK.T
     switchViewMode(gridMode: boolean): void;
     handleContextMenuForRequest(contextMenu: UI.ContextMenu.ContextMenu, request: SDK.NetworkRequest.NetworkRequest): void;
     private harRequests;
-    private copyAll;
+    private copyAllAsHAR;
+    private copyAllURLs;
     private copyCurlCommand;
     private copyAllCurlCommand;
     private copyFetchCall;
@@ -187,7 +190,7 @@ export declare class NetworkLogView extends NetworkLogView_base implements SDK.T
     private filterOutBlobRequests;
     private generateFetchCall;
     private generateAllFetchCall;
-    static generateCurlCommand(request: SDK.NetworkRequest.NetworkRequest, platform: string): Promise<string>;
+    static generateCurlCommand(request: SDK.NetworkRequest.NetworkRequest, platform: 'unix' | 'win'): Promise<string>;
     private generateAllCurlCommand;
     private generatePowerShellCommand;
     private generateAllPowerShellCommand;
@@ -213,4 +216,57 @@ export declare const overrideFilter: {
     headers: string;
 };
 export type Filter = (request: SDK.NetworkRequest.NetworkRequest) => boolean;
+export declare class DropDownTypesUI extends Common.ObjectWrapper.ObjectWrapper<UI.FilterBar.FilterUIEventTypes> implements UI.FilterBar.FilterUI {
+    private readonly filterElement;
+    private readonly dropDownButton;
+    private displayedTypes;
+    private readonly setting;
+    private readonly items;
+    private contextMenu?;
+    private selectedTypesCount;
+    private typesCountAdorner;
+    private hasChanged;
+    constructor(items: UI.FilterBar.Item[], setting: Common.Settings.Setting<{
+        [key: string]: boolean;
+    }>);
+    discard(): void;
+    emitUMA(): void;
+    showContextMenu(event: Common.EventTarget.EventTargetEvent<Event>): void;
+    private addRequestType;
+    private toggleTypeFilter;
+    private filterChanged;
+    private settingChanged;
+    private update;
+    updateSelectedTypesCount(): void;
+    updateLabel(): void;
+    updateTooltip(): void;
+    isActive(): boolean;
+    element(): HTMLDivElement;
+    reset(): void;
+    accept(typeName: string): boolean;
+    static readonly ALL_TYPES = "all";
+}
+export declare class MoreFiltersDropDownUI extends Common.ObjectWrapper.ObjectWrapper<UI.FilterBar.FilterUIEventTypes> implements UI.FilterBar.FilterUI {
+    #private;
+    private readonly filterElement;
+    private readonly dropDownButton;
+    private networkHideDataURLSetting;
+    private networkHideChromeExtensionsSetting;
+    private networkShowBlockedCookiesOnlySetting;
+    private networkOnlyBlockedRequestsSetting;
+    private networkOnlyThirdPartySetting;
+    private contextMenu?;
+    private activeFiltersCount;
+    private activeFiltersCountAdorner;
+    private hasChanged;
+    constructor();
+    emitUMA(): void;
+    showMoreFiltersContextMenu(event: Common.EventTarget.EventTargetEvent<Event>): void;
+    selectedFilters(): string[];
+    updateActiveFiltersCount(): void;
+    updateTooltip(): void;
+    discard(): void;
+    isActive(): boolean;
+    element(): HTMLDivElement;
+}
 export {};

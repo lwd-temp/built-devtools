@@ -1,11 +1,10 @@
-import * as TraceEngine from '../../models/trace/trace.js';
-import type * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
-import { type CompatibilityTracksAppender, type TrackAppender, type HighlightedEntryInfo, type TrackAppenderName } from './CompatibilityTracksAppender.js';
 import type * as Common from '../../core/common/common.js';
+import * as TraceEngine from '../../models/trace/trace.js';
+import { type CompatibilityTracksAppender, type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName } from './CompatibilityTracksAppender.js';
 export declare class InteractionsTrackAppender implements TrackAppender {
     #private;
     readonly appenderName: TrackAppenderName;
-    constructor(compatibilityBuilder: CompatibilityTracksAppender, flameChartData: PerfUI.FlameChart.FlameChartTimelineData, traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData, colorGenerator: Common.Color.Generator);
+    constructor(compatibilityBuilder: CompatibilityTracksAppender, traceParsedData: TraceEngine.Handlers.Types.TraceParseData, colorGenerator: Common.Color.Generator);
     /**
      * Appends into the flame chart data the data corresponding to the
      * interactions track.
@@ -34,4 +33,4 @@ export declare class InteractionsTrackAppender implements TrackAppender {
  * Return the title to use for a given interaction event.
  * Exported so the title in the DetailsView can re-use the same logic
  **/
-export declare function titleForInteractionEvent(event: TraceEngine.Types.TraceEvents.SyntheticInteractionEvent): string;
+export declare function titleForInteractionEvent(event: TraceEngine.Types.TraceEvents.SyntheticInteractionPair): string;

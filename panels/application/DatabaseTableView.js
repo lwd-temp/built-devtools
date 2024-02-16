@@ -73,11 +73,11 @@ export class DatabaseTableView extends UI.View.SimpleView {
         this.columnsMap = new Map();
         this.element.classList.add('storage-view', 'table');
         this.visibleColumnsSetting =
-            Common.Settings.Settings.instance().createSetting('databaseTableViewVisibleColumns', {});
+            Common.Settings.Settings.instance().createSetting('database-table-view-visible-columns', {});
         this.refreshButton = new UI.Toolbar.ToolbarButton(i18nString(UIStrings.refresh), 'refresh');
-        this.refreshButton.addEventListener(UI.Toolbar.ToolbarButton.Events.Click, this.refreshButtonClicked, this);
+        this.refreshButton.addEventListener("Click" /* UI.Toolbar.ToolbarButton.Events.Click */, this.refreshButtonClicked, this);
         this.visibleColumnsInput = new UI.Toolbar.ToolbarInput(i18nString(UIStrings.visibleColumns), '', 1);
-        this.visibleColumnsInput.addEventListener(UI.Toolbar.ToolbarInput.Event.TextChanged, this.onVisibleColumnsChanged, this);
+        this.visibleColumnsInput.addEventListener("TextChanged" /* UI.Toolbar.ToolbarInput.Event.TextChanged */, this.onVisibleColumnsChanged, this);
         this.dataGrid = null;
     }
     wasShown() {

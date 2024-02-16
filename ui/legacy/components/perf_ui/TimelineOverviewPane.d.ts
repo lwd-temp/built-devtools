@@ -34,11 +34,13 @@ export declare class TimelineOverviewPane extends TimelineOverviewPane_base {
     willHide(): void;
     onResize(): void;
     setOverviewControls(overviewControls: TimelineOverview[]): void;
+    set showingScreenshots(isShowing: boolean);
     setBounds(minimumBoundary: TraceEngine.Types.Timing.MilliSeconds, maximumBoundary: TraceEngine.Types.Timing.MilliSeconds): void;
     setNavStartTimes(navStartTimes: readonly TraceEngine.Types.TraceEvents.TraceEventNavigationStart[]): void;
     scheduleUpdate(start?: TraceEngine.Types.Timing.MilliSeconds, end?: TraceEngine.Types.Timing.MilliSeconds): void;
     private update;
     setMarkers(markers: Map<number, Element>): void;
+    getMarkers(): Map<number, Element>;
     private updateMarkers;
     reset(): void;
     private onClick;
@@ -47,21 +49,21 @@ export declare class TimelineOverviewPane extends TimelineOverviewPane_base {
     setWindowTimes(startTime: number, endTime: number): void;
     private updateWindow;
 }
-export declare enum Events {
-    WindowChanged = "WindowChanged",
-    BreadcrumbAdded = "BreadcrumbAdded"
+export declare const enum Events {
+    OverviewPaneWindowChanged = "OverviewPaneWindowChanged",
+    OverviewPaneBreadcrumbAdded = "OverviewPaneBreadcrumbAdded"
 }
-export interface WindowChangedEvent {
-    startTime: number;
-    endTime: number;
+export interface OverviewPaneWindowChangedEvent {
+    startTime: TraceEngine.Types.Timing.MilliSeconds;
+    endTime: TraceEngine.Types.Timing.MilliSeconds;
 }
-export interface BreadcrumbAddedEvent {
+export interface OverviewPaneBreadcrumbAddedEvent {
     startTime: TraceEngine.Types.Timing.MilliSeconds;
     endTime: TraceEngine.Types.Timing.MilliSeconds;
 }
 export type EventTypes = {
-    [Events.WindowChanged]: WindowChangedEvent;
-    [Events.BreadcrumbAdded]: BreadcrumbAddedEvent;
+    [Events.OverviewPaneWindowChanged]: OverviewPaneWindowChangedEvent;
+    [Events.OverviewPaneBreadcrumbAdded]: OverviewPaneBreadcrumbAddedEvent;
 };
 export interface TimelineOverview {
     show(parentElement: Element, insertBefore?: Element | null): void;

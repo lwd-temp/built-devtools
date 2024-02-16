@@ -5,12 +5,15 @@ import * as Common from '../../core/common/common.js';
 import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
+import { assertNotNullOrUndefined } from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
+import * as Bindings from '../../models/bindings/bindings.js';
+import * as Workspace from '../../models/workspace/workspace.js';
+import * as CodeMirror from '../../third_party/codemirror.next/codemirror.next.js';
 import * as ColorPicker from '../../ui/legacy/components/color_picker/color_picker.js';
 import * as InlineEditor from '../../ui/legacy/components/inline_editor/inline_editor.js';
-import * as CodeMirror from '../../third_party/codemirror.next/codemirror.next.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { assertNotNullOrUndefined } from '../../core/platform/platform.js';
+import { AddDebugInfoURLDialog } from './AddSourceMapURLDialog.js';
 import { Plugin } from './Plugin.js';
 // Plugin to add CSS completion, shortcuts, and color/curve swatches
 // to editors with CSS content.
@@ -23,6 +26,10 @@ const UIStrings = {
      *@description Text to open the cubic bezier editor
      */
     openCubicBezierEditor: 'Open cubic bezier editor.',
+    /**
+     *@description Text for a context menu item for attaching a sourcemap to the currently open css file
+     */
+    addSourceMap: 'Add source map…',
 };
 const str_ = i18n.i18n.registerUIStrings('panels/sources/CSSPlugin.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
@@ -198,10 +205,10 @@ function createCSSTooltip(active) {
             let widget, addListener;
             if (active.type === 0 /* TooltipType.Color */) {
                 const spectrum = new ColorPicker.Spectrum.Spectrum();
-                addListener = (handler) => {
-                    spectrum.addEventListener(ColorPicker.Spectrum.Events.ColorChanged, handler);
+                addListener = handler => {
+                    spectrum.addEventListener("ColorChanged" /* ColorPicker.Spectrum.Events.ColorChanged */, handler);
                 };
-                spectrum.addEventListener(ColorPicker.Spectrum.Events.SizeChanged, () => view.requestMeasure());
+                spectrum.addEventListener("SizeChanged" /* ColorPicker.Spectrum.Events.SizeChanged */, () => view.requestMeasure());
                 spectrum.setColor(active.color, active.color.format());
                 widget = spectrum;
                 Host.userMetrics.colorPickerOpenedFrom(0 /* Host.UserMetrics.ColorPickerOpenedFrom.SourcesPanel */);
@@ -209,8 +216,8 @@ function createCSSTooltip(active) {
             else {
                 const spectrum = new InlineEditor.BezierEditor.BezierEditor(active.curve);
                 widget = spectrum;
-                addListener = (handler) => {
-                    spectrum.addEventListener(InlineEditor.BezierEditor.Events.BezierChanged, handler);
+                addListener = handler => {
+                    spectrum.addEventListener("BezierChanged" /* InlineEditor.BezierEditor.Events.BezierChanged */, handler);
                 };
             }
             const dom = document.createElement('div');
@@ -383,6 +390,21 @@ export class CSSPlugin extends Plugin {
                     return (await specificCssCompletion(cx, uiSourceCode, cssModel)) || cssCompletionSource(cx);
                 }],
         });
+    }
+    populateTextAreaContextMenu(contextMenu) {
+        function addSourceMapURL(cssModel, sourceUrl) {
+            const dialog = AddDebugInfoURLDialog.createAddSourceMapURLDialog(sourceMapUrl => {
+                Bindings.CSSWorkspaceBinding.CSSWorkspaceBinding.instance().modelToInfo.get(cssModel)?.addSourceMap(sourceUrl, sourceMapUrl);
+            });
+            dialog.show();
+        }
+        const cssModel = this.#cssModel;
+        const url = this.uiSourceCode.url();
+        if (this.uiSourceCode.project().type() === Workspace.Workspace.projectTypes.Network && cssModel &&
+            !Bindings.IgnoreListManager.IgnoreListManager.instance().isUserIgnoreListedURL(url)) {
+            const addSourceMapURLLabel = i18nString(UIStrings.addSourceMap);
+            contextMenu.debugSection().appendItem(addSourceMapURLLabel, () => addSourceMapURL(cssModel, url));
+        }
     }
 }
 //# sourceMappingURL=CSSPlugin.js.map

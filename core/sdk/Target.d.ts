@@ -37,9 +37,10 @@ export declare enum Type {
     Node = "node",
     Browser = "browser",
     AuctionWorklet = "auction-worklet",
+    Worklet = "worklet",
     Tab = "tab"
 }
-export declare enum Capability {
+export declare const enum Capability {
     Browser = 1,
     DOM = 2,
     JS = 4,

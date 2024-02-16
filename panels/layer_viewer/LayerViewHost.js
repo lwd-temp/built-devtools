@@ -80,7 +80,7 @@ export class LayerViewHost {
         this.selectedObject = null;
         this.hoveredObject = null;
         this.showInternalLayersSettingInternal =
-            Common.Settings.Settings.instance().createSetting('layersShowInternalLayers', false);
+            Common.Settings.Settings.instance().createSetting('layers-show-internal-layers', false);
         this.snapshotLayers = new Map();
     }
     registerView(layerView) {
@@ -133,7 +133,7 @@ export class LayerViewHost {
         return this.selectedObject;
     }
     showContextMenu(contextMenu, selection) {
-        contextMenu.defaultSection().appendCheckboxItem(i18nString(UIStrings.showInternalLayers), this.toggleShowInternalLayers.bind(this), this.showInternalLayersSettingInternal.get());
+        contextMenu.defaultSection().appendCheckboxItem(i18nString(UIStrings.showInternalLayers), this.toggleShowInternalLayers.bind(this), this.showInternalLayersSettingInternal.get(), undefined, undefined, undefined, this.showInternalLayersSettingInternal.name);
         const node = selection && selection.layer() && selection.layer().nodeForSelfOrAncestor();
         if (node) {
             contextMenu.appendApplicableItems(node);

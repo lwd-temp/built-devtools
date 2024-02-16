@@ -154,10 +154,10 @@ export class EventListenersView extends UI.Widget.VBox {
                 const objectListenerElement = listenerElement;
                 const listenerOrigin = objectListenerElement.eventListener().origin();
                 let hidden = false;
-                if (listenerOrigin === SDK.DOMDebuggerModel.EventListener.Origin.FrameworkUser && !showFramework) {
+                if (listenerOrigin === "FrameworkUser" /* SDK.DOMDebuggerModel.EventListener.Origin.FrameworkUser */ && !showFramework) {
                     hidden = true;
                 }
-                if (listenerOrigin === SDK.DOMDebuggerModel.EventListener.Origin.Framework && showFramework) {
+                if (listenerOrigin === "Framework" /* SDK.DOMDebuggerModel.EventListener.Origin.Framework */ && showFramework) {
                     hidden = true;
                 }
                 if (!showPassive && objectListenerElement.eventListener().passive()) {
@@ -297,7 +297,7 @@ export class ObjectEventListenerBar extends UI.TreeOutline.TreeElement {
             if (object.subtype === 'node') {
                 menu.defaultSection().appendItem(i18nString(UIStrings.revealInElementsPanel), () => Common.Revealer.reveal(object));
             }
-            menu.defaultSection().appendItem(i18nString(UIStrings.deleteEventListener), this.removeListener.bind(this), !this.eventListenerInternal.canRemove());
+            menu.defaultSection().appendItem(i18nString(UIStrings.deleteEventListener), this.removeListener.bind(this), { disabled: !this.eventListenerInternal.canRemove() });
             menu.defaultSection().appendCheckboxItem(i18nString(UIStrings.passive), this.togglePassiveListener.bind(this), this.eventListenerInternal.passive(), !this.eventListenerInternal.canTogglePassive());
             void menu.show();
         });

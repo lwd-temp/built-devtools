@@ -1,25 +1,24 @@
 import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
-import { type PerformanceModel } from './PerformanceModel.js';
 export declare abstract class TimelineEventOverview extends PerfUI.TimelineOverviewPane.TimelineOverviewBase {
     constructor(id: string, title: string | null);
     renderBar(begin: number, end: number, position: number, height: number, color: string): void;
 }
 export declare class TimelineEventOverviewNetwork extends TimelineEventOverview {
     #private;
-    constructor(traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData);
+    constructor(traceParsedData: TraceEngine.Handlers.Types.TraceParseData);
     update(start?: TraceEngine.Types.Timing.MilliSeconds, end?: TraceEngine.Types.Timing.MilliSeconds): void;
 }
 export declare class TimelineEventOverviewCPUActivity extends TimelineEventOverview {
     #private;
     private backgroundCanvas;
-    constructor(model: PerformanceModel);
+    constructor(traceParsedData: TraceEngine.Handlers.Types.TraceParseData);
     resetCanvas(): void;
-    update(start?: TraceEngine.Types.Timing.MilliSeconds, end?: TraceEngine.Types.Timing.MilliSeconds): void;
+    update(): void;
 }
 export declare class TimelineEventOverviewResponsiveness extends TimelineEventOverview {
     #private;
-    constructor(traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData);
+    constructor(traceParsedData: TraceEngine.Handlers.Types.TraceParseData);
     update(start?: TraceEngine.Types.Timing.MilliSeconds, end?: TraceEngine.Types.Timing.MilliSeconds): void;
 }
 export declare class TimelineFilmStripOverview extends TimelineEventOverview {
@@ -30,7 +29,7 @@ export declare class TimelineFilmStripOverview extends TimelineEventOverview {
     private drawGeneration?;
     private emptyImage?;
     constructor(filmStrip: TraceEngine.Extras.FilmStrip.Data);
-    update(): void;
+    update(customStartTime?: TraceEngine.Types.Timing.MilliSeconds, customEndTime?: TraceEngine.Types.Timing.MilliSeconds): void;
     private imageByFrame;
     private drawFrames;
     overviewInfoPromise(x: number): Promise<Element | null>;
@@ -40,7 +39,7 @@ export declare class TimelineFilmStripOverview extends TimelineEventOverview {
 export declare class TimelineEventOverviewMemory extends TimelineEventOverview {
     #private;
     private heapSizeLabel;
-    constructor(traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData);
+    constructor(traceParsedData: TraceEngine.Handlers.Types.TraceParseData);
     resetHeapSizeLabels(): void;
     update(start?: TraceEngine.Types.Timing.MilliSeconds, end?: TraceEngine.Types.Timing.MilliSeconds): void;
 }

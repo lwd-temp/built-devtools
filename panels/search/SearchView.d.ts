@@ -29,7 +29,7 @@ export declare class SearchView extends UI.Widget.VBox {
     constructor(settingKey: string, throttler: Common.Throttler.Throttler);
     private static appendToolbarToggle;
     private buildSearchConfig;
-    toggle(queryCandidate: string, searchImmediately?: boolean): Promise<void>;
+    toggle(queryCandidate: string, searchImmediately?: boolean): void;
     createScope(): SearchScope;
     private initScope;
     wasShown(): void;
@@ -38,16 +38,12 @@ export declare class SearchView extends UI.Widget.VBox {
     private onSearchInputClear;
     private onSearchResult;
     private onSearchFinished;
-    private startSearch;
     private innerStartSearch;
     private resetSearch;
-    private clearSearchMessage;
     private stopSearch;
     private searchStarted;
-    private indexingFinished;
     private updateSearchResultsMessage;
     private showPane;
-    private resetCounters;
     private nothingFound;
     private addSearchResult;
     private searchFinished;

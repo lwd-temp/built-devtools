@@ -126,7 +126,6 @@ export declare class StylePropertiesSection {
      * or otherwise, null.
      */
     closestPropertyForEditing(propertyIndex: number): UI.TreeOutline.TreeElement | null;
-    static MaxProperties: number;
 }
 export declare class BlankStylePropertiesSection extends StylePropertiesSection {
     private normal;
@@ -142,7 +141,11 @@ export declare class BlankStylePropertiesSection extends StylePropertiesSection 
 }
 export declare class RegisteredPropertiesSection extends StylePropertiesSection {
     constructor(stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number, propertyName: string, expandedByDefault: boolean);
+    setHeaderText(rule: SDK.CSSRule.CSSRule, newContent: string): Promise<void>;
     createRuleOriginNode(matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, linkifier: Components.Linkifier.Linkifier, rule: SDK.CSSRule.CSSRule | null): Node;
+}
+export declare class FontPaletteValuesRuleSection extends StylePropertiesSection {
+    constructor(stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number);
 }
 export declare class KeyframePropertiesSection extends StylePropertiesSection {
     constructor(stylesPane: StylesSidebarPane, matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, sectionIdx: number);

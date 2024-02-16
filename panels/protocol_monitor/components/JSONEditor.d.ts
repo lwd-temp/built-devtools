@@ -23,7 +23,7 @@ interface BaseParameter {
 }
 interface ArrayParameter extends BaseParameter {
     type: ParameterType.Array;
-    value: Parameter[];
+    value?: Parameter[];
 }
 interface NumberParameter extends BaseParameter {
     type: ParameterType.Number;

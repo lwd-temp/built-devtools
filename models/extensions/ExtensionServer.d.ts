@@ -61,6 +61,7 @@ export declare class ExtensionServer extends Common.ObjectWrapper.ObjectWrapper<
     private onCreateRecorderView;
     private inspectedURLChanged;
     hasSubscribers(type: string): boolean;
+    private isNotificationAllowedForExtension;
     private postNotification;
     private onSubscribe;
     private onUnsubscribe;
@@ -116,9 +117,8 @@ export declare class ExtensionServer extends Common.ObjectWrapper.ObjectWrapper<
     static canInspectURL(url: Platform.DevToolsPath.UrlString): boolean;
     private disableExtensions;
 }
-export declare enum Events {
-    SidebarPaneAdded = "SidebarPaneAdded",
-    TraceProviderAdded = "TraceProviderAdded"
+export declare const enum Events {
+    SidebarPaneAdded = "SidebarPaneAdded"
 }
 export type EventTypes = {
     [Events.SidebarPaneAdded]: ExtensionSidebarPane;

@@ -26,11 +26,8 @@ export class Model extends EventTarget {
     #lastRecordingIndex = 0;
     #processor;
     #config = Types.Configuration.DEFAULT;
-    static createWithAllHandlers() {
-        return new Model(Handlers.ModelHandlers);
-    }
-    static createWithRequiredHandlersForMigration(config) {
-        return new Model(Handlers.Migration.ENABLED_TRACE_HANDLERS, config);
+    static createWithAllHandlers(config) {
+        return new Model(Handlers.ModelHandlers, config);
     }
     constructor(handlers, config) {
         super();

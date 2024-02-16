@@ -30,8 +30,10 @@
   },
   "files": [
     "../../../../../../front_end/models/text_utils/CodeMirrorUtils.ts",
+    "../../../../../../front_end/models/text_utils/ContentData.ts",
     "../../../../../../front_end/models/text_utils/ContentProvider.ts",
     "../../../../../../front_end/models/text_utils/StaticContentProvider.ts",
+    "../../../../../../front_end/models/text_utils/StreamingContentData.ts",
     "../../../../../../front_end/models/text_utils/Text.ts",
     "../../../../../../front_end/models/text_utils/TextCursor.ts",
     "../../../../../../front_end/models/text_utils/TextRange.ts",
@@ -39,7 +41,8 @@
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
@@ -53,6 +56,9 @@
     },
     {
       "path": "../../third_party/codemirror/codemirror-tsconfig.json"
+    },
+    {
+      "path": "../../third_party/codemirror.next/bundle-tsconfig.json"
     }
   ]
 }

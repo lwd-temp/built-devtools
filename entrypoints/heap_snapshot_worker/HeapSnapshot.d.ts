@@ -19,6 +19,7 @@ export declare class HeapSnapshotEdge implements HeapSnapshotItem {
     itemIndex(): number;
     serialize(): HeapSnapshotModel.HeapSnapshotModel.Edge;
     rawType(): number;
+    isInternal(): boolean;
     isInvisible(): boolean;
     isWeak(): boolean;
 }
@@ -161,6 +162,13 @@ export interface Profile {
     trace_function_infos: Uint32Array;
     trace_tree: Object;
 }
+export interface LiveObjects {
+    [x: number]: {
+        count: number;
+        size: number;
+        ids: number[];
+    };
+}
 export declare abstract class HeapSnapshot {
     #private;
     nodes: Uint32Array;
@@ -235,6 +243,7 @@ export declare abstract class HeapSnapshot {
         [x: string]: HeapSnapshotModel.HeapSnapshotModel.AggregateForDiff;
     };
     isUserRoot(_node: HeapSnapshotNode): boolean;
+    calculateShallowSizes(): void;
     calculateDistances(filter?: ((arg0: HeapSnapshotNode, arg1: HeapSnapshotEdge) => boolean)): void;
     private bfs;
     private buildAggregates;
@@ -357,13 +366,14 @@ export declare class JSHeapSnapshot extends HeapSnapshot {
     };
     lazyStringCache: {};
     private flags;
-    constructor(profile: Profile, progress: HeapSnapshotProgress);
+    constructor(profile: Profile, progress: HeapSnapshotProgress, options?: HeapSnapshotModel.HeapSnapshotModel.HeapSnapshotOptions);
     createNode(nodeIndex?: number): JSHeapSnapshotNode;
     createEdge(edgeIndex: number): JSHeapSnapshotEdge;
     createRetainingEdge(retainerIndex: number): JSHeapSnapshotRetainerEdge;
     containmentEdgesFilter(): (arg0: HeapSnapshotEdge) => boolean;
     retainingEdgesFilter(): (arg0: HeapSnapshotEdge) => boolean;
     calculateFlags(): void;
+    calculateShallowSizes(): void;
     calculateDistances(): void;
     isUserRoot(node: HeapSnapshotNode): boolean;
     userObjectsMapAndFlag(): {

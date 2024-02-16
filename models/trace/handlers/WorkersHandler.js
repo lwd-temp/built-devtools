@@ -15,6 +15,7 @@ export function initialize() {
 export function reset() {
     sessionIdEvents.length = 0;
     workerIdByThread.clear();
+    workerURLById.clear();
     handlerState = 1 /* HandlerState.UNINITIALIZED */;
 }
 export function handleEvent(event) {

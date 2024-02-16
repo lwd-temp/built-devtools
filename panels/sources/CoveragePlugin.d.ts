@@ -1,15 +1,16 @@
 import type * as Workspace from '../../models/workspace/workspace.js';
 import * as CodeMirror from '../../third_party/codemirror.next/codemirror.next.js';
+import type * as TextEditor from '../../ui/components/text_editor/text_editor.js';
 import * as SourceFrame from '../../ui/legacy/components/source_frame/source_frame.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import type * as TextEditor from '../../ui/components/text_editor/text_editor.js';
 import { Plugin } from './Plugin.js';
 export declare class CoveragePlugin extends Plugin {
+    #private;
     private originalSourceCode;
     private infoInToolbar;
     private model;
     private coverage;
-    constructor(uiSourceCode: Workspace.UISourceCode.UISourceCode);
+    constructor(uiSourceCode: Workspace.UISourceCode.UISourceCode, transformer: SourceFrame.SourceFrame.Transformer);
     dispose(): void;
     static accepts(uiSourceCode: Workspace.UISourceCode.UISourceCode): boolean;
     private handleReset;

@@ -1,5 +1,5 @@
 import * as LitHtml from '../../lit-html/lit-html.js';
-import { type TreeNodeId, type TreeNode } from './TreeOutlineUtils.js';
+import { type TreeNode, type TreeNodeId } from './TreeOutlineUtils.js';
 export interface TreeOutlineData<TreeNodeDataType> {
     defaultRenderer: (node: TreeNode<TreeNodeDataType>, state: {
         isExpanded: boolean;

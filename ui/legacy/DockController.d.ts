@@ -1,7 +1,7 @@
 import * as Common from '../../core/common/common.js';
 import { type ActionDelegate } from './ActionRegistration.js';
 import { type Context } from './Context.js';
-import { ToolbarButton, type Provider, type ToolbarItem } from './Toolbar.js';
+import { type Provider, ToolbarButton, type ToolbarItem } from './Toolbar.js';
 export declare class DockController extends Common.ObjectWrapper.ObjectWrapper<EventTypes> {
     private canDockInternal;
     readonly closeButton: ToolbarButton;
@@ -46,9 +46,6 @@ export type EventTypes = {
     [Events.AfterDockSideChanged]: ChangeEvent;
 };
 export declare class ToggleDockActionDelegate implements ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ToggleDockActionDelegate;
     handleAction(_context: Context, _actionId: string): boolean;
 }
 export declare class CloseButtonProvider implements Provider {

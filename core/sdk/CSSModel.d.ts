@@ -25,6 +25,7 @@ export declare class CSSModel extends SDKModel<EventTypes> {
     domModel(): DOMModel;
     setStyleText(styleSheetId: Protocol.CSS.StyleSheetId, range: TextUtils.TextRange.TextRange, text: string, majorChange: boolean): Promise<boolean>;
     setSelectorText(styleSheetId: Protocol.CSS.StyleSheetId, range: TextUtils.TextRange.TextRange, text: string): Promise<boolean>;
+    setPropertyRulePropertyName(styleSheetId: Protocol.CSS.StyleSheetId, range: TextUtils.TextRange.TextRange, text: string): Promise<boolean>;
     setKeyframeKey(styleSheetId: Protocol.CSS.StyleSheetId, range: TextUtils.TextRange.TextRange, text: string): Promise<boolean>;
     startCoverage(): Promise<Protocol.ProtocolResponseWithError>;
     takeCoverageDelta(): Promise<{
@@ -140,7 +141,7 @@ export declare class CSSPropertyTracker extends Common.ObjectWrapper.ObjectWrapp
     stop(): void;
     getTrackedProperties(): Protocol.CSS.CSSComputedStyleProperty[];
 }
-export declare enum CSSPropertyTrackerEvents {
+export declare const enum CSSPropertyTrackerEvents {
     TrackedCSSPropertiesUpdated = "TrackedCSSPropertiesUpdated"
 }
 export type CSSPropertyTrackerEventTypes = {

@@ -29,6 +29,7 @@
     "useUnknownInCatchVariables": false
   },
   "files": [
+    "../../../../../../../front_end/ui/legacy/utils/DynamicTheming.ts",
     "../../../../../../../front_end/ui/legacy/utils/create-shadow-root-with-core-styles.ts",
     "../../../../../../../front_end/ui/legacy/utils/focus-changed.ts",
     "../../../../../../../front_end/ui/legacy/utils/inject-core-styles.ts",
@@ -37,9 +38,13 @@
     "../../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
+    {
+      "path": "../../../core/host/bundle-tsconfig.json"
+    },
     {
       "path": "../../../core/platform/bundle-tsconfig.json"
     },

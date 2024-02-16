@@ -1,13 +1,13 @@
-import * as Platform from '../platform/platform.js';
 import type * as ProtocolProxyApi from '../../generated/protocol-proxy-api.js';
 import * as Protocol from '../../generated/protocol.js';
-import { CategorizedBreakpoint } from './CategorizedBreakpoint.js';
-import { type Location } from './DebuggerModel.js';
+import * as Platform from '../platform/platform.js';
+import { CategorizedBreakpoint, Category } from './CategorizedBreakpoint.js';
+import { type EventListenerPausedDetailsAuxData, type Location } from './DebuggerModel.js';
 import { type DOMNode } from './DOMModel.js';
 import { RemoteObject } from './RemoteObject.js';
 import { RuntimeModel } from './RuntimeModel.js';
-import { type Target } from './Target.js';
 import { SDKModel } from './SDKModel.js';
+import { type Target } from './Target.js';
 import { type SDKModelObserver } from './TargetManager.js';
 export declare class DOMDebuggerModel extends SDKModel<EventTypes> {
     #private;
@@ -45,7 +45,7 @@ export declare class DOMDebuggerModel extends SDKModel<EventTypes> {
     private nodeRemoved;
     private saveDOMBreakpoints;
 }
-export declare enum Events {
+export declare const enum Events {
     DOMBreakpointAdded = "DOMBreakpointAdded",
     DOMBreakpointToggled = "DOMBreakpointToggled",
     DOMBreakpointsRemoved = "DOMBreakpointsRemoved"
@@ -83,7 +83,7 @@ export declare class EventListener {
     isScrollBlockingType(): boolean;
 }
 export declare namespace EventListener {
-    enum Origin {
+    const enum Origin {
         Raw = "Raw",
         Framework = "Framework",
         FrameworkUser = "FrameworkUser"
@@ -91,18 +91,15 @@ export declare namespace EventListener {
 }
 export declare class CSPViolationBreakpoint extends CategorizedBreakpoint {
     #private;
-    constructor(category: string, title: string, type: Protocol.DOMDebugger.CSPViolationType);
+    constructor(category: Category, type: Protocol.DOMDebugger.CSPViolationType);
     type(): Protocol.DOMDebugger.CSPViolationType;
 }
 export declare class DOMEventListenerBreakpoint extends CategorizedBreakpoint {
-    readonly instrumentationName: string;
-    readonly eventName: string;
     readonly eventTargetNames: string[];
-    constructor(instrumentationName: string, eventName: string, eventTargetNames: string[], category: string, title: string);
+    constructor(eventName: string, eventTargetNames: string[], category: Category);
     setEnabled(enabled: boolean): void;
     updateOnModel(model: DOMDebuggerModel): void;
     static readonly listener = "listener:";
-    static readonly instrumentation = "instrumentation:";
 }
 export declare class DOMDebuggerManager implements SDKModelObserver<DOMDebuggerModel> {
     #private;
@@ -111,20 +108,9 @@ export declare class DOMDebuggerManager implements SDKModelObserver<DOMDebuggerM
         forceNew: boolean | null;
     }): DOMDebuggerManager;
     cspViolationBreakpoints(): CSPViolationBreakpoint[];
-    private createInstrumentationBreakpoints;
     private createEventListenerBreakpoints;
-    private resolveEventListenerBreakpointInternal;
+    resolveEventListenerBreakpoint({ eventName, targetName }: EventListenerPausedDetailsAuxData): DOMEventListenerBreakpoint | null;
     eventListenerBreakpoints(): DOMEventListenerBreakpoint[];
-    resolveEventListenerBreakpointTitle(auxData: {
-        eventName: string;
-        webglErrorName: string;
-        directiveText: string;
-        targetName: string;
-    }): string;
-    resolveEventListenerBreakpoint(auxData: {
-        eventName: string;
-        targetName: string;
-    }): DOMEventListenerBreakpoint | null;
     updateCSPViolationBreakpoints(): void;
     private updateCSPViolationBreakpointsForModel;
     xhrBreakpoints(): Map<string, boolean>;

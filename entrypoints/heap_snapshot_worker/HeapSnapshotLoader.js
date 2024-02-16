@@ -27,6 +27,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+import * as Platfrom from '../../core/platform/platform.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
 import { HeapSnapshotProgress, JSHeapSnapshot } from './HeapSnapshot.js';
 export class HeapSnapshotLoader {
@@ -48,7 +49,7 @@ export class HeapSnapshotLoader {
     constructor(dispatcher) {
         this.#reset();
         this.#progress = new HeapSnapshotProgress(dispatcher);
-        this.#buffer = '';
+        this.#buffer = [];
         this.#dataCallback = null;
         this.#done = false;
         void this.#parseInput();
@@ -66,10 +67,10 @@ export class HeapSnapshotLoader {
             this.#dataCallback('');
         }
     }
-    buildSnapshot() {
+    buildSnapshot(options) {
         this.#snapshot = this.#snapshot || {};
         this.#progress.updateStatus('Processing snapshot…');
-        const result = new JSHeapSnapshot(this.#snapshot, this.#progress);
+        const result = new JSHeapSnapshot(this.#snapshot, this.#progress, options);
         this.#reset();
         return result;
     }
@@ -129,18 +130,23 @@ export class HeapSnapshotLoader {
         this.#snapshot.strings = JSON.parse(this.#json);
     }
     write(chunk) {
-        this.#buffer += chunk;
+        this.#buffer.push(chunk);
         if (!this.#dataCallback) {
             return;
         }
-        this.#dataCallback(this.#buffer);
+        this.#dataCallback(this.#buffer.shift());
         this.#dataCallback = null;
-        this.#buffer = '';
     }
     #fetchChunk() {
-        return this.#done ? Promise.resolve(this.#buffer) : new Promise(r => {
-            this.#dataCallback = r;
-        });
+        // This method shoudln't be entered more than once since parsing happens
+        // sequentially. This means it's fine to stash away a single #dataCallback
+        // instead of an array of them.
+        if (this.#buffer.length > 0) {
+            return Promise.resolve(this.#buffer.shift());
+        }
+        const { promise, resolve } = Platfrom.PromiseUtilities.promiseWithResolvers();
+        this.#dataCallback = resolve;
+        return promise;
     }
     async #findToken(token, startIndex) {
         while (true) {

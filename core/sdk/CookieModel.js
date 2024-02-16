@@ -4,9 +4,9 @@
 import * as Common from '../common/common.js';
 import * as Root from '../root/root.js';
 import { Cookie } from './Cookie.js';
-import { ResourceTreeModel } from './ResourceTreeModel.js';
-import { Capability } from './Target.js';
+import { Events as ResourceTreeModelEvents, ResourceTreeModel } from './ResourceTreeModel.js';
 import { SDKModel } from './SDKModel.js';
+import { TargetManager } from './TargetManager.js';
 export class CookieModel extends SDKModel {
     #blockedCookies;
     #cookieToBlockedReasons;
@@ -14,6 +14,7 @@ export class CookieModel extends SDKModel {
         super(target);
         this.#blockedCookies = new Map();
         this.#cookieToBlockedReasons = new Map();
+        TargetManager.instance().addModelListener(ResourceTreeModel, ResourceTreeModelEvents.PrimaryPageChanged, this.#onPrimaryPageChanged, this);
     }
     addBlockedCookie(cookie, blockedReasons) {
         const key = cookie.key();
@@ -29,6 +30,10 @@ export class CookieModel extends SDKModel {
             this.#cookieToBlockedReasons.delete(previousCookie);
         }
     }
+    #onPrimaryPageChanged() {
+        this.#blockedCookies.clear();
+        this.#cookieToBlockedReasons.clear();
+    }
     getCookieToBlockedReasonsMap() {
         return this.#cookieToBlockedReasons;
     }
@@ -38,7 +43,11 @@ export class CookieModel extends SDKModel {
             return [];
         }
         const normalCookies = response.cookies.map(Cookie.fromProtocolCookie);
-        return normalCookies.concat(Array.from(this.#blockedCookies.values()));
+        const blockedCookieArray = Array.from(this.#blockedCookies.values());
+        const matchesBlockedCookie = (cookie) => {
+            return blockedCookieArray.some(blockedCookie => cookie.isEqual(blockedCookie));
+        };
+        return normalCookies.filter(cookie => !matchesBlockedCookie(cookie)).concat(blockedCookieArray);
     }
     async deleteCookie(cookie) {
         await this.deleteCookies([cookie]);
@@ -115,8 +124,14 @@ export class CookieModel extends SDKModel {
         const networkAgent = this.target().networkAgent();
         this.#blockedCookies.clear();
         this.#cookieToBlockedReasons.clear();
-        await Promise.all(cookies.map(cookie => networkAgent.invoke_deleteCookies({ name: cookie.name(), url: undefined, domain: cookie.domain(), path: cookie.path() })));
+        await Promise.all(cookies.map(cookie => networkAgent.invoke_deleteCookies({
+            name: cookie.name(),
+            url: undefined,
+            domain: cookie.domain(),
+            path: cookie.path(),
+            partitionKey: cookie.partitionKey(),
+        })));
     }
 }
-SDKModel.register(CookieModel, { capabilities: Capability.Network, autostart: false });
+SDKModel.register(CookieModel, { capabilities: 16 /* Capability.Network */, autostart: false });
 //# sourceMappingURL=CookieModel.js.map

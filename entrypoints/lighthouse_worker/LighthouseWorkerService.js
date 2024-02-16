@@ -77,25 +77,15 @@ async function invokeLH(action, args) {
         // @ts-expect-error https://github.com/GoogleChrome/lighthouse/issues/11628
         const config = args.config || self.createConfig(args.categoryIDs, flags.formFactor);
         const url = args.url;
-        const { mainFrameId, mainTargetId, mainSessionId, targetInfos } = args;
+        const { rootTargetId, mainSessionId } = args;
         cdpConnection = new ConnectionProxy(mainSessionId);
-        puppeteerHandle = await PuppeteerService.PuppeteerConnection.PuppeteerConnectionHelper.connectPuppeteerToConnection({
-            connection: cdpConnection,
-            mainFrameId,
-            targetInfos,
-            // For the most part, defer to Lighthouse for which targets are important.
-            // Excluding devtools targets is required for e2e tests to work, and LH doesn't support auditing DT targets anyway.
-            targetFilterCallback: targetInfo => {
-                if (targetInfo.url.startsWith('https://i0.devtools-frontend') || targetInfo.url.startsWith('devtools://')) {
-                    return false;
-                }
-                // TODO only connect to iframes that are related to the main target. This requires refactoring in Puppeteer: https://github.com/puppeteer/puppeteer/issues/3667.
-                return (targetInfo.targetId === mainTargetId || targetInfo.openerId === mainTargetId ||
-                    targetInfo.type === 'iframe');
-            },
-            // Lighthouse can only audit normal pages.
-            isPageTargetCallback: targetInfo => targetInfo.type === 'page',
-        });
+        puppeteerHandle =
+            await PuppeteerService.PuppeteerConnection.PuppeteerConnectionHelper.connectPuppeteerToConnectionViaTab({
+                connection: cdpConnection,
+                rootTargetId,
+                // Lighthouse can only audit normal pages.
+                isPageTargetCallback: targetInfo => targetInfo.type === 'page',
+            });
         const { page } = puppeteerHandle;
         if (!page) {
             throw new Error('Could not create page handle for the target page');
@@ -123,7 +113,7 @@ async function invokeLH(action, args) {
     finally {
         // endTimespan will need to use the same connection as startTimespan.
         if (action !== 'startTimespan') {
-            puppeteerHandle?.browser.disconnect();
+            await puppeteerHandle?.browser.disconnect();
         }
     }
 }

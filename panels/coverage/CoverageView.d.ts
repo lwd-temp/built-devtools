@@ -8,8 +8,8 @@ export declare class CoverageView extends UI.Widget.VBox {
     private readonly toggleRecordButton;
     private inlineReloadButton;
     private readonly startWithReloadButton;
-    private readonly clearButton;
-    private readonly saveButton;
+    private readonly clearAction;
+    private readonly exportAction;
     private textFilterRegExp;
     private readonly filterInput;
     private typeFilterValue;
@@ -23,12 +23,12 @@ export declare class CoverageView extends UI.Widget.VBox {
     private listView;
     private readonly statusToolbarElement;
     private statusMessageElement;
-    private constructor();
+    constructor();
     static instance(): CoverageView;
     static removeInstance(): void;
     private buildLandingPage;
     private buildReloadPromptPage;
-    private clear;
+    clear(): void;
     private reset;
     toggleRecording(): void;
     isBlockCoverageSelected(): boolean;
@@ -40,6 +40,7 @@ export declare class CoverageView extends UI.Widget.VBox {
         jsCoveragePerBlock: (boolean | undefined);
     } | null): Promise<void>;
     private onCoverageDataReceived;
+    private updateListView;
     stopRecording(): Promise<void>;
     processBacklog(): void;
     private onPrimaryPageChanged;
@@ -48,15 +49,13 @@ export declare class CoverageView extends UI.Widget.VBox {
     private onFilterChanged;
     private onFilterByTypeChanged;
     private isVisible;
-    private exportReport;
+    exportReport(): Promise<void>;
     selectCoverageItemByUrl(url: string): void;
     static readonly EXTENSION_BINDINGS_URL_PREFIX = "extensions::";
     wasShown(): void;
+    willHide(): void;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    handleAction(context: UI.Context.Context, actionId: string): boolean;
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
     private innerHandleAction;
 }

@@ -1,4 +1,4 @@
-import { TimelineCategory, TimelineRecordStyle } from './TimelineUIUtils.js';
+import { TimelineCategory, TimelineRecordStyle } from './EventUICategory.js';
 export declare class UIDevtoolsUtils {
     static isUiDevTools(): boolean;
     static categorizeEvents(): {

@@ -2,19 +2,18 @@ import * as Common from '../../../../core/common/common.js';
 import * as Host from '../../../../core/host/host.js';
 import * as Platform from '../../../../core/platform/platform.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
+import type * as Protocol from '../../../../generated/protocol.js';
 import * as Bindings from '../../../../models/bindings/bindings.js';
 import * as TextUtils from '../../../../models/text_utils/text_utils.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
-import type * as Protocol from '../../../../generated/protocol.js';
 import type * as IconButton from '../../../components/icon_button/icon_button.js';
 import * as UI from '../../legacy.js';
-export declare class Linkifier implements SDK.TargetManager.Observer {
+export declare class Linkifier extends Common.ObjectWrapper.ObjectWrapper<EventTypes> implements SDK.TargetManager.Observer {
     private readonly maxLength;
     private readonly anchorsByTarget;
     private readonly locationPoolByTarget;
-    private onLiveLocationUpdate;
     private useLinkDecorator;
-    constructor(maxLengthForDisplayedURLs?: number, useLinkDecorator?: boolean, onLiveLocationUpdate?: (() => void));
+    constructor(maxLengthForDisplayedURLs?: number, useLinkDecorator?: boolean);
     static setLinkDecorator(linkDecorator: LinkDecorator): void;
     private updateAllAnchorDecorations;
     private static bindUILocation;
@@ -40,7 +39,6 @@ export declare class Linkifier implements SDK.TargetManager.Observer {
     reset(): void;
     dispose(): void;
     private updateAnchor;
-    setLiveLocationUpdateCallback(callback: () => void): void;
     private static updateLinkDecorations;
     static linkifyURL(url: Platform.DevToolsPath.UrlString, options?: LinkifyURLOptions): HTMLElement;
     static linkifyRevealable(revealable: Object, text: string | HTMLElement, fallbackHref?: Platform.DevToolsPath.UrlString, title?: string, className?: string): HTMLElement;
@@ -67,18 +65,15 @@ export interface LinkDecorator extends Common.EventTarget.EventTarget<LinkDecora
     linkIcon(uiSourceCode: Workspace.UISourceCode.UISourceCode): IconButton.Icon.Icon | null;
 }
 export declare namespace LinkDecorator {
-    enum Events {
+    const enum Events {
         LinkIconChanged = "LinkIconChanged"
     }
     type EventTypes = {
         [Events.LinkIconChanged]: Workspace.UISourceCode.UISourceCode;
     };
 }
-export declare class LinkContextMenuProvider implements UI.ContextMenu.Provider {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): LinkContextMenuProvider;
-    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Object): void;
+export declare class LinkContextMenuProvider implements UI.ContextMenu.Provider<Node> {
+    appendApplicableItems(_event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Node): void;
 }
 export declare class LinkHandlerSettingUI implements UI.SettingsUI.SettingUI {
     private element;
@@ -90,11 +85,9 @@ export declare class LinkHandlerSettingUI implements UI.SettingsUI.SettingUI {
     private onChange;
     settingElement(): Element | null;
 }
-export declare class ContentProviderContextMenuProvider implements UI.ContextMenu.Provider {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ContentProviderContextMenuProvider;
-    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Object): void;
+export declare class ContentProviderContextMenuProvider implements UI.ContextMenu
+    .Provider<Workspace.UISourceCode.UISourceCode | SDK.Resource.Resource | SDK.NetworkRequest.NetworkRequest> {
+    appendApplicableItems(_event: Event, contextMenu: UI.ContextMenu.ContextMenu, contentProvider: Workspace.UISourceCode.UISourceCode | SDK.Resource.Resource | SDK.NetworkRequest.NetworkRequest): void;
 }
 export interface _LinkInfo {
     icon: IconButton.Icon.Icon | null;
@@ -143,3 +136,9 @@ export interface _CreateLinkOptions {
     bypassURLTrimming?: boolean;
 }
 export type LinkHandler = (arg0: TextUtils.ContentProvider.ContentProvider, arg1: number) => void;
+export declare const enum Events {
+    LiveLocationUpdated = "liveLocationUpdated"
+}
+export type EventTypes = {
+    [Events.LiveLocationUpdated]: Bindings.LiveLocation.LiveLocation;
+};

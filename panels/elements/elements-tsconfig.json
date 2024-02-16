@@ -55,6 +55,7 @@
     "../../../../../../front_end/panels/elements/PlatformFontsWidget.ts",
     "../../../../../../front_end/panels/elements/PropertiesWidget.ts",
     "../../../../../../front_end/panels/elements/PropertyNameCategories.ts",
+    "../../../../../../front_end/panels/elements/PropertyParser.ts",
     "../../../../../../front_end/panels/elements/StyleEditorWidget.ts",
     "../../../../../../front_end/panels/elements/StylePropertiesSection.ts",
     "../../../../../../front_end/panels/elements/StylePropertyHighlighter.ts",
@@ -66,7 +67,8 @@
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
@@ -128,6 +130,9 @@
     },
     {
       "path": "../../ui/components/code_highlighter/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../ui/components/highlighting/bundle-tsconfig.json"
     },
     {
       "path": "../../ui/components/text_editor/bundle-tsconfig.json"

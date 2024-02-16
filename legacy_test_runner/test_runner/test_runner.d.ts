@@ -4,15 +4,16 @@ export function _executeTestScript(): Promise<void>;
  */
 export class _TestObserver implements SDK.TargetManager.Observer {
     /**
-     * @param {!SDK.Target} target
+     * @param {!SDK.Target.Target} target
      * @override
      */
-    override targetAdded(target: SDK.Target): void;
+    override targetAdded(target: SDK.Target.Target): void;
     /**
-     * @param {!SDK.Target} target
+     * @param {!SDK.Target.Target} target
      * @override
      */
-    override targetRemoved(target: SDK.Target): void;
+    override targetRemoved(target: SDK.Target.Target): void;
 }
 export { globalTestRunner as TestRunner };
+import * as SDK from '../../core/sdk/sdk.js';
 declare const globalTestRunner: any;

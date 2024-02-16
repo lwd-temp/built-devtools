@@ -8,6 +8,7 @@ import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { type ComputedStyleChangedEvent } from './ComputedStyleModel.js';
 import { ElementsSidebarPane } from './ElementsSidebarPane.js';
+import { type Matcher } from './PropertyParser.js';
 import { StylePropertiesSection } from './StylePropertiesSection.js';
 import { type StylePropertyTreeElement } from './StylePropertyTreeElement.js';
 export declare const REGISTERED_PROPERTY_SECTION_NAME = "@property";
@@ -53,14 +54,13 @@ export declare class StylesSidebarPane extends StylesSidebarPane_base {
     static instance(opts?: {
         forceNew: boolean;
     }): StylesSidebarPane;
-    private constructor();
+    constructor();
     addPopover(element: Node, contents: () => HTMLElement | undefined): void;
     private onScroll;
     swatchPopoverHelper(): InlineEditor.SwatchPopoverHelper.SwatchPopoverHelper;
     setUserOperation(userOperation: boolean): void;
-    createExclamationMark(property: SDK.CSSProperty.CSSProperty, title: HTMLElement | string | null): Element;
+    createExclamationMark(property: SDK.CSSProperty.CSSProperty, title: HTMLElement | null): Element;
     static ignoreErrorsForProperty(property: SDK.CSSProperty.CSSProperty): boolean;
-    static createPropertyFilterElement(placeholder: string, container: Element, filterCallback: (arg0: RegExp | null) => void): Element;
     static formatLeadingProperties(section: StylePropertiesSection): {
         allDeclarationText: string;
         ruleText: string;
@@ -98,6 +98,7 @@ export declare class StylesSidebarPane extends StylesSidebarPane_base {
     removeSection(section: StylePropertiesSection): void;
     filterRegex(): RegExp | null;
     private updateFilter;
+    wasShown(): void;
     willHide(): void;
     hideAllPopovers(): void;
     getSectionBlockByName(name: string): SectionBlock | undefined;
@@ -136,6 +137,7 @@ export declare class SectionBlock {
     static createInheritedPseudoTypeBlock(pseudoType: Protocol.DOM.PseudoType, pseudoArgument: string | null, node: SDK.DOMModel.DOMNode): Promise<SectionBlock>;
     static createRegisteredPropertiesBlock(expandedByDefault: boolean): SectionBlock;
     static createKeyframesBlock(keyframesName: string): SectionBlock;
+    static createFontPaletteValuesRuleBlock(name: string): SectionBlock;
     static createPositionFallbackBlock(positionFallbackName: string): SectionBlock;
     static createInheritedNodeBlock(node: SDK.DOMModel.DOMNode): Promise<SectionBlock>;
     static createLayerBlock(rule: SDK.CSSRule.CSSStyleRule): SectionBlock;
@@ -176,7 +178,6 @@ export declare class StylesSidebarPropertyRenderer {
     private node;
     readonly propertyName: string;
     readonly propertyValue: string;
-    private colorHandler;
     private colorMixHandler;
     private bezierHandler;
     private fontHandler;
@@ -188,8 +189,9 @@ export declare class StylesSidebarPropertyRenderer {
     private animationNameHandler;
     private animationHandler;
     private positionFallbackHandler;
-    constructor(rule: SDK.CSSRule.CSSRule | null, node: SDK.DOMModel.DOMNode | null, name: string, value: string);
-    setColorHandler(handler: (arg0: string) => Node): void;
+    private fontPaletteHandler;
+    matchers: Matcher[];
+    constructor(rule: SDK.CSSRule.CSSRule | null, node: SDK.DOMModel.DOMNode | null, name: string, value: string, matchers?: Matcher[]);
     setColorMixHandler(handler: (arg0: string) => Node): void;
     setBezierHandler(handler: (arg0: string) => Node): void;
     setFontHandler(handler: (arg0: string) => Node): void;
@@ -198,12 +200,16 @@ export declare class StylesSidebarPropertyRenderer {
     setVarHandler(handler: (arg0: string) => Node): void;
     setAnimationNameHandler(handler: (arg0: string) => Node): void;
     setAnimationHandler(handler: (arg0: string) => Node): void;
-    setAngleHandler(handler: (arg0: string) => Node): void;
+    setAngleHandler(handler: (arg0: string, readonly: boolean) => Node): void;
     setLengthHandler(handler: (arg0: string) => Node): void;
     setPositionFallbackHandler(handler: (arg0: string) => Node): void;
+    setFontPaletteHandler(handler: (arg0: string) => Node): void;
     renderName(): Element;
     renderValue(): Element;
     private processURL;
+}
+export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
 }
 export declare class ButtonProvider implements UI.Toolbar.Provider {
     private readonly button;
@@ -211,7 +217,6 @@ export declare class ButtonProvider implements UI.Toolbar.Provider {
     static instance(opts?: {
         forceNew: boolean | null;
     }): ButtonProvider;
-    private clicked;
     private longClicked;
     item(): UI.Toolbar.ToolbarItem;
 }

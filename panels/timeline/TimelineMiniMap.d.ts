@@ -3,10 +3,10 @@ import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as TimelineComponents from './components/components.js';
-import { type PerformanceModel } from './PerformanceModel.js';
+import { type TimelineEventOverview } from './TimelineEventOverview.js';
 export interface OverviewData {
-    performanceModel: PerformanceModel | null;
-    traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData | null;
+    traceParsedData: TraceEngine.Handlers.Types.TraceParseData;
+    isCpuProfile?: boolean;
     settings: {
         showScreenshots: boolean;
         showMemory: boolean;
@@ -24,18 +24,20 @@ declare const TimelineMiniMap_base: (new (...args: any[]) => {
  * This component wraps the generic PerfUI Overview component and configures it
  * specifically for the Performance Panel, including injecting the CSS we use
  * to customise how the components render within the Performance Panel.
+ *
+ * It is also responsible for listening to events from the OverviewPane to
+ * update the visible trace window, and when this happens it will update the
+ * TraceBounds service with the new values.
  */
 export declare class TimelineMiniMap extends TimelineMiniMap_base {
     #private;
+    breadcrumbsActivated: boolean;
+    breadcrumbs: TimelineComponents.Breadcrumbs.Breadcrumbs | null;
     constructor();
-    activateBreadcrumbs(): void;
-    breadcrumbWindowBounds(breadcrumbWindow: PerfUI.TimelineOverviewPane.BreadcrumbAddedEvent): PerfUI.TimelineOverviewPane.BreadcrumbAddedEvent;
-    addBreadcrumb({ startTime, endTime }: PerfUI.TimelineOverviewPane.BreadcrumbAddedEvent): void;
-    removeBreadcrumb(breadcrumb: TimelineComponents.Breadcrumbs.Breadcrumb): void;
     wasShown(): void;
     reset(): void;
-    setBounds(min: TraceEngine.Types.Timing.MilliSeconds, max: TraceEngine.Types.Timing.MilliSeconds): void;
-    setWindowTimes(left: number, right: number): void;
+    getControls(): TimelineEventOverview[];
     setData(data: OverviewData): void;
+    addInitialBreadcrumb(): void;
 }
 export {};

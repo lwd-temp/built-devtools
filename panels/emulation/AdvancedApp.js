@@ -14,8 +14,12 @@ export class AdvancedApp {
     toolboxWindow;
     toolboxRootView;
     changingDockSide;
+    toolboxDocument;
     constructor() {
         UI.DockController.DockController.instance().addEventListener("BeforeDockSideChanged" /* UI.DockController.Events.BeforeDockSideChanged */, this.openToolboxWindow, this);
+        Host.InspectorFrontendHost.InspectorFrontendHostInstance.events.addEventListener(Host.InspectorFrontendHostAPI.Events.ColorThemeChanged, async () => {
+            await UI.Utils.DynamicTheming.fetchColors(this.toolboxDocument);
+        }, this);
     }
     /**
      * Note: it's used by toolbox.ts without real type checks.
@@ -28,7 +32,8 @@ export class AdvancedApp {
     }
     presentUI(document) {
         const rootView = new UI.RootView.RootView();
-        this.rootSplitWidget = new UI.SplitWidget.SplitWidget(false, true, 'InspectorView.splitViewState', 555, 300, true);
+        this.rootSplitWidget =
+            new UI.SplitWidget.SplitWidget(false, true, 'inspector-view.split-view-state', 555, 300, true);
         this.rootSplitWidget.show(rootView.element);
         this.rootSplitWidget.setSidebarWidget(UI.InspectorView.InspectorView.instance());
         this.rootSplitWidget.setDefaultFocusedChild(UI.InspectorView.InspectorView.instance());
@@ -66,6 +71,7 @@ export class AdvancedApp {
         UI.ContextMenu.ContextMenu.installHandler(toolboxDocument);
         this.toolboxRootView = new UI.RootView.RootView();
         this.toolboxRootView.attachToDocument(toolboxDocument);
+        this.toolboxDocument = toolboxDocument;
         this.updateDeviceModeView();
     }
     updateDeviceModeView() {

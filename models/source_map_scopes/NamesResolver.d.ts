@@ -1,7 +1,7 @@
 import * as SDK from '../../core/sdk/sdk.js';
+import * as Protocol from '../../generated/protocol.js';
 import * as Formatter from '../formatter/formatter.js';
 import type * as Workspace from '../workspace/workspace.js';
-import * as Protocol from '../../generated/protocol.js';
 export declare class IdentifierPositions {
     name: string;
     positions: {
@@ -50,8 +50,8 @@ export declare class RemoteObject extends SDK.RemoteObject.RemoteObject {
     getAllProperties(accessorPropertiesOnly: boolean, generatePreview: boolean): Promise<SDK.RemoteObject.GetPropertiesResult>;
     setPropertyValue(argumentName: string | Protocol.Runtime.CallArgument, value: string): Promise<string | undefined>;
     deleteProperty(name: Protocol.Runtime.CallArgument): Promise<string | undefined>;
-    callFunction<T>(functionDeclaration: (this: Object, ...arg1: unknown[]) => T, args?: Protocol.Runtime.CallArgument[]): Promise<SDK.RemoteObject.CallFunctionResult>;
-    callFunctionJSON<T>(functionDeclaration: (this: Object, ...arg1: unknown[]) => T, args?: Protocol.Runtime.CallArgument[]): Promise<T>;
+    callFunction<T, U>(functionDeclaration: (this: U, ...args: any[]) => T, args?: Protocol.Runtime.CallArgument[]): Promise<SDK.RemoteObject.CallFunctionResult>;
+    callFunctionJSON<T, U>(functionDeclaration: (this: U, ...args: any[]) => T, args?: Protocol.Runtime.CallArgument[]): Promise<T>;
     release(): void;
     debuggerModel(): SDK.DebuggerModel.DebuggerModel;
     runtimeModel(): SDK.RuntimeModel.RuntimeModel;

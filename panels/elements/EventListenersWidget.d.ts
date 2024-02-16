@@ -11,6 +11,8 @@ export declare class EventListenersWidget extends UI.ThrottledWidget.ThrottledWi
         forceNew: boolean | null;
     } | undefined): EventListenersWidget;
     doUpdate(): Promise<void>;
+    wasShown(): void;
+    willHide(): void;
     toolbarItems(): UI.Toolbar.ToolbarItem[];
     private onDispatchFilterTypeChanged;
     private showFrameworkListenersChanged;
@@ -22,3 +24,6 @@ export declare const DispatchFilterBy: {
     Blocking: string;
     Passive: string;
 };
+export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
+}

@@ -2,6 +2,7 @@ import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { type PerformanceModel } from './PerformanceModel.js';
+import { TimelineFlameChartDataProvider } from './TimelineFlameChartDataProvider.js';
 import { type TimelineModeViewDelegate } from './TimelinePanel.js';
 import { TimelineSelection } from './TimelineSelection.js';
 import { type TimelineMarkerStyle } from './TimelineUIUtils.js';
@@ -21,6 +22,7 @@ export declare class TimelineFlameChartView extends UI.Widget.VBox implements Pe
     private readonly networkPane;
     private readonly splitResizer;
     private readonly chartSplitWidget;
+    private brickGame?;
     private readonly countersView;
     private readonly detailsSplitWidget;
     private readonly detailsView;
@@ -33,15 +35,15 @@ export declare class TimelineFlameChartView extends UI.Widget.VBox implements Pe
     private selectedSearchResult?;
     private searchRegex?;
     constructor(delegate: TimelineModeViewDelegate);
+    fixMe(): void;
     isNetworkTrackShownForTests(): boolean;
+    getMainDataProvider(): TimelineFlameChartDataProvider;
     updateColorMapper(): void;
-    private onWindowChanged;
-    windowChanged(windowStartTime: number, windowEndTime: number, animate: boolean): void;
+    windowChanged(windowStartTime: TraceEngine.Types.Timing.MilliSeconds, windowEndTime: TraceEngine.Types.Timing.MilliSeconds, animate: boolean): void;
     updateRangeSelection(startTime: number, endTime: number): void;
+    getMainFlameChart(): PerfUI.FlameChart.FlameChart;
     updateSelectedGroup(flameChart: PerfUI.FlameChart.FlameChart, group: PerfUI.FlameChart.Group | null): void;
-    setModel(model: PerformanceModel | null, newTraceEngineData: TraceEngine.Handlers.Migration.PartialTraceData | null): void;
-    private updateTrack;
-    private refresh;
+    setModel(model: PerformanceModel | null, newTraceEngineData: TraceEngine.Handlers.Types.TraceParseData | null, isCpuProfile?: boolean): void;
     private onEntryHighlighted;
     highlightEvent(event: TraceEngine.Legacy.Event | null): void;
     willHide(): void;
@@ -85,6 +87,6 @@ export declare class TimelineFlameChartMarker implements PerfUI.FlameChart.Flame
     title(): string | null;
     draw(context: CanvasRenderingContext2D, x: number, height: number, pixelsPerMillisecond: number): void;
 }
-export declare enum ColorBy {
+export declare const enum ColorBy {
     URL = "URL"
 }

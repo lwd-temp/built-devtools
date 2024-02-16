@@ -1,8 +1,8 @@
 import * as Common from '../../core/common/common.js';
 import type * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import * as UI from '../../ui/legacy/legacy.js';
 import type * as Protocol from '../../generated/protocol.js';
+import * as UI from '../../ui/legacy/legacy.js';
 export type ParsedSize = {
     any: 'any';
     formatted: string;
@@ -27,7 +27,7 @@ export declare class AppManifestView extends AppManifestView_base implements SDK
     private readonly identitySection;
     private readonly presentationSection;
     private readonly iconsSection;
-    private readonly windowsControlsOverlaySection;
+    private readonly windowControlsSection;
     private readonly protocolHandlersSection;
     private readonly shortcutSections;
     private readonly screenshotsSections;
@@ -49,8 +49,8 @@ export declare class AppManifestView extends AppManifestView_base implements SDK
     private target?;
     private resourceTreeModel?;
     private serviceWorkerManager?;
+    private overlayModel?;
     private protocolHandlersView;
-    private manifestLink?;
     constructor(emptyView: UI.EmptyWidget.EmptyWidget, reportView: UI.ReportView.ReportView, throttler: Common.Throttler.Throttler);
     getStaticSections(): UI.ReportView.Section[];
     getManifestElement(): Element;
@@ -67,8 +67,9 @@ export declare class AppManifestView extends AppManifestView_base implements SDK
     };
     private appendImageResourceToSection;
     wasShown(): void;
+    private appendWindowControlsToSection;
 }
-export declare enum Events {
+export declare const enum Events {
     ManifestDetected = "ManifestDetected",
     ManifestRendered = "ManifestRendered"
 }

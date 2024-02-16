@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 import * as Platform from '../../core/platform/platform.js';
+import { ContentData } from './ContentData.js';
 import { SearchMatch } from './ContentProvider.js';
 import { Text } from './Text.js';
 export const Utils = {
@@ -39,7 +40,7 @@ export const Utils = {
     // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration
     // eslint-disable-next-line @typescript-eslint/naming-convention
     get _regexFilterRegex() {
-        return /(?:^|\s)(\-)?\/([^\/\\]+(\\.[^\/]+)*)\//;
+        return /(?:^|\s)(\-)?\/([^\/\\]+(\\.[^\/]*)*)\//;
     },
     // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -245,6 +246,69 @@ export class BalancedJSONTokenizer {
     }
 }
 /**
+ * Detects the indentation used by a given text document, based on the _Comparing
+ * lines_ approach suggested by Heather Arthur (and also found in Firefox DevTools).
+ *
+ * This implementation differs from the original proposal in that tab indentation
+ * isn't detected by checking if at least 50% of the lines start with a tab, but
+ * instead by comparing the number of lines that start with a tab to the frequency
+ * of the other indentation patterns. This way we also detect small snippets with
+ * long leading comments correctly, when tab indentation is used for the snippets
+ * of code.
+ *
+ * @param lines The input document lines.
+ * @return The indentation detected for the lines as string or `null` if it's inconclusive.
+ *
+ * @see https://heathermoor.medium.com/detecting-code-indentation-eff3ed0fb56b
+ */
+export const detectIndentation = function (lines) {
+    const frequencies = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let tabs = 0, previous = 0;
+    for (const line of lines) {
+        let current = 0;
+        if (line.length !== 0) {
+            let char = line.charAt(0);
+            if (char === '\t') {
+                tabs++;
+                continue;
+            }
+            while (char === ' ') {
+                char = line.charAt(++current);
+            }
+        }
+        if (current === line.length) {
+            // Don't consider empty lines.
+            previous = 0;
+            continue;
+        }
+        const delta = Math.abs(current - previous);
+        if (delta < frequencies.length) {
+            // Don't consider deltas above 8 characters.
+            frequencies[delta] = frequencies[delta] + 1;
+        }
+        previous = current;
+    }
+    // Find most frequent non-zero width difference between adjacent lines.
+    let mostFrequentDelta = 0, highestFrequency = 0;
+    for (let delta = 1; delta < frequencies.length; ++delta) {
+        const frequency = frequencies[delta];
+        if (frequency > highestFrequency) {
+            highestFrequency = frequency;
+            mostFrequentDelta = delta;
+        }
+    }
+    if (tabs > mostFrequentDelta) {
+        // If more lines start with tabs than any other indentation,
+        // we assume that the document was written with tab indentation
+        // in mind. This differs from the original algorithm.
+        return '\t';
+    }
+    if (!mostFrequentDelta) {
+        return null;
+    }
+    return ' '.repeat(mostFrequentDelta);
+};
+/**
  * Heuristic to check whether a given text was likely minified. Intended to
  * be used for HTML, CSS, and JavaScript inputs.
  *
@@ -264,6 +328,18 @@ export const isMinified = function (text) {
         lastIndex = eolIndex + 1;
     }
     return (text.length - lineCount) / lineCount >= 80;
+};
+/**
+ * Small wrapper around {@link performSearchInContent} to reduce boilerplate when searching
+ * in {@link ContentDataOrError}.
+ *
+ * @returns empty search matches if `contentData` is an error or not text content.
+ */
+export const performSearchInContentData = function (contentData, query, caseSensitive, isRegex) {
+    if (ContentData.isError(contentData) || !contentData.isTextContent) {
+        return [];
+    }
+    return performSearchInContent(contentData.text, query, caseSensitive, isRegex);
 };
 /**
  * @returns One {@link SearchMatch} per match. Multiple matches on the same line each

@@ -439,6 +439,9 @@ export class TargetBase {
     auditsAgent() {
         return this.getAgent('Audits');
     }
+    autofillAgent() {
+        return this.getAgent('Autofill');
+    }
     browserAgent() {
         return this.getAgent('Browser');
     }
@@ -578,6 +581,9 @@ export class TargetBase {
     }
     registerAccessibilityDispatcher(dispatcher) {
         this.registerDispatcher('Accessibility', dispatcher);
+    }
+    registerAutofillDispatcher(dispatcher) {
+        this.registerDispatcher('Autofill', dispatcher);
     }
     registerAnimationDispatcher(dispatcher) {
         this.registerDispatcher('Animation', dispatcher);

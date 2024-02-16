@@ -15,7 +15,6 @@ declare const SourcesView_base: (new (...args: any[]) => {
 }) & typeof UI.Widget.VBox;
 export declare class SourcesView extends SourcesView_base implements TabbedEditorContainerDelegate, UI.SearchableView.Searchable, UI.SearchableView.Replaceable {
     #private;
-    private placeholderOptionArray;
     private selectedIndex;
     private readonly searchableViewInternal;
     private readonly sourceViewByUISourceCode;
@@ -32,7 +31,6 @@ export declare class SourcesView extends SourcesView_base implements TabbedEdito
     constructor();
     private placeholderElement;
     private addFileSystemClicked;
-    private placeholderOnKeyDown;
     static defaultUISourceCodeScores(): Map<Workspace.UISourceCode.UISourceCode, number>;
     leftToolbar(): UI.Toolbar.Toolbar;
     rightToolbar(): UI.Toolbar.Toolbar;
@@ -81,7 +79,7 @@ export declare class SourcesView extends SourcesView_base implements TabbedEdito
     private saveSourceFrame;
     toggleBreakpointsActiveState(active: boolean): void;
 }
-export declare enum Events {
+export declare const enum Events {
     EditorClosed = "EditorClosed",
     EditorSelected = "EditorSelected"
 }
@@ -99,16 +97,10 @@ export interface EditorAction {
 export declare function registerEditorAction(editorAction: () => EditorAction): void;
 export declare function getRegisteredEditorActions(): EditorAction[];
 export declare class SwitchFileActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): SwitchFileActionDelegate;
     private static nextFile;
-    handleAction(_context: UI.Context.Context, _actionId: string): boolean;
+    handleAction(context: UI.Context.Context, _actionId: string): boolean;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    } | undefined): ActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
 export {};

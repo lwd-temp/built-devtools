@@ -30,7 +30,7 @@ export declare class PreloadingModel extends SDKModel<EventTypes> {
     onPrerenderStatusUpdated(event: Protocol.Preload.PrerenderStatusUpdatedEvent): void;
     onPreloadEnabledStateUpdated(event: Protocol.Preload.PreloadEnabledStateUpdatedEvent): void;
 }
-export declare enum Events {
+export declare const enum Events {
     ModelUpdated = "ModelUpdated",
     WarningsUpdated = "WarningsUpdated"
 }
@@ -64,6 +64,7 @@ export interface PrerenderAttempt {
     status: PreloadingStatus;
     prerenderStatus: Protocol.Preload.PrerenderFinalStatus | null;
     disallowedMojoInterface: string | null;
+    mismatchedHeaders: Protocol.Preload.PrerenderMismatchedHeaders[] | null;
     ruleSetIds: Protocol.Preload.RuleSetId[];
     nodeIds: Protocol.DOM.BackendNodeId[];
 }
@@ -81,4 +82,5 @@ export interface PrerenderAttemptInternal {
     status: PreloadingStatus;
     prerenderStatus: Protocol.Preload.PrerenderFinalStatus | null;
     disallowedMojoInterface: string | null;
+    mismatchedHeaders: Protocol.Preload.PrerenderMismatchedHeaders[] | null;
 }

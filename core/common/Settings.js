@@ -27,10 +27,11 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+import * as Platform from '../platform/platform.js';
 import * as Root from '../root/root.js';
 import { Console } from './Console.js';
 import { ObjectWrapper } from './Object.js';
-import { getLocalizedSettingsCategory, getRegisteredSettings, maybeRemoveSettingExtension, registerSettingExtension, registerSettingsForTest, resetSettings, SettingCategory, SettingType, } from './SettingRegistration.js';
+import { getLocalizedSettingsCategory, getRegisteredSettings, maybeRemoveSettingExtension, registerSettingExtension, registerSettingsForTest, resetSettings, } from './SettingRegistration.js';
 let settingsInstance;
 export class Settings {
     syncedStorage;
@@ -53,17 +54,13 @@ export class Settings {
         this.#registry = new Map();
         this.moduleSettings = new Map();
         for (const registration of getRegisteredSettings()) {
+            // TODO(b/320405843): remove normalization when kebab migration is complete
             const { settingName, defaultValue, storageType } = registration;
-            const isRegex = registration.settingType === SettingType.REGEX;
+            const isRegex = registration.settingType === "regex" /* SettingType.REGEX */;
             const setting = isRegex && typeof defaultValue === 'string' ?
                 this.createRegExpSetting(settingName, defaultValue, undefined, storageType) :
                 this.createSetting(settingName, defaultValue, storageType);
-            if (Root.Runtime.Runtime.platform() === 'mac' && registration.titleMac) {
-                setting.setTitleFunction(registration.titleMac);
-            }
-            else {
-                setting.setTitleFunction(registration.title);
-            }
+            setting.setTitleFunction(registration.title);
             if (registration.userActionCondition) {
                 setting.setRequiresUserAction(Boolean(Root.Runtime.Runtime.queryParam(registration.userActionCondition)));
             }
@@ -105,9 +102,23 @@ export class Settings {
         this.settingNameSet.add(settingName);
         this.moduleSettings.set(setting.name, setting);
     }
+    static normalizeSettingName(name) {
+        if ([
+            VersionController.GLOBAL_VERSION_SETTING_NAME,
+            VersionController.SYNCED_VERSION_SETTING_NAME,
+            VersionController.LOCAL_VERSION_SETTING_NAME,
+            'currentDockState',
+            'isUnderTest',
+        ].includes(name)) {
+            return name;
+        }
+        return Platform.StringUtilities.toKebabCase(name);
+    }
     // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     moduleSetting(settingName) {
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        settingName = Settings.normalizeSettingName(settingName);
         const setting = this.moduleSettings.get(settingName);
         if (!setting) {
             throw new Error('No setting registered: ' + settingName);
@@ -115,6 +126,8 @@ export class Settings {
         return setting;
     }
     settingForTest(settingName) {
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        settingName = Settings.normalizeSettingName(settingName);
         const setting = this.#registry.get(settingName);
         if (!setting) {
             throw new Error('No setting registered: ' + settingName);
@@ -122,6 +135,8 @@ export class Settings {
         return setting;
     }
     createSetting(key, defaultValue, storageType) {
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        key = Settings.normalizeSettingName(key);
         const storage = this.storageFromType(storageType);
         let setting = this.#registry.get(key);
         if (!setting) {
@@ -131,9 +146,13 @@ export class Settings {
         return setting;
     }
     createLocalSetting(key, defaultValue) {
-        return this.createSetting(key, defaultValue, SettingStorageType.Local);
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        key = Settings.normalizeSettingName(key);
+        return this.createSetting(key, defaultValue, "Local" /* SettingStorageType.Local */);
     }
     createRegExpSetting(key, defaultValue, regexFlags, storageType) {
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        key = Settings.normalizeSettingName(key);
         if (!this.#registry.get(key)) {
             this.#registry.set(key, new RegExpSetting(key, defaultValue, this.#eventSupport, this.storageFromType(storageType), regexFlags));
         }
@@ -147,13 +166,13 @@ export class Settings {
     }
     storageFromType(storageType) {
         switch (storageType) {
-            case SettingStorageType.Local:
+            case "Local" /* SettingStorageType.Local */:
                 return this.localStorage;
-            case SettingStorageType.Session:
+            case "Session" /* SettingStorageType.Session */:
                 return this.#sessionStorage;
-            case SettingStorageType.Global:
+            case "Global" /* SettingStorageType.Global */:
                 return this.globalStorage;
-            case SettingStorageType.Synced:
+            case "Synced" /* SettingStorageType.Synced */:
                 return this.syncedStorage;
         }
         return this.globalStorage;
@@ -215,6 +234,9 @@ export class SettingsStorage {
         this.object = {};
         this.backingStore.clear();
     }
+    keys() {
+        return Object.keys(this.object);
+    }
     dumpSizes() {
         Console.instance().log('Ten largest settings: ');
         const sizes = { __proto__: null };
@@ -254,7 +276,6 @@ export class Deprecation {
     }
 }
 export class Setting {
-    name;
     defaultValue;
     eventSupport;
     storage;
@@ -268,12 +289,14 @@ export class Setting {
     #hadUserAction;
     #disabled;
     #deprecation = null;
+    name;
     constructor(name, defaultValue, eventSupport, storage) {
-        this.name = name;
         this.defaultValue = defaultValue;
         this.eventSupport = eventSupport;
         this.storage = storage;
-        storage.register(name);
+        // TODO(b/320405843): remove normalization when kebab migration is complete
+        this.name = Settings.normalizeSettingName(name);
+        storage.register(this.name);
     }
     setSerializer(serializer) {
         this.#serializer = serializer;
@@ -305,7 +328,24 @@ export class Setting {
         this.#requiresUserAction = requiresUserAction;
     }
     disabled() {
+        if (this.#registration?.disabledCondition) {
+            const { disabled } = this.#registration.disabledCondition();
+            // If registration does not disable it, pass through to #disabled
+            // attribute check.
+            if (disabled) {
+                return true;
+            }
+        }
         return this.#disabled || false;
+    }
+    disabledReason() {
+        if (this.#registration?.disabledCondition) {
+            const result = this.#registration.disabledCondition();
+            if (result.disabled) {
+                return result.reason;
+            }
+        }
+        return undefined;
     }
     setDisabled(disabled) {
         this.#disabled = disabled;
@@ -488,15 +528,15 @@ export class VersionController {
     static GLOBAL_VERSION_SETTING_NAME = 'inspectorVersion';
     static SYNCED_VERSION_SETTING_NAME = 'syncedInspectorVersion';
     static LOCAL_VERSION_SETTING_NAME = 'localInspectorVersion';
-    static CURRENT_VERSION = 35;
+    static CURRENT_VERSION = 37;
     #globalVersionSetting;
     #syncedVersionSetting;
     #localVersionSetting;
     constructor() {
         // If no version setting is found, we initialize with the current version and don't do anything.
-        this.#globalVersionSetting = Settings.instance().createSetting(VersionController.GLOBAL_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, SettingStorageType.Global);
-        this.#syncedVersionSetting = Settings.instance().createSetting(VersionController.SYNCED_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, SettingStorageType.Synced);
-        this.#localVersionSetting = Settings.instance().createSetting(VersionController.LOCAL_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, SettingStorageType.Local);
+        this.#globalVersionSetting = Settings.instance().createSetting(VersionController.GLOBAL_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, "Global" /* SettingStorageType.Global */);
+        this.#syncedVersionSetting = Settings.instance().createSetting(VersionController.SYNCED_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, "Synced" /* SettingStorageType.Synced */);
+        this.#localVersionSetting = Settings.instance().createSetting(VersionController.LOCAL_VERSION_SETTING_NAME, VersionController.CURRENT_VERSION, "Local" /* SettingStorageType.Local */);
     }
     /**
      * Force re-sets all version number settings to the current version without
@@ -1014,6 +1054,35 @@ export class VersionController {
         }
         breakpointsSetting.set(breakpoints);
     }
+    updateVersionFrom35To36() {
+        // We have changed the default from 'false' to 'true' and this updates the existing setting just for once.
+        Settings.instance().createSetting('showThirdPartyIssues', true).set(true);
+    }
+    updateVersionFrom36To37() {
+        const updateStorage = (storage) => {
+            for (const key of storage.keys()) {
+                const normalizedKey = Settings.normalizeSettingName(key);
+                if (normalizedKey !== key) {
+                    storage.set(normalizedKey, storage.get(key));
+                    removeSetting({ name: key, storage });
+                }
+            }
+        };
+        updateStorage(Settings.instance().globalStorage);
+        updateStorage(Settings.instance().syncedStorage);
+        updateStorage(Settings.instance().localStorage);
+        for (const key of Settings.instance().globalStorage.keys()) {
+            if ((key.startsWith('data-grid-') && key.endsWith('-column-weights')) || key.endsWith('-tab-order') ||
+                key === 'views-location-override' || key === 'closeable-tabs') {
+                const setting = Settings.instance().createSetting(key, {});
+                setting.set(Platform.StringUtilities.toKebabCaseKeys(setting.get()));
+            }
+            if (key.endsWith('-selected-tab')) {
+                const setting = Settings.instance().createSetting(key, '');
+                setting.set(Platform.StringUtilities.toKebabCase(setting.get()));
+            }
+        }
+    }
     /*
      * Any new migration should be added before this comment.
      *
@@ -1057,47 +1126,11 @@ export class VersionController {
         }
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var SettingStorageType;
-(function (SettingStorageType) {
-    /**
-     * Synced storage persists settings with the active Chrome profile but also
-     * syncs the settings across devices via Chrome Sync.
-     */
-    SettingStorageType["Synced"] = "Synced";
-    /** Global storage persists settings with the active Chrome profile */
-    SettingStorageType["Global"] = "Global";
-    /** Uses Window.localStorage */
-    SettingStorageType["Local"] = "Local";
-    /** Session storage dies when DevTools window closes */
-    SettingStorageType["Session"] = "Session";
-})(SettingStorageType || (SettingStorageType = {}));
 export function moduleSetting(settingName) {
     return Settings.instance().moduleSetting(settingName);
 }
 export function settingForTest(settingName) {
     return Settings.instance().settingForTest(settingName);
 }
-export function detectColorFormat(color) {
-    let format;
-    const formatSetting = Settings.instance().moduleSetting('colorFormat').get();
-    if (formatSetting === "rgb" /* Format.RGB */) {
-        format = "rgb" /* Format.RGB */;
-    }
-    else if (formatSetting === "hsl" /* Format.HSL */) {
-        format = "hsl" /* Format.HSL */;
-    }
-    else if (formatSetting === "hwb" /* Format.HWB */) {
-        format = "hwb" /* Format.HWB */;
-    }
-    else if (formatSetting === "hex" /* Format.HEX */) {
-        format = color.asLegacyColor().detectHEXFormat();
-    }
-    else {
-        format = color.format();
-    }
-    return format;
-}
-export { getLocalizedSettingsCategory, getRegisteredSettings, maybeRemoveSettingExtension, registerSettingExtension, SettingCategory, SettingType, registerSettingsForTest, resetSettings, };
+export { getLocalizedSettingsCategory, getRegisteredSettings, maybeRemoveSettingExtension, registerSettingExtension, registerSettingsForTest, resetSettings, };
 //# sourceMappingURL=Settings.js.map

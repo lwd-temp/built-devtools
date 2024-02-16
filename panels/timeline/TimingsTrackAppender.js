@@ -1,10 +1,7 @@
-// Copyright 2023 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-import * as TraceEngine from '../../models/trace/trace.js';
 import * as i18n from '../../core/i18n/i18n.js';
-import { TimelineFlameChartMarker } from './TimelineFlameChartView.js';
+import * as TraceEngine from '../../models/trace/trace.js';
 import { buildGroupStyle, buildTrackHeader, getFormattedTime } from './AppenderUtils.js';
+import { TimelineFlameChartMarker } from './TimelineFlameChartView.js';
 const UIStrings = {
     /**
      *@description Text in Timeline Flame Chart Data Provider of the Performance panel
@@ -17,12 +14,10 @@ export class TimingsTrackAppender {
     appenderName = 'Timings';
     #colorGenerator;
     #compatibilityBuilder;
-    #flameChartData;
     #traceParsedData;
-    constructor(compatibilityBuilder, flameChartData, traceParsedData, colorGenerator) {
+    constructor(compatibilityBuilder, traceParsedData, colorGenerator) {
         this.#compatibilityBuilder = compatibilityBuilder;
         this.#colorGenerator = colorGenerator;
-        this.#flameChartData = flameChartData;
         this.#traceParsedData = traceParsedData;
     }
     /**
@@ -79,14 +74,14 @@ export class TimingsTrackAppender {
         const markers = this.#traceParsedData.PageLoadMetrics.allMarkerEvents;
         markers.forEach(marker => {
             const index = this.#compatibilityBuilder.appendEventAtLevel(marker, currentLevel, this);
-            this.#flameChartData.entryTotalTimes[index] = Number.NaN;
+            this.#compatibilityBuilder.getFlameChartTimelineData().entryTotalTimes[index] = Number.NaN;
         });
         const minTimeMs = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(this.#traceParsedData.Meta.traceBounds.min);
         const flameChartMarkers = markers.map(marker => {
             const startTimeMs = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(marker.ts);
             return new TimelineFlameChartMarker(startTimeMs, startTimeMs - minTimeMs, this.markerStyleForEvent(marker));
         });
-        this.#flameChartData.markers.push(...flameChartMarkers);
+        this.#compatibilityBuilder.getFlameChartTimelineData().markers.push(...flameChartMarkers);
         return ++currentLevel;
     }
     /*

@@ -30,9 +30,8 @@ export declare class ChartViewport extends UI.Widget.VBox {
     private targetLeftTime;
     private targetRightTime;
     private selectionOffsetShiftX;
-    private selectionOffsetShiftY;
     private selectionStartX;
-    private lastMouseOffsetX;
+    private lastMouseOffsetX?;
     private minimumBoundary;
     private totalTime;
     private isUpdateScheduled?;

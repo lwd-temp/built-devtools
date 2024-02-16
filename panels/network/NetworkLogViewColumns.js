@@ -3,10 +3,12 @@
 // found in the LICENSE file.
 import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
+import * as IconButton from '../../ui/components/icon_button/icon_button.js';
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as ThemeSupport from '../../ui/legacy/theme_support/theme_support.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import { NetworkRequestNode } from './NetworkDataGridNode.js';
 import { NetworkManageCustomHeadersView } from './NetworkManageCustomHeadersView.js';
 import { NetworkWaterfallColumn } from './NetworkWaterfallColumn.js';
@@ -168,7 +170,7 @@ export class NetworkLogViewColumns {
     scrollerTouchStartPos;
     constructor(networkLogView, timeCalculator, durationCalculator, networkLogLargeRowsSetting) {
         this.networkLogView = networkLogView;
-        this.persistantSettings = Common.Settings.Settings.instance().createSetting('networkLogColumns', {});
+        this.persistantSettings = Common.Settings.Settings.instance().createSetting('network-log-columns', {});
         this.networkLogLargeRowsSetting = networkLogLargeRowsSetting;
         this.networkLogLargeRowsSetting.addChangeListener(this.updateRowsSize, this);
         this.eventDividers = new Map();
@@ -179,8 +181,8 @@ export class NetworkLogViewColumns {
         this.waterfallScrollerWidthIsStale = true;
         this.popupLinkifier = new Components.Linkifier.Linkifier();
         this.calculatorsMap = new Map();
-        this.calculatorsMap.set(_calculatorTypes.Time, timeCalculator);
-        this.calculatorsMap.set(_calculatorTypes.Duration, durationCalculator);
+        this.calculatorsMap.set("Time" /* CalculatorTypes.Time */, timeCalculator);
+        this.calculatorsMap.set("Duration" /* CalculatorTypes.Duration */, durationCalculator);
         this.lastWheelTime = 0;
         this.setupDataGrid();
         this.setupWaterfall();
@@ -230,8 +232,7 @@ export class NetworkLogViewColumns {
             this.columns.push(columnConfig);
         }
         this.loadCustomColumnsAndSettings();
-        this.popoverHelper =
-            new UI.PopoverHelper.PopoverHelper(this.networkLogView.element, this.getPopoverRequest.bind(this));
+        this.popoverHelper = new UI.PopoverHelper.PopoverHelper(this.networkLogView.element, this.getPopoverRequest.bind(this), 'network.initiator-stacktrace');
         this.popoverHelper.setHasPadding(true);
         this.popoverHelper.setTimeout(300, 300);
         this.dataGridInternal = new DataGrid.SortableDataGrid.SortableDataGrid(({
@@ -248,11 +249,11 @@ export class NetworkLogViewColumns {
         }, true);
         this.dataGridScroller = this.dataGridInternal.scrollContainer;
         this.updateColumns();
-        this.dataGridInternal.addEventListener(DataGrid.DataGrid.Events.SortingChanged, this.sortHandler, this);
+        this.dataGridInternal.addEventListener("SortingChanged" /* DataGrid.DataGrid.Events.SortingChanged */, this.sortHandler, this);
         this.dataGridInternal.setHeaderContextMenuCallback(this.innerHeaderContextMenu.bind(this));
         this.activeWaterfallSortId = WaterfallSortIds.StartTime;
         this.dataGridInternal.markColumnAsSortedBy(_initialSortColumn, DataGrid.DataGrid.Order.Ascending);
-        this.splitWidget = new UI.SplitWidget.SplitWidget(true, true, 'networkPanelSplitViewWaterfall', 200);
+        this.splitWidget = new UI.SplitWidget.SplitWidget(true, true, 'network-panel-split-view-waterfall', 200);
         const widget = this.dataGridInternal.asWidget();
         widget.setMinimumSize(150, 0);
         this.splitWidget.setMainWidget(widget);
@@ -272,11 +273,11 @@ export class NetworkLogViewColumns {
             this.waterfallColumn.contentElement.createChild('div', 'network-waterfall-v-scroll');
         this.waterfallScrollerContent =
             this.waterfallScroller.createChild('div', 'network-waterfall-v-scroll-content');
-        this.dataGridInternal.addEventListener(DataGrid.DataGrid.Events.PaddingChanged, () => {
+        this.dataGridInternal.addEventListener("PaddingChanged" /* DataGrid.DataGrid.Events.PaddingChanged */, () => {
             this.waterfallScrollerWidthIsStale = true;
             this.syncScrollers();
         });
-        this.dataGridInternal.addEventListener(DataGrid.ViewportDataGrid.Events.ViewportCalculated, this.redrawWaterfallColumn.bind(this));
+        this.dataGridInternal.addEventListener("ViewportCalculated" /* DataGrid.ViewportDataGrid.Events.ViewportCalculated */, this.redrawWaterfallColumn.bind(this));
         this.createWaterfallHeader();
         this.waterfallColumn.contentElement.classList.add('network-waterfall-view');
         this.waterfallColumn.setMinimumSize(100, 0);
@@ -354,11 +355,14 @@ export class NetworkLogViewColumns {
     createWaterfallHeader() {
         this.waterfallHeaderElement =
             this.waterfallColumn.contentElement.createChild('div', 'network-waterfall-header');
+        this.waterfallHeaderElement.setAttribute('jslog', `${VisualLogging.tableHeader('waterfall').track({ click: true })}`);
         this.waterfallHeaderElement.addEventListener('click', waterfallHeaderClicked.bind(this));
         this.waterfallHeaderElement.addEventListener('contextmenu', event => this.innerHeaderContextMenu(new UI.ContextMenu.ContextMenu(event)));
+        this.waterfallHeaderElement.createChild('div', 'hover-layer');
         const innerElement = this.waterfallHeaderElement.createChild('div');
         innerElement.textContent = i18nString(UIStrings.waterfall);
-        this.waterfallColumnSortIcon = UI.Icon.Icon.create('', 'sort-order-icon');
+        this.waterfallColumnSortIcon = new IconButton.Icon.Icon();
+        this.waterfallColumnSortIcon.className = 'sort-order-icon';
         this.waterfallHeaderElement.createChild('div', 'sort-order-icon-container')
             .appendChild(this.waterfallColumnSortIcon);
         function waterfallHeaderClicked() {
@@ -411,17 +415,19 @@ export class NetworkLogViewColumns {
         this.waterfallRequestsAreStale = true;
         if (columnId === 'waterfall') {
             if (this.dataGridInternal.sortOrder() === DataGrid.DataGrid.Order.Ascending) {
-                this.waterfallColumnSortIcon.setIconType('triangle-up');
+                this.waterfallColumnSortIcon.name = 'triangle-up';
             }
             else {
-                this.waterfallColumnSortIcon.setIconType('triangle-down');
+                this.waterfallColumnSortIcon.name = 'triangle-down';
             }
+            this.waterfallColumnSortIcon.hidden = false;
             const sortFunction = NetworkRequestNode.RequestPropertyComparator.bind(null, this.activeWaterfallSortId);
             this.dataGridInternal.sortNodes(sortFunction, !this.dataGridInternal.isSortOrderAscending());
             this.dataGridSortedForTest();
             return;
         }
-        this.waterfallColumnSortIcon.setIconType('');
+        this.waterfallColumnSortIcon.hidden = true;
+        this.waterfallColumnSortIcon.name = null;
         const columnConfig = this.columns.find(columnConfig => columnConfig.id === columnId);
         if (!columnConfig || !columnConfig.sortingFunction) {
             return;
@@ -571,10 +577,10 @@ export class NetworkLogViewColumns {
         waterfallSubMenu.defaultSection().appendCheckboxItem(i18nString(UIStrings.totalDuration), setWaterfallMode.bind(this, waterfallSortIds.Duration), this.activeWaterfallSortId === waterfallSortIds.Duration);
         waterfallSubMenu.defaultSection().appendCheckboxItem(i18nString(UIStrings.latency), setWaterfallMode.bind(this, waterfallSortIds.Latency), this.activeWaterfallSortId === waterfallSortIds.Latency);
         function setWaterfallMode(sortId) {
-            let calculator = this.calculatorsMap.get(_calculatorTypes.Time);
+            let calculator = this.calculatorsMap.get("Time" /* CalculatorTypes.Time */);
             const waterfallSortIds = WaterfallSortIds;
             if (sortId === waterfallSortIds.Duration || sortId === waterfallSortIds.Latency) {
-                calculator = this.calculatorsMap.get(_calculatorTypes.Duration);
+                calculator = this.calculatorsMap.get("Duration" /* CalculatorTypes.Duration */);
             }
             this.networkLogView.setCalculator(calculator);
             this.activeWaterfallSortId = sortId;
@@ -676,7 +682,7 @@ export class NetworkLogViewColumns {
         return {
             box: anchor.boxInWindow(),
             show: async (popover) => {
-                this.popupLinkifier.setLiveLocationUpdateCallback(() => {
+                this.popupLinkifier.addEventListener("liveLocationUpdated" /* Components.Linkifier.Events.LiveLocationUpdated */, () => {
                     popover.setSizeBehavior("MeasureContent" /* UI.GlassPane.SizeBehavior.MeasureContent */);
                 });
                 const content = RequestInitiatorView.createStackTracePreview(request, this.popupLinkifier, false);
@@ -726,13 +732,6 @@ export class NetworkLogViewColumns {
 // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const _initialSortColumn = 'waterfall';
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum, @typescript-eslint/naming-convention
-export var _calculatorTypes;
-(function (_calculatorTypes) {
-    _calculatorTypes["Duration"] = "Duration";
-    _calculatorTypes["Time"] = "Time";
-})(_calculatorTypes || (_calculatorTypes = {}));
 // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const _defaultColumnConfig = {
@@ -805,7 +804,7 @@ const _temporaryDefaultColumns = [
         id: 'remoteaddress',
         title: i18nLazyString(UIStrings.remoteAddress),
         weight: 10,
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.RemoteAddressComparator,
     },
     {
@@ -838,13 +837,13 @@ const _temporaryDefaultColumns = [
     {
         id: 'cookies',
         title: i18nLazyString(UIStrings.cookies),
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.RequestCookiesCountComparator,
     },
     {
         id: 'setcookies',
         title: i18nLazyString(UIStrings.setCookies),
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.ResponseCookiesCountComparator,
     },
     {
@@ -852,7 +851,7 @@ const _temporaryDefaultColumns = [
         title: i18nLazyString(UIStrings.size),
         visible: true,
         subtitle: i18nLazyString(UIStrings.content),
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.SizeComparator,
     },
     {
@@ -860,7 +859,7 @@ const _temporaryDefaultColumns = [
         title: i18nLazyString(UIStrings.time),
         visible: true,
         subtitle: i18nLazyString(UIStrings.latency),
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.RequestPropertyComparator.bind(null, 'duration'),
     },
     { id: 'priority', title: i18nLazyString(UIStrings.priority), sortingFunction: NetworkRequestNode.PriorityComparator },
@@ -891,7 +890,7 @@ const _temporaryDefaultColumns = [
         id: 'content-length',
         isResponseHeader: true,
         title: i18n.i18n.lockedLazyString('Content-Length'),
-        align: DataGrid.DataGrid.Align.Right,
+        align: "right" /* DataGrid.DataGrid.Align.Right */,
         sortingFunction: NetworkRequestNode.ResponseHeaderNumberComparator.bind(null, 'content-length'),
     },
     {
@@ -944,9 +943,7 @@ const _defaultColumns = _temporaryDefaultColumns;
 // TODO(crbug.com/1172300) Ignored during the jsdoc to ts migration)
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const _filmStripDividerColor = '#fccc49';
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var WaterfallSortIds;
+var WaterfallSortIds;
 (function (WaterfallSortIds) {
     WaterfallSortIds["StartTime"] = "startTime";
     WaterfallSortIds["ResponseTime"] = "responseReceivedTime";

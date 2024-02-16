@@ -1,9 +1,9 @@
 import * as Common from '../../core/common/common.js';
 import * as SDK from '../../core/sdk/sdk.js';
+import type * as IssuesManager from '../../models/issues_manager/issues_manager.js';
 import * as Adorners from '../../ui/components/adorners/adorners.js';
 import * as TextEditor from '../../ui/components/text_editor/text_editor.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import type * as IssuesManager from '../../models/issues_manager/issues_manager.js';
 import { type ElementsTreeOutline, type UpdateRecord } from './ElementsTreeOutline.js';
 declare const enum TagType {
     OPENING = "OPENING_TAG",
@@ -34,10 +34,8 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     private inClipboard;
     private hoveredInternal;
     private editing;
-    private highlightResult;
     private htmlEditElement?;
     expandAllButtonElement: UI.TreeOutline.TreeElement | null;
-    private searchHighlightsVisible?;
     selectionElement?: HTMLDivElement;
     private hintElement?;
     private contentElement;
@@ -52,7 +50,6 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     isEditing(): boolean;
     highlightSearchResults(searchQuery: string): void;
     hideSearchHighlights(): void;
-    private hideSearchHighlight;
     setInClipboard(inClipboard: boolean): void;
     get hovered(): boolean;
     set hovered(isHovered: boolean);
@@ -81,7 +78,9 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     private startEditingTarget;
     private showContextMenu;
     populateTagContextMenu(contextMenu: UI.ContextMenu.ContextMenu, event: Event): void;
-    populateScrollIntoView(contextMenu: UI.ContextMenu.ContextMenu): void;
+    populatePseudoElementContextMenu(contextMenu: UI.ContextMenu.ContextMenu): void;
+    private populateExpandRecursively;
+    private populateScrollIntoView;
     populateTextContextMenu(contextMenu: UI.ContextMenu.ContextMenu, textNode: Element): void;
     populateNodeContextMenu(contextMenu: UI.ContextMenu.ContextMenu): void;
     private startEditing;
@@ -97,7 +96,7 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     private textNodeEditingCommitted;
     private editingCancelled;
     private distinctClosingTagElement;
-    updateTitle(updateRecord?: UpdateRecord | null, onlySearchQueryChanged?: boolean): void;
+    updateTitle(updateRecord?: UpdateRecord | null): void;
     private computeLeftIndent;
     updateDecorations(): void;
     private updateDecorationsInternal;
@@ -121,6 +120,9 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     adornSlot({ name }: {
         name: string;
     }, context: OpeningTagContext): Adorners.Adorner.Adorner;
+    adornMedia({ name }: {
+        name: string;
+    }): Adorners.Adorner.Adorner;
     removeAdorner(adornerToRemove: Adorners.Adorner.Adorner, context: OpeningTagContext): void;
     removeAllAdorners(): void;
     private updateAdorners;
@@ -130,6 +132,7 @@ export declare class ElementsTreeElement extends UI.TreeOutline.TreeElement {
     pushScrollSnapAdorner(context: OpeningTagContext): void;
     pushFlexAdorner(context: OpeningTagContext): void;
     pushContainerAdorner(context: OpeningTagContext): void;
+    pushMediaAdorner(context: OpeningTagContext): void;
 }
 export declare const InitialChildrenLimit = 500;
 export declare const ForbiddenClosingTagElements: Set<string>;

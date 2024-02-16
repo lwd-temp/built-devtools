@@ -39,7 +39,7 @@ export declare class ResourceTreeModel extends SDKModel<EventTypes> {
     suspendReload(): void;
     resumeReload(): void;
     reloadPage(ignoreCache?: boolean, scriptToEvaluateOnLoad?: string): void;
-    navigate(url: Platform.DevToolsPath.UrlString): Promise<any>;
+    navigate(url: Platform.DevToolsPath.UrlString): Promise<Protocol.Page.NavigateResponse>;
     navigationHistory(): Promise<{
         currentIndex: number;
         entries: Array<Protocol.Page.NavigationEntry>;
@@ -174,7 +174,7 @@ export declare class ResourceTreeFrame {
      */
     isOutermostFrame(): boolean;
     /**
-     * Returns true is this is the primary frame of the browser tab. There can only be one primary frame for each
+     * Returns true if this is the primary frame of the browser tab. There can only be one primary frame for each
      * browser tab. It is the outermost frame being actively displayed in the browser tab.
      * https://chromium.googlesource.com/chromium/src/+/HEAD/docs/frame_trees.md
      */

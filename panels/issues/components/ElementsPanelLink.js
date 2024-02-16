@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 import * as ComponentHelpers from '../../../ui/components/helpers/helpers.js';
 import * as LitHtml from '../../../ui/lit-html/lit-html.js';
+import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
 import elementsPanelLinkStyles from './elementsPanelLink.css.js';
 export class ElementsPanelLink extends HTMLElement {
     static litTagName = LitHtml.literal `devtools-elements-panel-link`;
@@ -27,6 +28,7 @@ export class ElementsPanelLink extends HTMLElement {
         LitHtml.render(LitHtml.html `
       <span
         class="element-reveal-icon"
+        jslog=${VisualLogging.link('elements-panel').track({ click: true })}
         @click=${this.#onElementRevealIconClick}
         @mouseenter=${this.#onElementRevealIconMouseEnter}
         @mouseleave=${this.#onElementRevealIconMouseLeave}></span>

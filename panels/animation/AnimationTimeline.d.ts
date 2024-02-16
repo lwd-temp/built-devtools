@@ -1,7 +1,7 @@
 import * as SDK from '../../core/sdk/sdk.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { AnimationGroupPreviewUI } from './AnimationGroupPreviewUI.js';
-import { AnimationModel, type AnimationEffect, type AnimationGroup } from './AnimationModel.js';
+import { type AnimationEffect, type AnimationGroup, AnimationModel } from './AnimationModel.js';
 import { AnimationUI } from './AnimationUI.js';
 export declare class AnimationTimeline extends UI.Widget.VBox implements SDK.TargetManager.SDKModelObserver<AnimationModel> {
     #private;
@@ -23,7 +23,6 @@ export declare class AnimationTimeline extends UI.Widget.VBox implements SDK.Tar
     private createHeader;
     private handlePlaybackRateControlKeyDown;
     private focusNextPlaybackRateButton;
-    private getPopoverRequest;
     private togglePauseAll;
     private setPlaybackRate;
     private updatePlaybackControls;
@@ -37,24 +36,26 @@ export declare class AnimationTimeline extends UI.Widget.VBox implements SDK.Tar
     private clearTimeline;
     private reset;
     private animationGroupStarted;
+    private clearPreviews;
+    private createPreview;
     private addAnimationGroup;
     private handleAnimationGroupKeyDown;
     private focusNextGroup;
     private removeAnimationGroup;
     private selectAnimationGroup;
+    animationGroupSelectedForTest(): void;
     private addAnimation;
-    private nodeRemoved;
+    private markNodeAsRemoved;
+    private hasAnimationGroupActiveNodes;
     private renderGrid;
     scheduleRedraw(): void;
     private render;
     onResize(): void;
     width(): number;
-    private resizeWindow;
     private syncScrubber;
     private animateTime;
     pixelMsRatio(): number;
     private updateScrubber;
-    private repositionScrubber;
     private scrubberDragStart;
     private scrubberDragMove;
     private scrubberDragEnd;
@@ -67,6 +68,7 @@ export declare class NodeUI {
     nodeResolved(node: SDK.DOMModel.DOMNode | null): void;
     createNewRow(): Element;
     nodeRemoved(): void;
+    hasActiveNode(): boolean;
     nodeChanged(): void;
 }
 export declare class StepTimingFunction {

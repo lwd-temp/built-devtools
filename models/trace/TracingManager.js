@@ -80,7 +80,20 @@ export class TracingManager extends SDK.SDKModel.SDKModel {
         if (response.getError()) {
             this.#activeClient = null;
         }
+        await this.warmupJsProfiler();
         return response;
+    }
+    // CPUProfiler::StartProfiling has a non-trivial cost and we'd prefer it not happen within an
+    // interaction as that complicates debugging interaction latency.
+    // To trigger the StartProfiling interrupt and get the warmup cost out of the way, we send a
+    // very soft invocation to V8.
+    // https://crbug.com/1358602
+    async warmupJsProfiler() {
+        const runtimeModel = this.target().model(SDK.RuntimeModel.RuntimeModel);
+        if (!runtimeModel) {
+            return;
+        }
+        await runtimeModel.checkSideEffectSupport();
     }
     stop() {
         if (!this.#activeClient) {
@@ -108,5 +121,5 @@ class TracingDispatcher {
         this.#tracingManager.tracingComplete();
     }
 }
-SDK.SDKModel.SDKModel.register(TracingManager, { capabilities: SDK.Target.Capability.Tracing, autostart: false });
+SDK.SDKModel.SDKModel.register(TracingManager, { capabilities: 128 /* SDK.Target.Capability.Tracing */, autostart: false });
 //# sourceMappingURL=TracingManager.js.map

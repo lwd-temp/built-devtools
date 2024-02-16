@@ -1,4 +1,7 @@
 /**
+ * @fileoverview using private properties isn't a Closure violation in tests.
+ */
+/**
  * @return {boolean}
  */
 export function isDebugTest(): boolean;
@@ -43,11 +46,6 @@ export function addSnifferPromise(receiver: Object, methodName: string): Promise
  * @return {Text}
  */
 export function selectTextInTextNode(textNode: Text, start?: number | undefined, end?: number | undefined): Text;
-/**
- * @param {string} module
- * @return {!Promise<void>}
- */
-export function loadLegacyModule(module: string): Promise<void>;
 /**
  * @param {string} panel
  * @return {!Promise.<?UI.Panel.Panel>}
@@ -97,11 +95,11 @@ export function evaluateInPageRemoteObject(code: string): Promise<any>;
 export function evaluateInPage(code: string, callback: (arg0: any, arg1: Protocol.Runtime.ExceptionDetails | undefined) => void): Promise<void>;
 /**
  * @param {string} code
- * @return {!Promise<undefined|{response: (!SDK.RemoteObject|undefined),
+ * @return {!Promise<undefined|{response: (!SDK.RuntimeModel.RemoteObject|undefined),
  *   exceptionDetails: (!Protocol.Runtime.ExceptionDetails|undefined)}>}
  */
 export function _evaluateInPage(code: string): Promise<{
-    response: (SDK.RemoteObject | undefined);
+    response: (SDK.RuntimeModel.RemoteObject | undefined);
     exceptionDetails: (Protocol.Runtime.ExceptionDetails | undefined);
 } | undefined>;
 /**
@@ -197,9 +195,9 @@ export function startDumpingProtocolMessages(): void;
 /**
  * @param {string} url
  * @param {string} content
- * @param {!SDK.ResourceTreeFrame} frame
+ * @param {!SDK.ResourceTreeModel.ResourceTreeFrame} frame
  */
-export function addScriptForFrame(url: string, content: string, frame: SDK.ResourceTreeFrame): void;
+export function addScriptForFrame(url: string, content: string, frame: SDK.ResourceTreeModel.ResourceTreeFrame): void;
 /**
  * @param {!Object} object
  * @param {!TestRunner.CustomFormatters=} customFormatters
@@ -238,25 +236,25 @@ export function dump(value: any, customFormatters?: TestRunner.CustomFormatters 
  */
 export function waitForEvent(eventName: symbol, obj: Common.ObjectWrapper.ObjectWrapper<any>, condition?: ((arg0: unknown) => boolean) | undefined): Promise<any>;
 /**
- * @param {function(!SDK.Target):boolean} filter
- * @return {!Promise<!SDK.Target>}
+ * @param {function(!SDK.Target.Target):boolean} filter
+ * @return {!Promise<!SDK.Target.Target>}
  */
-export function waitForTarget(filter: (arg0: SDK.Target) => boolean): Promise<SDK.Target>;
+export function waitForTarget(filter: (arg0: SDK.Target.Target) => boolean): Promise<SDK.Target.Target>;
 /**
- * @param {!SDK.Target} targetToRemove
- * @return {!Promise<!SDK.Target>}
+ * @param {!SDK.Target.Target} targetToRemove
+ * @return {!Promise<!SDK.Target.Target>}
  */
-export function waitForTargetRemoved(targetToRemove: SDK.Target): Promise<SDK.Target>;
+export function waitForTargetRemoved(targetToRemove: SDK.Target.Target): Promise<SDK.Target.Target>;
 /**
- * @param {!SDK.RuntimeModel} runtimeModel
+ * @param {!SDK.RuntimeModel.RuntimeModel} runtimeModel
  * @return {!Promise}
  */
-export function waitForExecutionContext(runtimeModel: SDK.RuntimeModel): Promise<any>;
+export function waitForExecutionContext(runtimeModel: SDK.RuntimeModel.RuntimeModel): Promise<any>;
 /**
- * @param {!SDK.ExecutionContext} context
+ * @param {!SDK.RuntimeModel.ExecutionContext} context
  * @return {!Promise}
  */
-export function waitForExecutionContextDestroyed(context: SDK.ExecutionContext): Promise<any>;
+export function waitForExecutionContextDestroyed(context: SDK.RuntimeModel.ExecutionContext): Promise<any>;
 /**
  * @param {number} a
  * @param {number} b
@@ -340,9 +338,9 @@ export function override(receiver: Object, methodName: string, override: Functio
 export function clearSpecificInfoFromStackFrames(text: string): string;
 export function hideInspectorView(): void;
 /**
- * @return {?SDK.ResourceTreeFrame}
+ * @return {?SDK.ResourceTreeModel.ResourceTreeFrame}
  */
-export function mainFrame(): SDK.ResourceTreeFrame | null;
+export function mainFrame(): SDK.ResourceTreeModel.ResourceTreeFrame | null;
 /**
  * @param {string} urlSuffix
  * @param {!Workspace.Workspace.projectTypes=} projectType
@@ -443,5 +441,6 @@ export class MockSetting<V> {
 }
 export function findLineEndingIndexes(inputString: string): Array<number>;
 import * as UI from '../../ui/legacy/legacy.js';
+import * as SDK from '../../core/sdk/sdk.js';
 import * as Common from '../../core/common/common.js';
 import * as Workspace from '../../models/workspace/workspace.js';

@@ -27,6 +27,7 @@ export declare class TextPrompt extends Common.ObjectWrapper.ObjectWrapper<Event
     private oldTabIndex?;
     private completeTimeout?;
     private disableDefaultSuggestionForEmptyInputInternal?;
+    jslogContext: string | undefined;
     constructor();
     initialize(completions: (this: null, expression: string, filter: string, force?: boolean | undefined) => Promise<Suggestion[]>, stopCharacters?: string, usesSuggestionBuilder?: boolean): void;
     setAutocompletionTimeout(timeout: number): void;
@@ -95,7 +96,7 @@ export declare class TextPrompt extends Common.ObjectWrapper.ObjectWrapper<Event
     private updateLeftParenthesesIndices;
     suggestBoxForTest(): SuggestBox | undefined;
 }
-export declare enum Events {
+export declare const enum Events {
     TextChanged = "TextChanged"
 }
 export type EventTypes = {

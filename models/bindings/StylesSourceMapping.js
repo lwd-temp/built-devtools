@@ -51,6 +51,9 @@ export class StylesSourceMapping {
             this.#cssModel.addEventListener(SDK.CSSModel.Events.StyleSheetChanged, this.styleSheetChanged, this),
         ];
     }
+    addSourceMap(sourceUrl, sourceMapUrl) {
+        this.#styleFiles.get(sourceUrl)?.addSourceMap(sourceUrl, sourceMapUrl);
+    }
     rawLocationToUILocation(rawLocation) {
         const header = rawLocation.header();
         if (!header || !this.acceptsHeader(header)) {
@@ -270,6 +273,10 @@ export class StyleFile {
         console.assert(this.headers.size > 0);
         return this.headers.values().next().value.originalContentProvider().requestContent();
     }
+    requestContentData() {
+        console.assert(this.headers.size > 0);
+        return this.headers.values().next().value.originalContentProvider().requestContentData();
+    }
     searchInContent(query, caseSensitive, isRegex) {
         console.assert(this.headers.size > 0);
         return this.headers.values().next().value.originalContentProvider().searchInContent(query, caseSensitive, isRegex);
@@ -282,6 +289,13 @@ export class StyleFile {
     }
     getUiSourceCode() {
         return this.uiSourceCode;
+    }
+    addSourceMap(sourceUrl, sourceMapUrl) {
+        const sourceMapManager = this.#cssModel.sourceMapManager();
+        this.headers.forEach(header => {
+            sourceMapManager.detachSourceMap(header);
+            sourceMapManager.attachSourceMap(header, sourceUrl, sourceMapUrl);
+        });
     }
 }
 //# sourceMappingURL=StylesSourceMapping.js.map

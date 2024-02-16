@@ -4,6 +4,7 @@
 import * as Platform from '../../../../core/platform/platform.js';
 import * as ComponentHelpers from '../../../components/helpers/helpers.js';
 import * as LitHtml from '../../../lit-html/lit-html.js';
+import * as VisualLogging from '../../../visual_logging/visual_logging.js';
 import colorMixSwatchStyles from './colorMixSwatch.css.js';
 export class ColorMixSwatch extends HTMLElement {
     static litTagName = LitHtml.literal `devtools-color-mix-swatch`;
@@ -53,7 +54,7 @@ export class ColorMixSwatch extends HTMLElement {
         // free to append any content to replace what is being shown here.
         // Note also that whitespace between nodes is removed on purpose to avoid pushing these elements apart. Do not
         // re-format the HTML code.
-        LitHtml.render(LitHtml.html `<div class="swatch-icon">
+        LitHtml.render(LitHtml.html `<div class="swatch-icon" jslog=${VisualLogging.cssColorMix()}>
         <span class="swatch swatch-left" id="swatch-1" style="--color: ${this.firstColorText}"></span>
         <span class="swatch swatch-right" id="swatch-2" style="--color: ${this.secondColorText}"></span>
         <span class="swatch swatch-mix" id="mix-result" style="--color: ${this.colorMixText}"></span>

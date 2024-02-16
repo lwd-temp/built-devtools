@@ -27,14 +27,13 @@ export declare class NavigatorView extends UI.Widget.VBox implements SDK.TargetM
     private navigatorGroupByFolderSetting;
     private navigatorGroupByAuthoredExperiment?;
     private workspaceInternal;
-    private lastSelectedUISourceCode?;
     private groupByFrame?;
     private groupByAuthored?;
     private groupByDomain?;
     private groupByFolder?;
-    constructor(enableAuthoredGrouping?: boolean);
+    constructor(jslogContext: string, enableAuthoredGrouping?: boolean);
     private static treeElementOrder;
-    static appendSearchItem(contextMenu: UI.ContextMenu.ContextMenu, path?: Platform.DevToolsPath.EncodedPathString): void;
+    static appendSearchItem(contextMenu: UI.ContextMenu.ContextMenu, path: string): void;
     private static treeElementsCompare;
     setPlaceholder(placeholder: UI.Widget.Widget): void;
     private onBindingChanged;
@@ -86,8 +85,6 @@ export declare class NavigatorView extends UI.Widget.VBox implements SDK.TargetM
     private handleContextMenuExclude;
     private handleContextMenuDelete;
     handleFileContextMenu(event: Event, node: NavigatorUISourceCodeTreeNode): void;
-    private handleDeleteOverrides;
-    private handleDeleteOverridesHelper;
     private handleDeleteFolder;
     private removeUISourceCodeFromProject;
     private deleteDirectoryRecursively;
@@ -106,6 +103,7 @@ export declare class NavigatorView extends UI.Widget.VBox implements SDK.TargetM
     wasShown(): void;
 }
 export declare class NavigatorFolderTreeElement extends UI.TreeOutline.TreeElement {
+    #private;
     private readonly nodeType;
     private readonly navigatorView;
     private hoverCallback;

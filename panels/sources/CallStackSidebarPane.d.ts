@@ -1,8 +1,8 @@
 import * as SDK from '../../core/sdk/sdk.js';
+import type * as Protocol from '../../generated/protocol.js';
 import * as Bindings from '../../models/bindings/bindings.js';
 import type * as Workspace from '../../models/workspace/workspace.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import type * as Protocol from '../../generated/protocol.js';
 export declare class CallStackSidebarPane extends UI.View.SimpleView implements UI.ContextFlavorListener.ContextFlavorListener, UI.ListControl.ListDelegate<Item> {
     private readonly ignoreListMessageElement;
     private readonly ignoreListCheckboxElement;
@@ -50,9 +50,6 @@ export declare class CallStackSidebarPane extends UI.View.SimpleView implements 
 export declare const elementSymbol: unique symbol;
 export declare const defaultMaxAsyncStackChainDepth = 32;
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
     handleAction(context: UI.Context.Context, actionId: string): boolean;
 }
 export declare class Item {

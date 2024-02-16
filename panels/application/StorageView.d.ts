@@ -41,9 +41,6 @@ export declare class StorageView extends UI.ThrottledWidget.ThrottledWidget {
 }
 export declare const AllStorageTypes: Protocol.Storage.StorageType[];
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
-    handleAction(context: UI.Context.Context, actionId: string): boolean;
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
     private handleClear;
 }

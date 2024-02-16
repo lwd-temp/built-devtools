@@ -172,9 +172,6 @@ export declare class ConsoleViewFilter {
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
     handleAction(_context: UI.Context.Context, actionId: string): boolean;
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
 }
 export interface RegexMatchRange {
     messageIndex: number;

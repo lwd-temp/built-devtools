@@ -1,5 +1,5 @@
+import * as Protocol from '../../generated/protocol.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import type * as Protocol from '../../generated/protocol.js';
 import * as ApplicationComponents from './components/components.js';
 interface InterestGroupDetailsGetter {
     getInterestGroupDetails: (owner: string, name: string) => Promise<Protocol.Storage.InterestGroupDetails | null>;
@@ -17,5 +17,6 @@ export declare class InterestGroupStorageView extends UI.SplitWidget.SplitWidget
     private onFocus;
     getEventsForTesting(): Array<Protocol.Storage.InterestGroupAccessedEvent>;
     getInterestGroupGridForTesting(): ApplicationComponents.InterestGroupAccessGrid.InterestGroupAccessGrid;
+    sidebarUpdatedForTesting(): void;
 }
 export {};

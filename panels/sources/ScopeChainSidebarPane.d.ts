@@ -18,10 +18,3 @@ export declare class ScopeChainSidebarPane extends UI.Widget.VBox implements UI.
     private sidebarPaneUpdatedForTest;
     wasShown(): void;
 }
-export declare class OpenLinearMemoryInspector extends UI.Widget.VBox implements UI.ContextMenu.Provider {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): OpenLinearMemoryInspector;
-    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, target: Object): void;
-    private openMemoryInspector;
-}

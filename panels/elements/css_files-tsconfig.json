@@ -12,7 +12,6 @@
         "elementsPanel.css.js",
         "elementsTreeOutline.css.js",
         "layersWidget.css.js",
-        "layoutPane.css.js",
         "metricsSidebarPane.css.js",
         "nodeStackTraceWidget.css.js",
         "platformFontsWidget.css.js",

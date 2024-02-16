@@ -32,12 +32,13 @@
 import * as Common from '../../core/common/common.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
+import * as VisualLogging from '../visual_logging/visual_logging.js';
 import * as ARIAUtils from './ARIAUtils.js';
-import * as ThemeSupport from './theme_support/theme_support.js';
 import { SuggestBox } from './SuggestBox.js';
+import textPromptStyles from './textPrompt.css.legacy.js';
+import * as ThemeSupport from './theme_support/theme_support.js';
 import { Tooltip } from './Tooltip.js';
 import { ElementFocusRestorer } from './UIUtils.js';
-import textPromptStyles from './textPrompt.css.legacy.js';
 export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
     proxyElement;
     proxyElementDisplay;
@@ -65,6 +66,7 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
     oldTabIndex;
     completeTimeout;
     disableDefaultSuggestionForEmptyInputInternal;
+    jslogContext = undefined;
     constructor() {
         super();
         this.proxyElementDisplay = 'inline-block';
@@ -126,9 +128,14 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
             element.parentElement.insertBefore(this.proxyElement, element);
         }
         this.contentElement.appendChild(element);
+        let jslog = VisualLogging.textField().track({ keydown: true });
+        if (this.jslogContext) {
+            jslog = jslog.context(this.jslogContext);
+        }
+        this.elementInternal.setAttribute('jslog', `${jslog}`);
         this.elementInternal.classList.add('text-prompt');
         ARIAUtils.markAsTextBox(this.elementInternal);
-        ARIAUtils.setAutocomplete(this.elementInternal, ARIAUtils.AutocompleteInteractionModel.both);
+        ARIAUtils.setAutocomplete(this.elementInternal, "both" /* ARIAUtils.AutocompleteInteractionModel.Both */);
         ARIAUtils.setHasPopup(this.elementInternal, "listbox" /* ARIAUtils.PopupRole.ListBox */);
         this.elementInternal.setAttribute('contenteditable', 'plaintext-only');
         this.element().addEventListener('keydown', this.boundOnKeyDown, false);
@@ -380,7 +387,7 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
         }
         this.refreshGhostText();
         this.previousText = text;
-        this.dispatchEventToListeners(Events.TextChanged);
+        this.dispatchEventToListeners("TextChanged" /* Events.TextChanged */);
         this.autoCompleteSoon();
     }
     acceptAutoComplete() {
@@ -406,7 +413,7 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
         this.queryRange = null;
         this.refreshGhostText();
         if (beforeText !== this.textWithCurrentSuggestion()) {
-            this.dispatchEventToListeners(Events.TextChanged);
+            this.dispatchEventToListeners("TextChanged" /* Events.TextChanged */);
         }
     }
     refreshGhostText() {
@@ -521,7 +528,7 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
         this.currentSuggestion = suggestion;
         this.refreshGhostText();
         if (isIntermediateSuggestion) {
-            this.dispatchEventToListeners(Events.TextChanged);
+            this.dispatchEventToListeners("TextChanged" /* Events.TextChanged */);
         }
     }
     acceptSuggestion() {
@@ -539,7 +546,7 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
         this.setDOMSelection(this.queryRange.startColumn + startColumn, this.queryRange.startColumn + endColumn);
         this.updateLeftParenthesesIndices();
         this.clearAutocomplete();
-        this.dispatchEventToListeners(Events.TextChanged);
+        this.dispatchEventToListeners("TextChanged" /* Events.TextChanged */);
         return true;
     }
     ariaControlledBy() {
@@ -673,10 +680,4 @@ export class TextPrompt extends Common.ObjectWrapper.ObjectWrapper {
     }
 }
 const DefaultAutocompletionTimeout = 250;
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var Events;
-(function (Events) {
-    Events["TextChanged"] = "TextChanged";
-})(Events || (Events = {}));
 //# sourceMappingURL=TextPrompt.js.map

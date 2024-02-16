@@ -1,18 +1,14 @@
 import * as TraceEngine from '../../models/trace/trace.js';
-import type * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import { type CompatibilityTracksAppender, type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName } from './CompatibilityTracksAppender.js';
-export declare const enum ThreadType {
-    MAIN_THREAD = "MAIN_THREAD",
-    WORKER = "WORKER",
-    RASTERIZER = "RASTERIZER",
-    OTHER = "OTHER"
-}
 export declare class ThreadAppender implements TrackAppender {
     #private;
     readonly appenderName: TrackAppenderName;
-    readonly threadType: ThreadType;
+    readonly threadType: TraceEngine.Handlers.Threads.ThreadType;
     readonly isOnMainFrame: boolean;
-    constructor(compatibilityBuilder: CompatibilityTracksAppender, flameChartData: PerfUI.FlameChart.FlameChartTimelineData, traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData, processId: TraceEngine.Types.TraceEvents.ProcessID, threadId: TraceEngine.Types.TraceEvents.ThreadID, threadName: string | null, type: ThreadType, rasterCount: number);
+    constructor(compatibilityBuilder: CompatibilityTracksAppender, traceParsedData: TraceEngine.Handlers.Types.TraceParseData, processId: TraceEngine.Types.TraceEvents.ProcessID, threadId: TraceEngine.Types.TraceEvents.ThreadID, threadName: string | null, type: TraceEngine.Handlers.Threads.ThreadType);
+    entriesFilter(): TraceEngine.EntriesFilter.EntriesFilter;
+    processId(): TraceEngine.Types.TraceEvents.ProcessID;
+    threadId(): TraceEngine.Types.TraceEvents.ThreadID;
     /**
      * Appends into the flame chart data the data corresponding to the
      * this thread.
@@ -23,7 +19,11 @@ export declare class ThreadAppender implements TrackAppender {
      * appended the track's events.
      */
     appendTrackAtLevel(trackStartLevel: number, expanded?: boolean): number;
+    setHeaderNestingLevel(level: number): void;
+    setHeaderAppended(headerAppended: boolean): void;
+    headerAppended(): boolean;
     trackName(): string;
+    getUrl(): string;
     isIgnoreListedEntry(entry: TraceEngine.Types.TraceEvents.TraceEventData): boolean;
     private isIgnoreListedURL;
     /**
@@ -38,5 +38,5 @@ export declare class ThreadAppender implements TrackAppender {
      * Returns the info shown when an event added by this appender
      * is hovered in the timeline.
      */
-    highlightedEntryInfo(event: TraceEngine.Types.TraceEvents.SyntheticEventWithSelfTime): HighlightedEntryInfo;
+    highlightedEntryInfo(event: TraceEngine.Types.TraceEvents.SyntheticTraceEntry): HighlightedEntryInfo;
 }

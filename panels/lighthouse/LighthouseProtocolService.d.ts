@@ -10,9 +10,7 @@ export interface LighthouseRun {
  */
 export declare class ProtocolService {
     private mainSessionId?;
-    private mainFrameId?;
-    private mainTargetId?;
-    private targetInfos?;
+    private rootTargetId?;
     private parallelConnection?;
     private lighthouseWorkerPromise?;
     private lighthouseMessageUpdateCallback?;

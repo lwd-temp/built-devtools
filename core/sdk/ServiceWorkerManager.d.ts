@@ -31,7 +31,7 @@ export declare class ServiceWorkerManager extends SDKModel<EventTypes> {
     forceUpdateOnReloadSetting(): Common.Settings.Setting<boolean>;
     private forceUpdateSettingChanged;
 }
-export declare enum Events {
+export declare const enum Events {
     RegistrationUpdated = "RegistrationUpdated",
     RegistrationErrorAdded = "RegistrationErrorAdded",
     RegistrationDeleted = "RegistrationDeleted"
@@ -58,6 +58,12 @@ export declare class ServiceWorkerVersionState {
     previousState: ServiceWorkerVersionState | null;
     constructor(runningStatus: Protocol.ServiceWorker.ServiceWorkerVersionRunningStatus, status: Protocol.ServiceWorker.ServiceWorkerVersionStatus, previousState: ServiceWorkerVersionState | null, timestamp: number);
 }
+export declare class ServiceWorkerRouterRule {
+    condition: string;
+    source: string;
+    id: number;
+    constructor(condition: string, source: string, id: number);
+}
 export declare class ServiceWorkerVersion {
     id: string;
     scriptURL: Platform.DevToolsPath.UrlString;
@@ -67,6 +73,7 @@ export declare class ServiceWorkerVersion {
     scriptResponseTime: number | undefined;
     controlledClients: Protocol.Target.TargetID[];
     targetId: string | null;
+    routerRules: ServiceWorkerRouterRule[] | null;
     currentState: ServiceWorkerVersionState;
     registration: ServiceWorkerRegistration;
     constructor(registration: ServiceWorkerRegistration, payload: Protocol.ServiceWorker.ServiceWorkerVersion);
@@ -86,6 +93,7 @@ export declare class ServiceWorkerVersion {
     get status(): Protocol.ServiceWorker.ServiceWorkerVersionStatus;
     get runningStatus(): Protocol.ServiceWorker.ServiceWorkerVersionRunningStatus;
     mode(): string;
+    private parseJSONRules;
 }
 export declare namespace ServiceWorkerVersion {
     const RunningStatus: {
@@ -102,7 +110,7 @@ export declare namespace ServiceWorkerVersion {
         new: () => Common.UIString.LocalizedString;
         redundant: () => Common.UIString.LocalizedString;
     };
-    enum Modes {
+    const enum Modes {
         Installing = "installing",
         Waiting = "waiting",
         Active = "active",

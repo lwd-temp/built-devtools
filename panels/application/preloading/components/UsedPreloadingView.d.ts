@@ -1,12 +1,13 @@
+import type * as Platform from '../../../../core/platform/platform.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as LegacyWrapper from '../../../../ui/components/legacy_wrapper/legacy_wrapper.js';
 import * as UI from '../../../../ui/legacy/legacy.js';
-import type * as Platform from '../../../../core/platform/platform.js';
 export interface UsedPreloadingViewData {
     pageURL: Platform.DevToolsPath.UrlString;
-    attempts: SDK.PreloadingModel.PreloadingAttempt[];
+    previousAttempts: SDK.PreloadingModel.PreloadingAttempt[];
+    currentAttempts: SDK.PreloadingModel.PreloadingAttempt[];
 }
-export declare enum UsedKind {
+export declare const enum UsedKind {
     DowngradedPrerenderToPrefetchAndUsed = "DowngradedPrerenderToPrefetchAndUsed",
     PrefetchUsed = "PrefetchUsed",
     PrerenderUsed = "PrerenderUsed",

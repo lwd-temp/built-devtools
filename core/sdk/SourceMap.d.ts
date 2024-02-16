@@ -15,6 +15,7 @@ export type SourceMapV3Object = {
     'sourcesContent'?: (string | null)[];
     'names'?: string[];
     'mappings': string;
+    'ignoreList'?: number[];
     'x_google_linecount'?: number;
     'x_google_ignoreList'?: number[];
     'x_com_bloomberg_sourcesFunctionMappings'?: string[];

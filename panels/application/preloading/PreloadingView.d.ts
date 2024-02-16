@@ -1,7 +1,7 @@
 import type * as Common from '../../../core/common/common.js';
-import * as UI from '../../../ui/legacy/legacy.js';
-import * as Protocol from '../../../generated/protocol.js';
 import * as SDK from '../../../core/sdk/sdk.js';
+import * as Protocol from '../../../generated/protocol.js';
+import * as UI from '../../../ui/legacy/legacy.js';
 import * as PreloadingComponents from './components/components.js';
 import type * as PreloadingHelper from './helper/helper.js';
 export declare class PreloadingRuleSetView extends UI.Widget.VBox {
@@ -44,7 +44,7 @@ export declare class PreloadingAttemptView extends UI.Widget.VBox {
     getPreloadingDetailsForTest(): PreloadingComponents.PreloadingDetailsReportView.PreloadingDetailsReportView;
     selectRuleSetOnFilterForTest(id: Protocol.Preload.RuleSetId | null): void;
 }
-export declare class PreloadingResultView extends UI.Widget.VBox {
+export declare class PreloadingSummaryView extends UI.Widget.VBox {
     private model;
     private readonly warningsContainer;
     private readonly warningsView;

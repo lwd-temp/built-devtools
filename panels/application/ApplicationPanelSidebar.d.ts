@@ -11,8 +11,7 @@ import { type DOMStorage } from './DOMStorageModel.js';
 import { type Database as IndexedDBModelDatabase, type DatabaseId, type Index, IndexedDBModel, type ObjectStore } from './IndexedDBModel.js';
 import { InterestGroupTreeElement } from './InterestGroupTreeElement.js';
 import type * as PreloadingHelper from './preloading/helper/helper.js';
-import { type PreloadingAttemptView, type PreloadingResultView, type PreloadingRuleSetView } from './preloading/PreloadingView.js';
-import { PreloadingTreeElement } from './PreloadingTreeElement.js';
+import { PreloadingSummaryTreeElement } from './PreloadingTreeElement.js';
 import { ReportingApiTreeElement } from './ReportingApiTreeElement.js';
 import { type ResourcesPanel } from './ResourcesPanel.js';
 import { ServiceWorkerCacheTreeElement } from './ServiceWorkerCacheTreeElement.js';
@@ -20,7 +19,7 @@ import { SharedStorageListTreeElement } from './SharedStorageListTreeElement.js'
 import { StorageBucketsTreeParentElement } from './StorageBucketsTreeElement.js';
 import { TrustTokensTreeElement } from './TrustTokensTreeElement.js';
 export declare namespace SharedStorageTreeElementDispatcher {
-    enum Events {
+    const enum Events {
         SharedStorageTreeElementAdded = "SharedStorageTreeElementAdded"
     }
     interface SharedStorageTreeElementAddedEvent {
@@ -54,9 +53,7 @@ export declare class ApplicationPanelSidebar extends UI.Widget.VBox implements S
     periodicBackgroundSyncTreeElement: BackgroundServiceTreeElement;
     pushMessagingTreeElement: BackgroundServiceTreeElement;
     reportingApiTreeElement: ReportingApiTreeElement;
-    preloadingRuleSetTreeElement: PreloadingTreeElement<PreloadingRuleSetView> | undefined;
-    preloadingAttemptTreeElement: PreloadingTreeElement<PreloadingAttemptView> | undefined;
-    preloadingResultTreeElement: PreloadingTreeElement<PreloadingResultView> | undefined;
+    preloadingSummaryTreeElement: PreloadingSummaryTreeElement | undefined;
     private readonly resourcesSection;
     private readonly databaseTableViews;
     private databaseQueryViews;
@@ -256,7 +253,7 @@ export declare class DOMStorageTreeElement extends ApplicationPanelTreeElement {
 export declare class CookieTreeElement extends ApplicationPanelTreeElement {
     private readonly target;
     private readonly cookieDomainInternal;
-    constructor(storagePanel: ResourcesPanel, frame: SDK.ResourceTreeModel.ResourceTreeFrame, cookieDomain: string);
+    constructor(storagePanel: ResourcesPanel, frame: SDK.ResourceTreeModel.ResourceTreeFrame, cookieUrl: Common.ParsedURL.ParsedURL);
     get itemURL(): Platform.DevToolsPath.UrlString;
     cookieDomain(): string;
     onattach(): void;
@@ -266,9 +263,11 @@ export declare class CookieTreeElement extends ApplicationPanelTreeElement {
 export declare class StorageCategoryView extends UI.Widget.VBox {
     private emptyWidget;
     private linkElement;
+    private warningBar?;
     constructor();
     setText(text: string): void;
     setLink(link: Platform.DevToolsPath.UrlString | null): void;
+    setWarning(message: string | null, learnMoreLink: Platform.DevToolsPath.UrlString, jsLogContext?: string): void;
 }
 export declare class ResourcesSection implements SDK.TargetManager.Observer {
     panel: ResourcesPanel;

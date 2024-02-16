@@ -1,7 +1,7 @@
 import * as SDK from '../../../core/sdk/sdk.js';
 import type * as PublicExtensions from '../../../models/extensions/extensions.js';
-import type * as Extensions from '../extensions/extensions.js';
 import type * as Converters from '../converters/converters.js';
+import type * as Extensions from '../extensions/extensions.js';
 import * as Models from '../models/models.js';
 import { PlayRecordingSpeed } from '../models/RecordingPlayer.js';
 declare global {
@@ -37,7 +37,7 @@ export declare class RecordingFinishedEvent extends Event {
 }
 export declare const enum TargetPanel {
     PerformancePanel = "timeline",
-    Default = "chrome_recorder"
+    Default = "chrome-recorder"
 }
 interface PlayRecordingEventData {
     targetPanel: TargetPanel;
@@ -83,6 +83,7 @@ export declare class TimeoutChanged extends Event {
 export declare class RecordingView extends HTMLElement {
     #private;
     static readonly litTagName: import("../../../ui/lit-html/static.js").Static;
+    constructor();
     set data(data: RecordingViewData);
     connectedCallback(): void;
     disconnectedCallback(): void;

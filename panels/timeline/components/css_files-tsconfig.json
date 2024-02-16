@@ -4,6 +4,7 @@
         "outDir": "."
     },
     "files": [
-        "breadcrumbsUI.css.js"
+        "breadcrumbsUI.css.js",
+        "interactionBreakdown.css.js"
     ]
 }

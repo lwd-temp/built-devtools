@@ -1,13 +1,11 @@
 import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { type PerformanceModel } from './PerformanceModel.js';
 import { type TimelineModeViewDelegate } from './TimelinePanel.js';
 export declare class CountersGraph extends UI.Widget.VBox {
     #private;
     private readonly delegate;
     private readonly calculator;
-    private model;
     private readonly header;
     readonly toolbar: UI.Toolbar.Toolbar;
     private graphsContainer;
@@ -21,13 +19,11 @@ export declare class CountersGraph extends UI.Widget.VBox {
     currentValuesBar?: HTMLElement;
     private markerXPosition?;
     constructor(delegate: TimelineModeViewDelegate);
-    setModel(model: PerformanceModel | null, events: TraceEngine.Legacy.CompatibleTraceEvent[] | null): void;
+    setModel(traceEngineData: TraceEngine.Handlers.Types.TraceParseData | null, events: TraceEngine.Types.TraceEvents.TraceEventData[] | null): void;
     private createCurrentValuesBar;
     private createCounter;
     resizerElement(): Element | null;
     private resize;
-    private onWindowChanged;
-    scheduleRefresh(): void;
     draw(): void;
     private onClick;
     private onMouseLeave;
@@ -71,7 +67,7 @@ export declare class CounterUI {
     private readonly verticalPadding;
     private currentValueLabel;
     private marker;
-    constructor(countersPane: CountersGraph, title: string, graphColor: string, counter: Counter, formatter?: (arg0: number) => string);
+    constructor(countersPane: CountersGraph, title: string, settingsKey: string, graphColor: string, counter: Counter, formatter?: (arg0: number) => string);
     reset(): void;
     setRange(minValue: number, maxValue: number): void;
     private toggleCounterGraph;

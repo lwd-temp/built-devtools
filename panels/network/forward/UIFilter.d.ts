@@ -21,13 +21,13 @@ export declare enum FilterType {
     StatusCode = "status-code",
     Url = "url"
 }
-export declare enum IsFilterType {
+export declare const enum IsFilterType {
     Running = "running",
     FromCache = "from-cache",
     ServiceWorkerIntercepted = "service-worker-intercepted",
     ServiceWorkerInitiated = "service-worker-initiated"
 }
-export declare enum MixedContentFilterValues {
+export declare const enum MixedContentFilterValues {
     All = "all",
     Displayed = "displayed",
     Blocked = "blocked",
@@ -39,7 +39,7 @@ interface UIFilter {
 }
 export declare class UIRequestFilter {
     readonly filters: UIFilter[];
-    private constructor();
+    constructor(filters: UIFilter[]);
     static filters(filters: UIFilter[]): UIRequestFilter;
 }
 export {};

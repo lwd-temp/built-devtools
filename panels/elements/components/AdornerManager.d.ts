@@ -22,7 +22,8 @@ export declare enum RegisteredAdorners {
     CONTAINER = "container",
     SLOT = "slot",
     TOP_LAYER = "top-layer",
-    REVEAL = "reveal"
+    REVEAL = "reveal",
+    MEDIA = "media"
 }
 export declare function getRegisteredAdorner(which: RegisteredAdorners): RegisteredAdorner;
 export declare const DefaultAdornerSettings: AdornerSetting[];

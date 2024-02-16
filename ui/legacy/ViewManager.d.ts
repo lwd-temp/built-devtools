@@ -1,14 +1,15 @@
 import * as Common from '../../core/common/common.js';
+import type * as Root from '../../core/root/root.js';
 import { type ToolbarItem } from './Toolbar.js';
 import { type TabbedViewLocation, type View, type ViewLocation } from './View.js';
-import { getRegisteredLocationResolvers, getRegisteredViewExtensions, getLocalizedViewLocationCategory, maybeRemoveViewExtension, registerLocationResolver, registerViewExtension, ViewLocationCategory, ViewLocationValues, ViewPersistence, type ViewRegistration, resetViewRegistration } from './ViewRegistration.js';
+import { getLocalizedViewLocationCategory, getRegisteredLocationResolvers, getRegisteredViewExtensions, maybeRemoveViewExtension, registerLocationResolver, registerViewExtension, resetViewRegistration, ViewLocationCategory, ViewLocationValues, ViewPersistence, type ViewRegistration } from './ViewRegistration.js';
 import { VBox, type Widget } from './Widget.js';
 export declare const defaultOptionsForTabs: {
     security: boolean;
 };
 export declare class PreRegisteredView implements View {
     private readonly viewRegistration;
-    private widgetRequested;
+    private widgetPromise;
     constructor(viewRegistration: ViewRegistration);
     title(): Common.UIString.LocalizedString;
     commandPrompt(): Common.UIString.LocalizedString;
@@ -25,7 +26,7 @@ export declare class PreRegisteredView implements View {
     widget(): Promise<Widget>;
     disposeView(): Promise<void>;
     experiment(): string | undefined;
-    condition(): string | undefined;
+    condition(): Root.Runtime.Condition | undefined;
 }
 export declare class ViewManager {
     readonly views: Map<string, View>;

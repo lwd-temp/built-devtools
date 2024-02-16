@@ -36,6 +36,10 @@ export declare const UIStrings: {
      */
     CrossOriginWindowConfirm: string;
     /**
+     * @description Warning displayed to developers when their website uses `:--customstatename` in CSS. They can simply switch their CSS to `:state(customstatename)` and it will be the same.
+     */
+    CSSCustomStateDeprecatedSyntax: string;
+    /**
      * @description Warning displayed to developers when they hide the Cast button on a video element using the deprecated CSS selector instead of using the disableRemotePlayback attribute on the element.
      */
     CSSSelectorInternalMediaControlsOverlayCastButton: string;
@@ -43,6 +47,10 @@ export declare const UIStrings: {
      * @description Warning displayed to developers to let them know the CSS appearance property values they used are deprecated and will be removed.
      */
     CSSValueAppearanceNonStandard: string;
+    /**
+     * @description Warning displayed to developers to let them know the CSS appearance property value they used is not standard and will be removed.
+     */
+    CSSValueAppearanceSliderVertical: string;
     /**
      * @description Warning displayed to developers when a data: URL is assigned to SVGUseElement to let them know that the support is deprecated.
      */
@@ -55,10 +63,6 @@ export declare const UIStrings: {
      * @description Warning displayed to developers when non-standard Mutation Events are used. These are deprecated and will be removed.
      */
     DOMMutationEvents: string;
-    /**
-     * @description This message is shown when the deprecated Expect-CT header is present.
-     */
-    ExpectCTHeader: string;
     /**
      * @description Warning displayed to developers when the Geolocation API is used from an insecure origin (one that isn't localhost or doesn't use HTTPS) to notify them that this use is no longer supported.
      */
@@ -99,10 +103,6 @@ export declare const UIStrings: {
      * @description This is a deprecation warning to developers that occurs when the script attempts to use the Media Source Extensions API in a way that is no longer supported by the specification for the API. The usage that is problematic is when the script sets the duration attribute of a MediaSource object too low. The duration attribute of a MediaSource must be longer than the actual duration of any media (audio or video) already in the MediaSource. When set too low, the MediaSource must remove audio and video content that is beyond the time indicated by the new duration. Content removal that is caused by setting the duration attribute too low is no longer allowed by the specification. The message describes the minimum allowable duration value as the 'highest presentation timestamp of any buffered coded frames' as a more precise way of describing the duration of content already in the MediaSource: 'coded frames' are the specification's way of describing compressed audio frames or compressed video frames, and they each have a 'presentation timestamp' that describes precisely when that frame's playback occurs in the overall media presentation. Early versions of the Media Source Extensions specification allowed this to happen, but standardization of the specification resulted in disallowing this behavior. The underlying issue leading to this specification change was that setting the duration attribute should be synchronous, but setting it lower than the timestamp of something currently buffered would cause confusing removal of media between that new duration and the previous, larger, duration. The script should instead explicitly remove that range of media first, before lowering the duration. See https://www.w3.org/TR/media-source-2/#dom-mediasource-duration and https://www.w3.org/TR/media-source-2/#dom-mediasource-duration for the currently specified behavior, which would throw an exception once support is removed for deprecated implicit asynchronous range removal when duration is truncated. See both https://github.com/w3c/media-source/issues/20 and https://github.com/w3c/media-source/issues/26 for the discussion that led to the specification change.
      */
     MediaSourceDurationTruncatingBuffered: string;
-    /**
-     * @description This warning is displayed when a site contains a `<template>` element with the `shadowroot` attribute.
-     */
-    NonStandardDeclarativeShadowDOM: string;
     /**
      * @description This warning occurs when the browser requests Web MIDI access as sysex (system exclusive messages) can be allowed via prompt even if the browser did not specifically request it.
      */
@@ -211,6 +211,10 @@ export declare const UIStrings: {
      * @description A deprecation warning shown in the DevTools Issues tab. It's shown when the speech synthesis API is called before the page receives a user activation.
      */
     TextToSpeech_DisallowedByAutoplay: string;
+    /**
+     * @description A deprecation warning shown in the DevTools Issues tab. It's shown when a listener for the `unload` event is added.
+     */
+    UnloadHandler: string;
     /**
      * @description A deprecation warning shown in the DevTools Issues tab. The placeholder is always the noun 'SharedArrayBuffer' which refers to a JavaScript construct. 'Extensions' refers to Chrome extensions. The warning is shown when Chrome Extensions attempt to use 'SharedArrayBuffer's under insecure circumstances.
      */

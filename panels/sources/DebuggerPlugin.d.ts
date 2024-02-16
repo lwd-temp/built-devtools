@@ -61,7 +61,6 @@ export declare class DebuggerPlugin extends Plugin {
     private onKeyUp;
     private setControlDown;
     private editBreakpointCondition;
-    private computeExecutionDecorations;
     private updateValueDecorations;
     private computeValueDecorations;
     private showContinueToLocations;
@@ -90,12 +89,10 @@ export declare class DebuggerPlugin extends Plugin {
     private setExecutionLocation;
     dispose(): void;
 }
-export declare class BreakpointLocationRevealer implements Common.Revealer.Revealer {
-    static instance({ forceNew }?: {
-        forceNew: boolean;
-    }): BreakpointLocationRevealer;
-    reveal(breakpointLocation: Object, omitFocus?: boolean | undefined): Promise<void>;
+export declare class BreakpointLocationRevealer implements Common.Revealer.Revealer<Breakpoints.BreakpointManager.BreakpointLocation> {
+    reveal(breakpointLocation: Breakpoints.BreakpointManager.BreakpointLocation, omitFocus?: boolean | undefined): Promise<void>;
 }
+export declare function computeExecutionDecorations(state: CodeMirror.EditorState, lineNumber: number, columnNumber: number): CodeMirror.DecorationSet;
 export declare function getVariableNamesByLine(editorState: CodeMirror.EditorState, fromPos: number, toPos: number, currentPos: number): {
     line: number;
     from: number;
@@ -118,5 +115,5 @@ export declare function getVariableValuesByLine(scopeMappings: {
 export declare function computePopoverHighlightRange(state: CodeMirror.EditorState, mimeType: string, cursorPos: number): {
     from: number;
     to: number;
-    containsCallExpression: boolean;
+    containsSideEffects: boolean;
 } | null;

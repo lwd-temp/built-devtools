@@ -1,8 +1,6 @@
-import type * as IconButton from '../components/icon_button/icon_button.js';
 import { type ActionDelegate as ActionDelegateInterface } from './ActionRegistration.js';
 import { type Context } from './Context.js';
 import { type ContextMenu } from './ContextMenu.js';
-import { type Icon } from './Icon.js';
 import { type Panel } from './Panel.js';
 import { SplitWidget } from './SplitWidget.js';
 import { type TabbedPane, type TabbedPaneTabDelegate } from './TabbedPane.js';
@@ -38,11 +36,14 @@ export declare class InspectorView extends VBox implements ViewLocationResolver 
     onSuspendStateChanged(allTargetsSuspended: boolean): void;
     canSelectPanel(panelName: string): boolean;
     showPanel(panelName: string): Promise<void>;
-    setPanelIcon(tabId: string, icon: Icon | IconButton.Icon.Icon | null): void;
+    setPanelWarnings(tabId: string, warnings: string[]): void;
     private emitDrawerChangeEvent;
     private getTabbedPaneForTabId;
     currentPanelDeprecated(): Widget | null;
-    showDrawer(focus: boolean): void;
+    showDrawer({ focus, hasTargetDrawer }: {
+        focus: boolean;
+        hasTargetDrawer: boolean;
+    }): void;
     drawerVisible(): boolean;
     closeDrawer(): void;
     setDrawerMinimized(minimized: boolean): void;
@@ -63,9 +64,6 @@ export declare class InspectorView extends VBox implements ViewLocationResolver 
     private attachInfobar;
 }
 export declare class ActionDelegate implements ActionDelegateInterface {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
     handleAction(context: Context, actionId: string): boolean;
 }
 export declare class InspectorViewTabDelegate implements TabbedPaneTabDelegate {
@@ -74,6 +72,6 @@ export declare class InspectorViewTabDelegate implements TabbedPaneTabDelegate {
     moveToMainPanel(tabId: string): void;
     onContextMenu(tabId: string, contextMenu: ContextMenu): void;
 }
-export declare enum Events {
+export declare const enum Events {
     DrawerChange = "drawerchange"
 }

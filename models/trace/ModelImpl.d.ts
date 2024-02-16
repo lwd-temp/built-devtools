@@ -21,10 +21,7 @@ export declare class Model<EnabledModelHandlers extends {
     [key: string]: Handlers.Types.TraceEventHandler;
 }> extends EventTarget {
     #private;
-    static createWithAllHandlers(): Model<typeof Handlers.ModelHandlers>;
-    static createWithRequiredHandlersForMigration(config?: Types.Configuration.Configuration): Model<{
-        [K in keyof typeof Handlers.Migration.ENABLED_TRACE_HANDLERS]: typeof Handlers.Migration.ENABLED_TRACE_HANDLERS[K];
-    }>;
+    static createWithAllHandlers(config?: Types.Configuration.Configuration): Model<typeof Handlers.ModelHandlers>;
     constructor(handlers: EnabledModelHandlers, config?: Types.Configuration.Configuration);
     /**
      * Updates the configuration. Useful if a user changes a setting - this lets

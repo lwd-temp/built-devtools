@@ -4,11 +4,11 @@
 import * as i18n from '../../core/i18n/i18n.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as TimelineModel from '../../models/timeline_model/timeline_model.js';
+import * as TraceEngine from '../../models/trace/trace.js';
+import * as TraceBounds from '../../services/trace_bounds/trace_bounds.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import * as TraceEngine from '../../models/trace/trace.js';
 import { EventsTimelineTreeView } from './EventsTimelineTreeView.js';
-import { Events } from './PerformanceModel.js';
 import { TimelineLayersView } from './TimelineLayersView.js';
 import { TimelinePaintProfilerView } from './TimelinePaintProfilerView.js';
 import { TimelineSelection } from './TimelineSelection.js';
@@ -32,13 +32,13 @@ const UIStrings = {
      */
     eventLog: 'Event Log',
     /**
-     *@description Title of the Layers tool
-     */
-    layers: 'Layers',
-    /**
      *@description Title of the paint profiler, old name of the performance pane
      */
     paintProfiler: 'Paint Profiler',
+    /**
+     *@description Title of the Layers tool
+     */
+    layers: 'Layers',
     /**
      *@description Text in Timeline Details View of the Performance panel
      *@example {1ms} PH1
@@ -63,6 +63,7 @@ export class TimelineDetailsView extends UI.Widget.VBox {
     updateContentsScheduled;
     #traceEngineData = null;
     #filmStrip = null;
+    #onTraceBoundsChangeBound = this.#onTraceBoundsChange.bind(this);
     constructor(delegate) {
         super();
         this.element.classList.add('timeline-details');
@@ -87,19 +88,23 @@ export class TimelineDetailsView extends UI.Widget.VBox {
         this.appendTab(Tab.EventLog, i18nString(UIStrings.eventLog), eventsView);
         this.rangeDetailViews.set(Tab.EventLog, eventsView);
         this.tabbedPane.addEventListener(UI.TabbedPane.Events.TabSelected, this.tabSelected, this);
+        TraceBounds.TraceBounds.onChange(this.#onTraceBoundsChangeBound);
     }
     getDetailsContentElementForTest() {
         return this.defaultDetailsContentElement;
     }
+    #onTraceBoundsChange(event) {
+        if (event.updateType === 'RESET' || event.updateType === 'VISIBLE_WINDOW') {
+            // If the update type was a changing of the minimap bounds, we do not
+            // need to redraw.
+            if (!this.selection) {
+                this.scheduleUpdateContentsFromWindow();
+            }
+        }
+    }
     async setModel(model, traceEngineData, selectedEvents) {
         if (this.model !== model) {
-            if (this.model) {
-                this.model.removeEventListener(Events.WindowChanged, this.onWindowChanged, this);
-            }
             this.model = model;
-            if (this.model) {
-                this.model.addEventListener(Events.WindowChanged, this.onWindowChanged, this);
-            }
         }
         this.#traceEngineData = traceEngineData;
         if (traceEngineData) {
@@ -127,8 +132,12 @@ export class TimelineDetailsView extends UI.Widget.VBox {
     updateContents() {
         const view = this.rangeDetailViews.get(this.tabbedPane.selectedTabId || '');
         if (view) {
-            const window = this.model.window();
-            view.updateContents(this.selection || TimelineSelection.fromRange(window.left, window.right));
+            const traceBoundsState = TraceBounds.TraceBounds.BoundsManager.instance().state();
+            if (!traceBoundsState) {
+                return;
+            }
+            const visibleWindow = traceBoundsState.milli.timelineTraceWindow;
+            view.updateContents(this.selection || TimelineSelection.fromRange(visibleWindow.min, visibleWindow.max));
         }
     }
     appendTab(id, tabTitle, view, isCloseable) {
@@ -143,14 +152,22 @@ export class TimelineDetailsView extends UI.Widget.VBox {
     setPreferredTab(tabId) {
         this.preferredTabId = tabId;
     }
-    onWindowChanged() {
-        if (!this.selection) {
-            this.updateContentsFromWindow();
-        }
-    }
-    updateContentsFromWindow() {
+    /**
+     * This forces a recalculation and rerendering of the timings
+     * breakdown of a track.
+     * User actions like zooming or scrolling can trigger many updates in
+     * short time windows, so we debounce the calls in those cases. Single
+     * sporadic calls (like selecting a new track) don't need to be
+     * debounced. The forceImmediateUpdate param configures the debouncing
+     * behaviour.
+     */
+    scheduleUpdateContentsFromWindow(forceImmediateUpdate = false) {
         if (!this.model) {
             this.setContent(UI.Fragment.html `<div/>`);
+            return;
+        }
+        if (forceImmediateUpdate) {
+            this.updateContentsFromWindow();
             return;
         }
         // Debounce this update as it's not critical.
@@ -158,19 +175,25 @@ export class TimelineDetailsView extends UI.Widget.VBox {
             this.updateContentsScheduled = true;
             setTimeout(() => {
                 this.updateContentsScheduled = false;
-                const window = this.model.window();
-                this.updateSelectedRangeStats(window.left, window.right);
-                this.updateContents();
+                this.updateContentsFromWindow();
             }, 100);
         }
+    }
+    updateContentsFromWindow() {
+        const traceBoundsState = TraceBounds.TraceBounds.BoundsManager.instance().state();
+        if (!traceBoundsState) {
+            return;
+        }
+        const visibleWindow = traceBoundsState.milli.timelineTraceWindow;
+        this.updateSelectedRangeStats(visibleWindow.min, visibleWindow.max);
+        this.updateContents();
     }
     #getFilmStripFrame(frame) {
         if (!this.#filmStrip) {
             return null;
         }
-        const screenshotTime = TraceEngine.Types.Timing.MilliSeconds(frame.idle ? frame.startTime : frame.endTime);
-        const screenshotTimeMicroSeconds = TraceEngine.Helpers.Timing.millisecondsToMicroseconds(screenshotTime);
-        const filmStripFrame = TraceEngine.Extras.FilmStrip.frameClosestToTimestamp(this.#filmStrip, screenshotTimeMicroSeconds);
+        const screenshotTime = (frame.idle ? frame.startTime : frame.endTime);
+        const filmStripFrame = TraceEngine.Extras.FilmStrip.frameClosestToTimestamp(this.#filmStrip, screenshotTime);
         if (!filmStripFrame) {
             return null;
         }
@@ -181,7 +204,9 @@ export class TimelineDetailsView extends UI.Widget.VBox {
         this.detailsLinkifier.reset();
         this.selection = selection;
         if (!this.selection) {
-            this.updateContentsFromWindow();
+            // Update instantly using forceImmediateUpdate, since we are only
+            // making a single call and don't need to debounce.
+            this.scheduleUpdateContentsFromWindow(/* forceImmediateUpdate */ true);
             return;
         }
         const selectionObject = this.selection.object;
@@ -199,9 +224,11 @@ export class TimelineDetailsView extends UI.Widget.VBox {
             const frame = selectionObject;
             const matchedFilmStripFrame = this.#getFilmStripFrame(frame);
             this.setContent(TimelineUIUtils.generateDetailsContentForFrame(frame, this.#filmStrip, matchedFilmStripFrame));
-            if (frame.layerTree) {
+            const target = SDK.TargetManager.TargetManager.instance().rootTarget();
+            if (frame.layerTree && target) {
+                const layerTreeForFrame = new TimelineModel.TracingLayerTree.TracingFrameLayerTree(target, frame.layerTree);
                 const layersView = this.layersView();
-                layersView.showLayerTree(frame.layerTree);
+                layersView.showLayerTree(layerTreeForFrame);
                 if (!this.tabbedPane.hasTab(Tab.LayerViewer)) {
                     this.appendTab(Tab.LayerViewer, i18nString(UIStrings.layers), layersView);
                 }
@@ -231,11 +258,17 @@ export class TimelineDetailsView extends UI.Widget.VBox {
         if (this.lazyPaintProfilerView) {
             return this.lazyPaintProfilerView;
         }
-        this.lazyPaintProfilerView = new TimelinePaintProfilerView(this.model.frameModel());
+        if (!this.#traceEngineData) {
+            return null;
+        }
+        this.lazyPaintProfilerView = new TimelinePaintProfilerView(this.#traceEngineData);
         return this.lazyPaintProfilerView;
     }
     showSnapshotInPaintProfiler(snapshot) {
         const paintProfilerView = this.paintProfilerView();
+        if (!paintProfilerView) {
+            return;
+        }
         paintProfilerView.setSnapshot(snapshot);
         if (!this.tabbedPane.hasTab(Tab.PaintProfiler)) {
             this.appendTab(Tab.PaintProfiler, i18nString(UIStrings.paintProfiler), paintProfilerView, true);
@@ -244,14 +277,13 @@ export class TimelineDetailsView extends UI.Widget.VBox {
     }
     appendDetailsTabsForTraceEventAndShowDetails(event, content) {
         this.setContent(content);
+        // TODO: once the legacy engine types are fully removed, this conditional
+        // can be removed.
         if (TraceEngine.Legacy.eventIsFromNewEngine(event)) {
-            // TODO(crbug.com/1386091): Add support for this use case in the
-            // new engine.
-            return;
-        }
-        if (event.name === TimelineModel.TimelineModel.RecordType.Paint ||
-            event.name === TimelineModel.TimelineModel.RecordType.RasterTask) {
-            this.showEventInPaintProfiler(event);
+            if (TraceEngine.Types.TraceEvents.isTraceEventPaint(event) ||
+                TraceEngine.Types.TraceEvents.isTraceEventRasterTask(event)) {
+                this.showEventInPaintProfiler(event);
+            }
         }
     }
     showEventInPaintProfiler(event) {
@@ -260,6 +292,9 @@ export class TimelineDetailsView extends UI.Widget.VBox {
             return;
         }
         const paintProfilerView = this.paintProfilerView();
+        if (!paintProfilerView) {
+            return;
+        }
         const hasProfileData = paintProfilerView.setEvent(paintProfilerModel, event);
         if (!hasProfileData) {
             return;
@@ -283,8 +318,6 @@ export class TimelineDetailsView extends UI.Widget.VBox {
         this.setContent(contentHelper.fragment);
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
 export var Tab;
 (function (Tab) {
     Tab["Details"] = "Details";

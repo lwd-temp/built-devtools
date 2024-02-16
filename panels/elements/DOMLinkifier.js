@@ -5,6 +5,7 @@ import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import domLinkifierStyles from './domLinkifier.css.js';
 const UIStrings = {
     /**
@@ -52,8 +53,12 @@ export const decorateNodeLabel = function (node, parentElement, tooltipContent) 
         }
     }
     if (isPseudo) {
+        const pseudoIdentifier = originalNode.pseudoIdentifier();
         const pseudoElement = parentElement.createChild('span', 'extra node-label-pseudo');
-        const pseudoText = '::' + originalNode.pseudoType();
+        let pseudoText = '::' + originalNode.pseudoType();
+        if (pseudoIdentifier) {
+            pseudoText += `(${pseudoIdentifier})`;
+        }
         UI.UIUtils.createTextChild(pseudoElement, pseudoText);
         title += pseudoText;
     }
@@ -70,6 +75,7 @@ export const linkifyNodeReference = function (node, options = {
     root.classList.add('monospace');
     const shadowRoot = UI.Utils.createShadowRootWithCoreStyles(root, { cssFile: [domLinkifierStyles], delegatesFocus: undefined });
     const link = shadowRoot.createChild('div', 'node-link');
+    link.setAttribute('jslog', `${VisualLogging.link('node').track({ click: true, keydown: 'Enter' })}`);
     decorateNodeLabel(node, link, options.tooltip);
     link.addEventListener('click', () => {
         void Common.Revealer.reveal(node, false);
@@ -95,6 +101,7 @@ export const linkifyDeferredNodeReference = function (deferredNode, options = {
     const root = document.createElement('div');
     const shadowRoot = UI.Utils.createShadowRootWithCoreStyles(root, { cssFile: [domLinkifierStyles], delegatesFocus: undefined });
     const link = shadowRoot.createChild('div', 'node-link');
+    link.setAttribute('jslog', `${VisualLogging.link('node').track({ click: true, keydown: 'Enter' })}`);
     link.createChild('slot');
     link.addEventListener('click', deferredNode.resolve.bind(deferredNode, onDeferredNodeResolved), false);
     link.addEventListener('mousedown', e => e.consume(), false);

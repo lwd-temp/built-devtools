@@ -1,8 +1,8 @@
-import type * as ProtocolClient from '../protocol_client/protocol_client.js';
 import type * as ProtocolProxyApi from '../../generated/protocol-proxy-api.js';
 import type * as Protocol from '../../generated/protocol.js';
-import { type Target } from './Target.js';
+import type * as ProtocolClient from '../protocol_client/protocol_client.js';
 import { SDKModel } from './SDKModel.js';
+import { type Target } from './Target.js';
 export declare class ChildTargetManager extends SDKModel<EventTypes> implements ProtocolProxyApi.TargetDispatcher {
     #private;
     constructor(parentTarget: Target);
@@ -33,7 +33,7 @@ export declare class ChildTargetManager extends SDKModel<EventTypes> implements 
     private static lastAnonymousTargetId;
     private static attachCallback?;
 }
-export declare enum Events {
+export declare const enum Events {
     TargetCreated = "TargetCreated",
     TargetDestroyed = "TargetDestroyed",
     TargetInfoChanged = "TargetInfoChanged"

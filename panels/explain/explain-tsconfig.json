@@ -30,17 +30,27 @@
   },
   "files": [
     "../../../../../../front_end/panels/explain/ActionDelegate.ts",
-    "../../../../../../front_end/panels/explain/ExplainPopover.ts",
-    "../../../../../../front_end/panels/explain/sources/CodeFrameSource.ts",
-    "../../../../../../front_end/panels/explain/sources/ConsoleMessageSource.ts",
+    "../../../../../../front_end/panels/explain/InsightProvider.ts",
+    "../../../../../../front_end/panels/explain/PromptBuilder.ts",
+    "../../../../../../front_end/panels/explain/components/ConsoleInsight.ts",
     "../../../../../../front_end/legacy/legacy-defs.d.ts",
     "../../../../../../front_end/global_typings/global_defs.d.ts",
     "../../../../../../front_end/global_typings/request_idle_callback.d.ts",
-    "../../../../../../node_modules/@types/filesystem/index.d.ts"
+    "../../../../../../node_modules/@types/filesystem/index.d.ts",
+    "../../../../../../node_modules/@webgpu/types/dist/index.d.ts"
   ],
   "references": [
     {
+      "path": "./css_files-tsconfig.json"
+    },
+    {
       "path": "../../core/host/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../core/sdk/bundle-tsconfig.json"
+    },
+    {
+      "path": "../../models/logs/bundle-tsconfig.json"
     },
     {
       "path": "../../third_party/marked/bundle-tsconfig.json"

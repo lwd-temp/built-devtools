@@ -4,7 +4,10 @@ import type * as Protocol from '../../generated/protocol.js';
 import * as TimelineModel from '../../models/timeline_model/timeline_model.js';
 import * as TraceEngine from '../../models/trace/trace.js';
 import * as LegacyComponents from '../../ui/legacy/components/utils/utils.js';
-import * as UI from '../../ui/legacy/legacy.js';
+import { TimelineCategory, TimelineRecordStyle } from './EventUICategory.js';
+interface EventStylesMap {
+    [x: string]: TimelineRecordStyle;
+}
 type LinkifyLocationOptions = {
     scriptId: Protocol.Runtime.ScriptId | null;
     url: string;
@@ -16,37 +19,37 @@ type LinkifyLocationOptions = {
 };
 export declare class TimelineUIUtils {
     private static initEventStyles;
-    static setEventStylesMap(eventStyles: any): void;
+    static setEventStylesMap(eventStyles: EventStylesMap): void;
     static frameDisplayName(frame: Protocol.Runtime.CallFrame): string;
-    static testContentMatching(traceEvent: TraceEngine.Legacy.CompatibleTraceEvent, regExp: RegExp): boolean;
+    static testContentMatching(traceEvent: TraceEngine.Legacy.CompatibleTraceEvent, regExp: RegExp, traceParsedData?: TraceEngine.Handlers.Types.TraceParseData): boolean;
     static eventStyle(event: TraceEngine.Legacy.CompatibleTraceEvent): TimelineRecordStyle;
-    static eventColor(event: TraceEngine.Legacy.Event): string;
+    static eventColor(event: TraceEngine.Legacy.CompatibleTraceEvent): string;
     static eventTitle(event: TraceEngine.Legacy.CompatibleTraceEvent): string;
     static isUserFrame(frame: Protocol.Runtime.CallFrame): boolean;
-    static syntheticNetworkRequestCategory(request: TraceEngine.Types.TraceEvents.TraceEventSyntheticNetworkRequest): NetworkCategory;
+    static syntheticNetworkRequestCategory(request: TraceEngine.Types.TraceEvents.SyntheticNetworkRequest): NetworkCategory;
     static networkCategoryColor(category: NetworkCategory): string;
     static buildDetailsTextForTraceEvent(event: TraceEngine.Legacy.Event | TraceEngine.Types.TraceEvents.TraceEventData): Promise<string | null>;
     static buildDetailsNodeForTraceEvent(event: TraceEngine.Legacy.CompatibleTraceEvent, target: SDK.Target.Target | null, linkifier: LegacyComponents.Linkifier.Linkifier, isFreshRecording?: boolean): Promise<Node | null>;
     static linkifyLocation(linkifyOptions: LinkifyLocationOptions): Element | null;
-    static linkifyTopCallFrame(event: TraceEngine.Legacy.CompatibleTraceEvent, target: SDK.Target.Target | null, linkifier: LegacyComponents.Linkifier.Linkifier, isFreshRecording?: boolean): Element | null;
+    static linkifyTopCallFrame(event: TraceEngine.Types.TraceEvents.TraceEventData, target: SDK.Target.Target | null, linkifier: LegacyComponents.Linkifier.Linkifier, isFreshRecording?: boolean): Element | null;
     static buildDetailsNodeForPerformanceEvent(event: TraceEngine.Legacy.Event | TraceEngine.Types.TraceEvents.TraceEventData): Element;
     static buildConsumeCacheDetails(eventData: {
         consumedCacheSize?: number;
         cacheRejected?: boolean;
         cacheKind?: string;
     }, contentHelper: TimelineDetailsContentHelper): void;
-    static buildTraceEventDetails(event: TraceEngine.Legacy.CompatibleTraceEvent, model: TimelineModel.TimelineModel.TimelineModelImpl, linkifier: LegacyComponents.Linkifier.Linkifier, detailed: boolean, traceParseData?: TraceEngine.Handlers.Migration.PartialTraceData | null): Promise<DocumentFragment>;
+    static buildTraceEventDetails(event: TraceEngine.Legacy.CompatibleTraceEvent, model: TimelineModel.TimelineModel.TimelineModelImpl, linkifier: LegacyComponents.Linkifier.Linkifier, detailed: boolean, traceParseData?: TraceEngine.Handlers.Types.TraceParseData | null): Promise<DocumentFragment>;
     static statsForTimeRange(events: TraceEngine.Legacy.CompatibleTraceEvent[], startTime: number, endTime: number): {
         [x: string]: number;
     };
-    static buildSyntheticNetworkRequestDetails(event: TraceEngine.Types.TraceEvents.TraceEventSyntheticNetworkRequest, model: TimelineModel.TimelineModel.TimelineModelImpl, linkifier: LegacyComponents.Linkifier.Linkifier): Promise<DocumentFragment>;
-    static stackTraceFromCallFrames(callFrames: Protocol.Runtime.CallFrame[]): Protocol.Runtime.StackTrace;
+    static buildSyntheticNetworkRequestDetails(event: TraceEngine.Types.TraceEvents.SyntheticNetworkRequest, model: TimelineModel.TimelineModel.TimelineModelImpl, linkifier: LegacyComponents.Linkifier.Linkifier): Promise<DocumentFragment>;
+    static stackTraceFromCallFrames(callFrames: Protocol.Runtime.CallFrame[] | TraceEngine.Types.TraceEvents.TraceEventCallFrame[]): Protocol.Runtime.StackTrace;
     private static generateCauses;
-    private static generateInvalidations;
-    private static generateInvalidationsForType;
-    private static collectInvalidationNodeIds;
+    private static createEntryLink;
+    private static generateInvalidationsList;
+    private static generateInvalidationsForReason;
     private static aggregatedStatsForTraceEvent;
-    static buildPicturePreviewContent(event: TraceEngine.Legacy.Event, target: SDK.Target.Target): Promise<Element | null>;
+    static buildPicturePreviewContent(traceData: TraceEngine.Handlers.Types.TraceParseData, event: TraceEngine.Types.TraceEvents.TraceEventPaint, target: SDK.Target.Target): Promise<Element | null>;
     static createEventDivider(event: TraceEngine.Legacy.CompatibleTraceEvent, zeroTime: number): Element;
     static visibleTypes(): string[];
     static visibleEventsFilter(): TimelineModel.TimelineModelFilter.TimelineModelFilter;
@@ -61,24 +64,17 @@ export declare class TimelineUIUtils {
     static generatePieChart(aggregatedStats: {
         [x: string]: number;
     }, selfCategory?: TimelineCategory, selfTime?: number): Element;
-    static generateDetailsContentForFrame(frame: TimelineModel.TimelineFrameModel.TimelineFrame, filmStrip: TraceEngine.Extras.FilmStrip.Data | null, filmStripFrame: TraceEngine.Extras.FilmStrip.Frame | null): DocumentFragment;
-    static frameDuration(frame: TimelineModel.TimelineFrameModel.TimelineFrame): Element;
+    static generateDetailsContentForFrame(frame: TraceEngine.Handlers.ModelHandlers.Frames.TimelineFrame, filmStrip: TraceEngine.Extras.FilmStrip.Data | null, filmStripFrame: TraceEngine.Extras.FilmStrip.Frame | null): DocumentFragment;
+    static frameDuration(frame: TraceEngine.Handlers.ModelHandlers.Frames.TimelineFrame): Element;
     static quadWidth(quad: number[]): number;
     static quadHeight(quad: number[]): number;
     static eventDispatchDesciptors(): EventDispatchTypeDescriptor[];
     static markerShortTitle(event: TraceEngine.Legacy.Event): string | null;
     static markerStyleForEvent(event: TraceEngine.Legacy.Event | TraceEngine.Types.TraceEvents.TraceEventData): TimelineMarkerStyle;
     static colorForId(id: string): string;
-    static legacyBuildEventWarningElement(event: TraceEngine.Legacy.CompatibleTraceEvent, warningType?: string): Element | null;
     static displayNameForFrame(frame: TimelineModel.TimelineModel.PageFrame, trimAt?: number): string;
 }
-export declare class TimelineRecordStyle {
-    title: string;
-    category: TimelineCategory;
-    hidden: boolean;
-    constructor(title: string, category: TimelineCategory, hidden?: boolean | undefined);
-}
-export declare enum NetworkCategory {
+export declare const enum NetworkCategory {
     HTML = "HTML",
     Script = "Script",
     Style = "Style",
@@ -86,34 +82,12 @@ export declare enum NetworkCategory {
     Other = "Other"
 }
 export declare const aggregatedStatsKey: unique symbol;
-export declare class InvalidationsGroupElement extends UI.TreeOutline.TreeElement {
-    toggleOnClick: boolean;
-    private readonly relatedNodesMap;
-    private readonly contentHelper;
-    private readonly invalidations;
-    constructor(target: SDK.Target.Target, relatedNodesMap: Map<number, SDK.DOMModel.DOMNode | null> | null, contentHelper: TimelineDetailsContentHelper, invalidations: TimelineModel.TimelineModel.InvalidationTrackingEvent[]);
-    private createTitle;
-    onpopulate(): Promise<void>;
-    private getTruncatedNodesElement;
-    private createInvalidationNode;
-}
 export declare const previewElementSymbol: unique symbol;
 export declare class EventDispatchTypeDescriptor {
     priority: number;
     color: string;
     eventTypes: string[];
     constructor(priority: number, color: string, eventTypes: string[]);
-}
-export declare class TimelineCategory {
-    name: string;
-    title: string;
-    visible: boolean;
-    childColor: string;
-    color: string;
-    private hiddenInternal?;
-    constructor(name: string, title: string, visible: boolean, childColor: string, color: string);
-    get hidden(): boolean;
-    set hidden(hidden: boolean);
 }
 export declare class TimelineDetailsContentHelper {
     fragment: DocumentFragment;
@@ -130,7 +104,6 @@ export declare class TimelineDetailsContentHelper {
     appendLocationRange(title: string, url: Platform.DevToolsPath.UrlString, startLine: number, endLine?: number): void;
     appendStackTrace(title: string, stackTrace: Protocol.Runtime.StackTrace): void;
     createChildStackTraceElement(parentElement: Element, stackTrace: Protocol.Runtime.StackTrace): void;
-    appendWarningRow(event: TraceEngine.Legacy.CompatibleTraceEvent, warningType?: string): void;
 }
 export declare const categoryBreakdownCacheSymbol: unique symbol;
 export interface TimelineMarkerStyle {
@@ -147,5 +120,5 @@ export interface TimelineMarkerStyle {
  * where the user has navigated multiple times in the trace, so that we can show
  * the LCP (for example) relative to the last navigation.
  **/
-export declare function timeStampForEventAdjustedForClosestNavigationIfPossible(event: TraceEngine.Types.TraceEvents.TraceEventData, traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData | null): TraceEngine.Types.Timing.MilliSeconds;
+export declare function timeStampForEventAdjustedForClosestNavigationIfPossible(event: TraceEngine.Types.TraceEvents.TraceEventData, traceParsedData: TraceEngine.Handlers.Types.TraceParseData | null): TraceEngine.Types.Timing.MilliSeconds;
 export {};

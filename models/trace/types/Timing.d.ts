@@ -16,8 +16,10 @@ export declare const enum TimeUnit {
     SECONDS = 2,
     MINUTES = 3
 }
-export interface TraceWindow {
-    min: MicroSeconds;
-    max: MicroSeconds;
-    range: MicroSeconds;
+export interface TraceWindow<TimeFormat extends MicroSeconds | MilliSeconds> {
+    min: TimeFormat;
+    max: TimeFormat;
+    range: TimeFormat;
 }
+export type TraceWindowMicroSeconds = TraceWindow<MicroSeconds>;
+export type TraceWindowMilliSeconds = TraceWindow<MilliSeconds>;

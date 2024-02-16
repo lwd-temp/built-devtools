@@ -5,6 +5,7 @@ declare global {
 }
 export declare const enum Variant {
     PRIMARY = "primary",
+    TONAL = "tonal",
     SECONDARY = "secondary",
     TOOLBAR = "toolbar",
     PRIMARY_TOOLBAR = "primary_toolbar",
@@ -12,8 +13,7 @@ export declare const enum Variant {
 }
 export declare const enum Size {
     SMALL = "SMALL",
-    MEDIUM = "MEDIUM",
-    TINY = "TINY"
+    MEDIUM = "MEDIUM"
 }
 type ButtonType = 'button' | 'submit' | 'reset';
 interface CommonButtonData {
@@ -27,8 +27,7 @@ interface CommonButtonData {
     type?: ButtonType;
     value?: string;
     title?: string;
-    iconWidth?: string;
-    iconHeight?: string;
+    jslogContext?: string;
 }
 export type ButtonData = CommonButtonData & ({
     variant: Variant.PRIMARY_TOOLBAR | Variant.TOOLBAR | Variant.ROUND;
@@ -37,7 +36,7 @@ export type ButtonData = CommonButtonData & ({
     variant: Variant.PRIMARY_TOOLBAR | Variant.TOOLBAR | Variant.ROUND;
     iconName: string;
 } | {
-    variant: Variant.PRIMARY | Variant.SECONDARY;
+    variant: Variant.PRIMARY | Variant.SECONDARY | Variant.TONAL;
 });
 export declare class Button extends HTMLElement {
     #private;
@@ -53,13 +52,14 @@ export declare class Button extends HTMLElement {
     set iconName(iconName: string | undefined);
     set variant(variant: Variant);
     set size(size: Size);
-    set iconWidth(iconWidth: string);
-    set iconHeight(iconHeight: string);
     set type(type: ButtonType);
     set title(title: string);
     set disabled(disabled: boolean);
     set active(active: boolean);
+    get active(): boolean;
     set spinner(spinner: boolean);
+    get jslogContext(): string | undefined;
+    set jslogContext(jslogContext: string | undefined);
     focus(): void;
     connectedCallback(): void;
     get value(): string;

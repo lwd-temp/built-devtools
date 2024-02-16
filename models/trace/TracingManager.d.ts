@@ -10,6 +10,7 @@ export declare class TracingManager extends SDK.SDKModel.SDKModel<void> {
     tracingComplete(): void;
     reset(): Promise<void>;
     start(client: TracingManagerClient, categoryFilter: string, options: string): Promise<Protocol.ProtocolResponseWithError>;
+    warmupJsProfiler(): Promise<void>;
     stop(): void;
 }
 export interface TracingManagerClient {
@@ -32,7 +33,7 @@ export interface EventPayload {
         data: Object | null;
     };
     dur: number;
-    id: string;
+    id?: string;
     id2?: {
         global: (string | undefined);
         local: (string | undefined);

@@ -1,12 +1,11 @@
-import * as TraceEngine from '../../models/trace/trace.js';
-import type * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
-import { type CompatibilityTracksAppender, type TrackAppender, type HighlightedEntryInfo, type TrackAppenderName } from './CompatibilityTracksAppender.js';
-import { type TimelineMarkerStyle } from './TimelineUIUtils.js';
 import type * as Common from '../../core/common/common.js';
+import * as TraceEngine from '../../models/trace/trace.js';
+import { type CompatibilityTracksAppender, type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName } from './CompatibilityTracksAppender.js';
+import { type TimelineMarkerStyle } from './TimelineUIUtils.js';
 export declare class TimingsTrackAppender implements TrackAppender {
     #private;
     readonly appenderName: TrackAppenderName;
-    constructor(compatibilityBuilder: CompatibilityTracksAppender, flameChartData: PerfUI.FlameChart.FlameChartTimelineData, traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData, colorGenerator: Common.Color.Generator);
+    constructor(compatibilityBuilder: CompatibilityTracksAppender, traceParsedData: TraceEngine.Handlers.Types.TraceParseData, colorGenerator: Common.Color.Generator);
     /**
      * Appends into the flame chart data the data corresponding to the
      * timings track.

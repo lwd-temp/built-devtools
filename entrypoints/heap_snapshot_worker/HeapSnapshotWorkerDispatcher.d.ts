@@ -1,4 +1,4 @@
-import type * as HeapSnapshotModel from '../../models/heap_snapshot_model/heap_snapshot_model.js';
+import * as HeapSnapshotModel from '../../models/heap_snapshot_model/heap_snapshot_model.js';
 export declare class HeapSnapshotWorkerDispatcher {
     #private;
     constructor(globalObject: Worker, postMessage: Function);

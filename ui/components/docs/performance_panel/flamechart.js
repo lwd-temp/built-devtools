@@ -8,6 +8,15 @@ import * as ComponentSetup from '../../helpers/helpers.js';
 import * as TraceEngine from '../../../../models/trace/trace.js';
 await EnvironmentHelpers.initializeGlobalVars();
 await ComponentSetup.ComponentServerSetup.setup();
+const defaultGroupStyle = {
+    height: 17,
+    padding: 4,
+    collapsible: false,
+    color: 'black',
+    backgroundColor: 'grey',
+    nestingLevel: 0,
+    itemsHeight: 17,
+};
 /**
  * Render a basic flame chart with 3 events on the same level
  **/
@@ -20,43 +29,19 @@ function renderExample1() {
                 entryTotalTimes: [50, 10, 10, 50, 10, 10, 50, 10, 10],
                 groups: [
                     {
-                        name: 'Test Group',
+                        name: 'Test Group 0',
                         startLevel: 0,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'black',
-                            backgroundColor: 'grey',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
+                        style: { ...defaultGroupStyle, collapsible: true },
+                    },
+                    {
+                        name: 'Test Group 1',
+                        startLevel: 1,
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'red', backgroundColor: 'green' },
                     },
                     {
                         name: 'Test Group 2',
-                        startLevel: 1,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'red',
-                            backgroundColor: 'green',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
-                    },
-                    {
-                        name: 'Test Group 3',
                         startLevel: 2,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'blue',
-                            backgroundColor: 'yellow',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'blue', backgroundColor: 'yellow' },
                     },
                 ],
             });
@@ -73,14 +58,6 @@ function renderExample1() {
     flameChart.setWindowTimes(0, 100);
     flameChart.show(container);
     flameChart.update();
-    const buttonHide = document.querySelector('#hide');
-    buttonHide?.addEventListener('click', () => {
-        flameChart.hideGroup(1);
-    });
-    const buttonUnhide = document.querySelector('#unhide');
-    buttonUnhide?.addEventListener('click', () => {
-        flameChart.showGroup(1);
-    });
 }
 /**
  * Render a flame chart with main thread long events to stripe and a warning triangle.
@@ -89,37 +66,73 @@ function renderExample2() {
     class FakeProviderWithLongTasksForStriping extends TraceHelpers.FakeFlameChartProvider {
         timelineData() {
             return PerfUI.FlameChart.FlameChartTimelineData.create({
-                entryLevels: [1, 1, 2],
-                entryStartTimes: [5, 80, 5],
-                entryTotalTimes: [70, 10, 80],
+                entryLevels: [0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2],
+                entryStartTimes: [5, 55, 70, 5, 30, 55, 75, 5, 10, 15, 20],
+                entryTotalTimes: [45, 10, 20, 20, 20, 5, 15, 4, 4, 4, 4],
                 entryDecorations: [
                     [
                         {
-                            type: 'CANDY',
-                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(50_000),
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(25_000),
                         },
-                        { type: 'WARNING_TRIANGLE' },
+                        { type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ },
                     ],
-                    [{ type: 'WARNING_TRIANGLE' }],
+                    [{ type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ }],
+                    [
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                        { type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ },
+                    ],
                     [
                         {
-                            type: 'CANDY',
-                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(50_000),
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(15_000),
                         },
+                    ],
+                    [
+                        {
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(10_000),
+                        },
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                    ],
+                    [
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                    ],
+                    [
+                        {
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(10_000),
+                        },
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                        { type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ },
+                    ],
+                    [
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                    ],
+                    [
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                        { type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ },
+                    ],
+                    [
+                        {
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(1_000),
+                        },
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                    ],
+                    [
+                        {
+                            type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
+                            startAtTime: TraceEngine.Types.Timing.MicroSeconds(1_000),
+                        },
+                        { type: "HIDDEN_DESCENDANTS_ARROW" /* PerfUI.FlameChart.FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW */ },
+                        { type: "WARNING_TRIANGLE" /* PerfUI.FlameChart.FlameChartDecorationType.WARNING_TRIANGLE */ },
                     ],
                 ],
                 groups: [{
-                        name: 'Testing Candy Stripe decorations and warning triangles',
+                        name: 'Testing Candy Stripe, warning triangles and hidden descendants arrow decorations',
                         startLevel: 0,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: false,
-                            color: 'black',
-                            backgroundColor: 'grey',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
+                        style: defaultGroupStyle,
                     }],
             });
         }
@@ -148,43 +161,19 @@ function renderExample3() {
                 entryTotalTimes: [50, 50, 50],
                 groups: [
                     {
-                        name: 'Test Group',
+                        name: 'Test Group 0',
                         startLevel: 0,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'black',
-                            backgroundColor: 'grey',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
+                        style: { ...defaultGroupStyle, collapsible: true },
                     },
                     {
-                        name: 'Test Nested Group',
+                        name: 'Test Nested Group 1',
                         startLevel: 0,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'red',
-                            backgroundColor: 'green',
-                            nestingLevel: 1,
-                            itemsHeight: 17,
-                        },
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'red', backgroundColor: 'green' },
                     },
                     {
-                        name: 'Test Group 3',
+                        name: 'Test Group 2',
                         startLevel: 2,
-                        style: {
-                            height: 17,
-                            padding: 4,
-                            collapsible: true,
-                            color: 'blue',
-                            backgroundColor: 'yellow',
-                            nestingLevel: 0,
-                            itemsHeight: 17,
-                        },
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'blue', backgroundColor: 'yellow' },
                     },
                 ],
             });
@@ -202,7 +191,81 @@ function renderExample3() {
     flameChart.show(container);
     flameChart.update();
 }
+/**
+ * Render a flame chart with nested case and buttons to hide/unhide and reorder
+ * tracks
+ **/
+function renderExample4() {
+    class FakeProviderWithBasicEvents extends TraceHelpers.FakeFlameChartProvider {
+        timelineData() {
+            return PerfUI.FlameChart.FlameChartTimelineData.create({
+                entryLevels: [0, 0, 1, 1, 2, 2, 3, 3],
+                entryStartTimes: [5, 60, 5, 60, 5, 60],
+                entryTotalTimes: [50, 10, 50, 10, 50, 10],
+                groups: [
+                    {
+                        name: 'Test Group 0',
+                        startLevel: 0,
+                        expanded: true,
+                        style: { ...defaultGroupStyle, collapsible: true },
+                    },
+                    {
+                        name: 'Test Group 1',
+                        startLevel: 1,
+                        expanded: true,
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'red', backgroundColor: 'green' },
+                    },
+                    {
+                        name: 'Test Group 2',
+                        startLevel: 2,
+                        expanded: true,
+                        style: { ...defaultGroupStyle, collapsible: true, color: 'blue', backgroundColor: 'yellow' },
+                    },
+                    {
+                        name: 'Test Group 3',
+                        startLevel: 2,
+                        expanded: true,
+                        style: { ...defaultGroupStyle, nestingLevel: 1 },
+                    },
+                ],
+            });
+        }
+    }
+    const container = document.querySelector('div#container4');
+    if (!container) {
+        throw new Error('No container');
+    }
+    const delegate = new TraceHelpers.MockFlameChartDelegate();
+    const dataProvider = new FakeProviderWithBasicEvents();
+    const flameChart = new PerfUI.FlameChart.FlameChart(dataProvider, delegate);
+    flameChart.markAsRoot();
+    flameChart.setWindowTimes(0, 100);
+    flameChart.show(container);
+    flameChart.update();
+    const indexInput = document.querySelector('#indexOfTrack');
+    const buttonHide = document.querySelector('#hide');
+    buttonHide?.addEventListener('click', () => {
+        const index = Number(indexInput.value);
+        flameChart.hideGroup(index);
+    });
+    const buttonUnhide = document.querySelector('#unhide');
+    buttonUnhide?.addEventListener('click', () => {
+        const index = Number(indexInput.value);
+        flameChart.showGroup(index);
+    });
+    const buttonForMoveUp = document.querySelector('#testForMoveUp');
+    buttonForMoveUp?.addEventListener('click', () => {
+        const index = Number(indexInput.value);
+        flameChart.moveGroupUp(index);
+    });
+    const buttonForMoveDown = document.querySelector('#testForMoveDown');
+    buttonForMoveDown?.addEventListener('click', () => {
+        const index = Number(indexInput.value);
+        flameChart.moveGroupDown(index);
+    });
+}
 renderExample1();
 renderExample2();
 renderExample3();
+renderExample4();
 //# sourceMappingURL=flamechart.js.map

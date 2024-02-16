@@ -1,10 +1,10 @@
 import * as SDK from '../../core/sdk/sdk.js';
-import * as UI from '../../ui/legacy/legacy.js';
 import type * as Protocol from '../../generated/protocol.js';
+import * as UI from '../../ui/legacy/legacy.js';
 export declare abstract class CategorizedBreakpointsSidebarPane extends UI.Widget.VBox {
     #private;
-    constructor(categories: string[], breakpoints: SDK.CategorizedBreakpoint.CategorizedBreakpoint[], viewId: string, detailsPausedReason: Protocol.Debugger.PausedEventReason);
-    get categories(): Map<string, Item>;
+    constructor(breakpoints: SDK.CategorizedBreakpoint.CategorizedBreakpoint[], viewId: string, detailsPausedReason: Protocol.Debugger.PausedEventReason);
+    get categories(): Map<SDK.CategorizedBreakpoint.Category, Item>;
     get breakpoints(): Map<SDK.CategorizedBreakpoint.CategorizedBreakpoint, Item>;
     focus(): void;
     private handleSpaceKeyEventOnBreakpoint;

@@ -61,6 +61,14 @@ export function normalizePath(path) {
     }
     return normalizedPath;
 }
+export function schemeIs(url, scheme) {
+    try {
+        return (new URL(url)).protocol === scheme;
+    }
+    catch (e) {
+        return false;
+    }
+}
 export class ParsedURL {
     isValid;
     url;

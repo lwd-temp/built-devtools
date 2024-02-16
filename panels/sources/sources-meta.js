@@ -4,7 +4,6 @@
 import * as Common from '../../core/common/common.js';
 import * as Host from '../../core/host/host.js';
 import * as i18n from '../../core/i18n/i18n.js';
-import * as Root from '../../core/root/root.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as Breakpoints from '../../models/breakpoints/breakpoints.js';
 import * as Workspace from '../../models/workspace/workspace.js';
@@ -227,13 +226,25 @@ const UIStrings = {
      */
     doNotAutomaticallyRevealFilesIn: 'Do not automatically reveal files in sidebar',
     /**
-     *@description Title of a setting under the Sources category that can be invoked through the Command Menu
+     *@description Setting under the Sources category to toggle usage of JavaScript source maps.
      */
-    enableJavascriptSourceMaps: 'Enable JavaScript source maps',
+    javaScriptSourceMaps: 'JavaScript source maps',
     /**
      *@description Title of a setting under the Sources category that can be invoked through the Command Menu
      */
-    disableJavascriptSourceMaps: 'Disable JavaScript source maps',
+    enableJavaScriptSourceMaps: 'Enable JavaScript source maps',
+    /**
+     *@description Title of a setting under the Sources category that can be invoked through the Command Menu
+     */
+    disableJavaScriptSourceMaps: 'Disable JavaScript source maps',
+    /**
+     *@description Title of a setting under the Sources category.
+     *'tab moves focus' is the name of the setting, which means that when the user
+     *hits the tab key, the focus in the UI will be moved to the next part of the
+     *text editor, as opposed to inserting a tab character into the text in the
+     *text editor.
+     */
+    tabMovesFocus: 'Tab moves focus',
     /**
      *@description Title of a setting that can be invoked through the Command Menu.
      *'tab moves focus' is the name of the setting, which means that when the user
@@ -332,6 +343,10 @@ const UIStrings = {
      */
     doNotDisplayVariableValuesInline: 'Do not display variable values inline while debugging',
     /**
+     *@description Title of a setting under the Sources category
+     */
+    cssSourceMaps: 'CSS source maps',
+    /**
      *@description Title of a setting under the Sources category that can be invoked through the Command Menu
      */
     enableCssSourceMaps: 'Enable CSS source maps',
@@ -392,6 +407,10 @@ const UIStrings = {
      */
     enableAutoFocusOnDebuggerPaused: 'Focus Sources panel when triggering a breakpoint',
     /**
+     *@description Title of an action to reveal the active file in the navigator sidebar of the Sources panel
+     */
+    revealActiveFileInSidebar: 'Reveal active file in navigator sidebar',
+    /**
      * @description Text for command of toggling navigator sidebar in Sources panel
      */
     toggleNavigatorSidebar: 'Toggle navigator sidebar',
@@ -450,7 +469,7 @@ UI.ViewManager.registerViewExtension({
     persistence: "permanent" /* UI.ViewManager.ViewPersistence.PERMANENT */,
     async loadView() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesNavigator.FilesNavigatorView.instance();
+        return new Sources.SourcesNavigator.FilesNavigatorView();
     },
 });
 UI.ViewManager.registerViewExtension({
@@ -462,7 +481,7 @@ UI.ViewManager.registerViewExtension({
     persistence: "permanent" /* UI.ViewManager.ViewPersistence.PERMANENT */,
     async loadView() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesNavigator.SnippetsNavigatorView.instance();
+        return new Sources.SourcesNavigator.SnippetsNavigatorView();
     },
 });
 UI.ViewManager.registerViewExtension({
@@ -474,7 +493,7 @@ UI.ViewManager.registerViewExtension({
     persistence: "closeable" /* UI.ViewManager.ViewPersistence.CLOSEABLE */,
     async loadView() {
         const Sources = await loadSourcesModule();
-        return Sources.SearchSourcesView.SearchSourcesView.instance();
+        return new Sources.SearchSourcesView.SearchSourcesView();
     },
 });
 UI.ViewManager.registerViewExtension({
@@ -486,7 +505,7 @@ UI.ViewManager.registerViewExtension({
     order: 1000,
     async loadView() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.WrapperView.instance();
+        return new Sources.SourcesPanel.QuickSourceView();
     },
 });
 UI.ViewManager.registerViewExtension({
@@ -494,14 +513,13 @@ UI.ViewManager.registerViewExtension({
     commandPrompt: i18nLazyString(UIStrings.showThreads),
     title: i18nLazyString(UIStrings.threads),
     persistence: "permanent" /* UI.ViewManager.ViewPersistence.PERMANENT */,
-    condition: Root.Runtime.ConditionName.NOT_SOURCES_HIDE_ADD_FOLDER,
     async loadView() {
         const Sources = await loadSourcesModule();
-        return Sources.ThreadsSidebarPane.ThreadsSidebarPane.instance();
+        return new Sources.ThreadsSidebarPane.ThreadsSidebarPane();
     },
 });
 UI.ViewManager.registerViewExtension({
-    id: 'sources.scopeChain',
+    id: 'sources.scope-chain',
     commandPrompt: i18nLazyString(UIStrings.showScope),
     title: i18nLazyString(UIStrings.scope),
     persistence: "permanent" /* UI.ViewManager.ViewPersistence.PERMANENT */,
@@ -522,7 +540,7 @@ UI.ViewManager.registerViewExtension({
     hasToolbar: true,
 });
 UI.ViewManager.registerViewExtension({
-    id: 'sources.jsBreakpoints',
+    id: 'sources.js-breakpoints',
     commandPrompt: i18nLazyString(UIStrings.showBreakpoints),
     title: i18nLazyString(UIStrings.breakpoints),
     persistence: "permanent" /* UI.ViewManager.ViewPersistence.PERMANENT */,
@@ -532,14 +550,14 @@ UI.ViewManager.registerViewExtension({
     },
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.toggle-pause',
     iconClass: "pause" /* UI.ActionRegistration.IconClass.LARGEICON_PAUSE */,
     toggleable: true,
     toggledIconClass: "resume" /* UI.ActionRegistration.IconClass.LARGEICON_RESUME */,
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.RevealingActionDelegate.instance();
+        return new Sources.SourcesPanel.RevealingActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView, UI.ShortcutRegistry.ForwardedShortcut]);
@@ -584,11 +602,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.step-over',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.stepOverNextFunctionCall),
     iconClass: "step-over" /* UI.ActionRegistration.IconClass.LARGEICON_STEP_OVER */,
@@ -614,11 +632,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.step-into',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.stepIntoNextFunctionCall),
     iconClass: "step-into" /* UI.ActionRegistration.IconClass.LARGE_ICON_STEP_INTO */,
@@ -644,11 +662,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.step',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.step),
     iconClass: "step" /* UI.ActionRegistration.IconClass.LARGE_ICON_STEP */,
@@ -665,11 +683,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.step-out',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.stepOutOfCurrentFunction),
     iconClass: "step-out" /* UI.ActionRegistration.IconClass.LARGE_ICON_STEP_OUT */,
@@ -696,10 +714,10 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'debugger.run-snippet',
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.runSnippet),
     iconClass: "play" /* UI.ActionRegistration.IconClass.PLAY */,
@@ -718,14 +736,14 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.toggle-breakpoints-active',
     iconClass: "breakpoint-crossed" /* UI.ActionRegistration.IconClass.BREAKPOINT_CROSSED */,
     toggledIconClass: "breakpoint-crossed-filled" /* UI.ActionRegistration.IconClass.BREAKPOINT_CROSSED_FILLED */,
     toggleable: true,
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -757,7 +775,7 @@ UI.ActionRegistration.registerActionExtension({
         const Sources = await loadSourcesModule();
         return Sources.WatchExpressionsSidebarPane.WatchExpressionsSidebarPane.instance();
     },
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     title: i18nLazyString(UIStrings.addSelectedTextToWatches),
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.UISourceCodeFrame.UISourceCodeFrame]);
@@ -775,10 +793,10 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'debugger.evaluate-selection',
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.evaluateSelectedTextInConsole),
     contextTypes() {
@@ -797,11 +815,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.switch-file',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.switchFile),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.SwitchFileActionDelegate.instance();
+        return new Sources.SourcesView.SwitchFileActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -814,7 +832,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.rename',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.rename),
     bindings: [
         {
@@ -828,21 +846,21 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     actionId: 'sources.close-all',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.closeAll),
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.jump-to-previous-location',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.jumpToPreviousEditingLocation),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -855,11 +873,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.jump-to-next-location',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.jumpToNextEditingLocation),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -872,11 +890,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.close-editor-tab',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.closeTheActiveTab),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -902,11 +920,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.next-editor-tab',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.nextEditorTab),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -932,11 +950,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.previous-editor-tab',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.previousEditorTab),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -962,11 +980,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.go-to-line',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.goToLine),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -983,11 +1001,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.go-to-member',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.goToAFunctionDeclarationruleSet),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -1033,7 +1051,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'debugger.toggle-breakpoint',
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     title: i18nLazyString(UIStrings.toggleBreakpoint),
     bindings: [
         {
@@ -1060,7 +1078,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'debugger.toggle-breakpoint-enabled',
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     title: i18nLazyString(UIStrings.toggleBreakpointEnabled),
     bindings: [
         {
@@ -1075,7 +1093,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'debugger.breakpoint-input-window',
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     title: i18nLazyString(UIStrings.toggleBreakpointInputWindow),
     bindings: [
         {
@@ -1090,11 +1108,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.save',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.save),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -1120,11 +1138,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.save-all',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.saveAll),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesView.ActionDelegate.instance();
+        return new Sources.SourcesView.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -1155,33 +1173,32 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     actionId: 'sources.create-snippet',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesNavigator.ActionDelegate.instance();
+        return new Sources.SourcesNavigator.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.createNewSnippet),
 });
 if (!Host.InspectorFrontendHost.InspectorFrontendHostInstance.isHostedMode()) {
     UI.ActionRegistration.registerActionExtension({
-        category: UI.ActionRegistration.ActionCategory.SOURCES,
+        category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
         actionId: 'sources.add-folder-to-workspace',
         async loadActionDelegate() {
             const Sources = await loadSourcesModule();
-            return Sources.SourcesNavigator.ActionDelegate.instance();
+            return new Sources.SourcesNavigator.ActionDelegate();
         },
         iconClass: "plus" /* UI.ActionRegistration.IconClass.PLUS */,
         title: i18nLazyString(UIStrings.addFolderToWorkspace),
-        condition: Root.Runtime.ConditionName.NOT_SOURCES_HIDE_ADD_FOLDER,
     });
 }
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.previous-call-frame',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.CallStackSidebarPane.ActionDelegate.instance();
+        return new Sources.CallStackSidebarPane.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.previousCallFrame),
     contextTypes() {
@@ -1194,11 +1211,11 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
-    category: UI.ActionRegistration.ActionCategory.DEBUGGER,
+    category: "DEBUGGER" /* UI.ActionRegistration.ActionCategory.DEBUGGER */,
     actionId: 'debugger.next-call-frame',
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.CallStackSidebarPane.ActionDelegate.instance();
+        return new Sources.CallStackSidebarPane.ActionDelegate();
     },
     title: i18nLazyString(UIStrings.nextCallFrame),
     contextTypes() {
@@ -1215,9 +1232,9 @@ UI.ActionRegistration.registerActionExtension({
     title: i18nLazyString(UIStrings.search),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SearchSourcesView.ActionDelegate.instance();
+        return new Sources.SearchSourcesView.ActionDelegate();
     },
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     bindings: [
         {
             platform: "mac" /* UI.ActionRegistration.Platforms.Mac */,
@@ -1259,7 +1276,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.increment-css',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.incrementCssUnitBy, { PH1: 1 }),
     bindings: [
         {
@@ -1270,7 +1287,7 @@ UI.ActionRegistration.registerActionExtension({
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.increment-css-by-ten',
     title: i18nLazyString(UIStrings.incrementCssUnitBy, { PH1: 10 }),
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     bindings: [
         {
             shortcut: 'Alt+PageUp',
@@ -1279,7 +1296,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.decrement-css',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.decrementCssUnitBy, { PH1: 1 }),
     bindings: [
         {
@@ -1289,7 +1306,7 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.decrement-css-by-ten',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.decrementCssUnitBy, { PH1: 10 }),
     bindings: [
         {
@@ -1298,12 +1315,24 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 UI.ActionRegistration.registerActionExtension({
+    actionId: 'sources.reveal-in-navigator-sidebar',
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
+    title: i18nLazyString(UIStrings.revealActiveFileInSidebar),
+    async loadActionDelegate() {
+        const Sources = await loadSourcesModule();
+        return new Sources.SourcesPanel.ActionDelegate();
+    },
+    contextTypes() {
+        return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
+    },
+});
+UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.toggle-navigator-sidebar',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.toggleNavigatorSidebar),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -1341,11 +1370,11 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'sources.toggle-debugger-sidebar',
-    category: UI.ActionRegistration.ActionCategory.SOURCES,
+    category: "SOURCES" /* UI.ActionRegistration.ActionCategory.SOURCES */,
     title: i18nLazyString(UIStrings.toggleDebuggerSidebar),
     async loadActionDelegate() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.ActionDelegate.instance();
+        return new Sources.SourcesPanel.ActionDelegate();
     },
     contextTypes() {
         return maybeRetrieveContextTypes(Sources => [Sources.SourcesView.SourcesView]);
@@ -1362,21 +1391,21 @@ UI.ActionRegistration.registerActionExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    settingName: 'navigatorGroupByFolder',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'navigator-group-by-folder',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
 });
 Common.Settings.registerSettingExtension({
-    settingName: 'navigatorGroupByAuthored',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'navigator-group-by-authored',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: false,
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.searchInAnonymousAndContent),
-    settingName: 'searchInAnonymousAndContentScripts',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'search-in-anonymous-and-content-scripts',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: false,
     options: [
         {
@@ -1390,11 +1419,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.automaticallyRevealFilesIn),
-    settingName: 'autoRevealInNavigator',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'auto-reveal-in-navigator',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1408,29 +1437,29 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
-    title: i18nLazyString(UIStrings.enableJavascriptSourceMaps),
-    settingName: 'jsSourceMapsEnabled',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
+    title: i18nLazyString(UIStrings.javaScriptSourceMaps),
+    settingName: 'js-source-maps-enabled',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
             value: true,
-            title: i18nLazyString(UIStrings.enableJavascriptSourceMaps),
+            title: i18nLazyString(UIStrings.enableJavaScriptSourceMaps),
         },
         {
             value: false,
-            title: i18nLazyString(UIStrings.disableJavascriptSourceMaps),
+            title: i18nLazyString(UIStrings.disableJavaScriptSourceMaps),
         },
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
-    title: i18nLazyString(UIStrings.enableTabMovesFocus),
-    settingName: 'textEditorTabMovesFocus',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
+    title: i18nLazyString(UIStrings.tabMovesFocus),
+    settingName: 'text-editor-tab-moves-focus',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: false,
     options: [
         {
@@ -1444,11 +1473,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.detectIndentation),
-    settingName: 'textEditorAutoDetectIndent',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'text-editor-auto-detect-indent',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1462,11 +1491,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.autocompletion),
-    settingName: 'textEditorAutocompletion',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'text-editor-autocompletion',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1480,10 +1509,10 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
     title: i18nLazyString(UIStrings.bracketMatching),
-    settingName: 'textEditorBracketMatching',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'text-editor-bracket-matching',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1497,11 +1526,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.codeFolding),
-    settingName: 'textEditorCodeFolding',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'text-editor-code-folding',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1515,11 +1544,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.showWhitespaceCharacters),
-    settingName: 'showWhitespacesInEditor',
-    settingType: Common.Settings.SettingType.ENUM,
+    settingName: 'show-whitespaces-in-editor',
+    settingType: "enum" /* Common.Settings.SettingType.ENUM */,
     defaultValue: 'original',
     options: [
         {
@@ -1540,11 +1569,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.displayVariableValuesInlineWhile),
-    settingName: 'inlineVariableValues',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'inline-variable-values',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1558,11 +1587,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.enableAutoFocusOnDebuggerPaused),
-    settingName: 'autoFocusOnDebuggerPausedEnabled',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'auto-focus-on-debugger-paused-enabled',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1576,11 +1605,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
-    title: i18nLazyString(UIStrings.enableCssSourceMaps),
-    settingName: 'cssSourceMapsEnabled',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
+    title: i18nLazyString(UIStrings.cssSourceMaps),
+    settingName: 'css-source-maps-enabled',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1594,11 +1623,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Synced,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Synced" /* Common.Settings.SettingStorageType.Synced */,
     title: i18nLazyString(UIStrings.allowScrollingPastEndOfFile),
-    settingName: 'allowScrollPastEof',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'allow-scroll-past-eof',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1612,11 +1641,11 @@ Common.Settings.registerSettingExtension({
     ],
 });
 Common.Settings.registerSettingExtension({
-    category: Common.Settings.SettingCategory.SOURCES,
-    storageType: Common.Settings.SettingStorageType.Local,
+    category: "SOURCES" /* Common.Settings.SettingCategory.SOURCES */,
+    storageType: "Local" /* Common.Settings.SettingStorageType.Local */,
     title: i18nLazyString(UIStrings.wasmAutoStepping),
-    settingName: 'wasmAutoStepping',
-    settingType: Common.Settings.SettingType.BOOLEAN,
+    settingName: 'wasm-auto-stepping',
+    settingType: "boolean" /* Common.Settings.SettingType.BOOLEAN */,
     defaultValue: true,
     options: [
         {
@@ -1631,7 +1660,7 @@ Common.Settings.registerSettingExtension({
 });
 UI.ViewManager.registerLocationResolver({
     name: "navigator-view" /* UI.ViewManager.ViewLocationValues.NAVIGATOR_VIEW */,
-    category: UI.ViewManager.ViewLocationCategory.SOURCES,
+    category: "SOURCES" /* UI.ViewManager.ViewLocationCategory.SOURCES */,
     async loadResolver() {
         const Sources = await loadSourcesModule();
         return Sources.SourcesPanel.SourcesPanel.instance();
@@ -1639,7 +1668,7 @@ UI.ViewManager.registerLocationResolver({
 });
 UI.ViewManager.registerLocationResolver({
     name: "sources.sidebar-top" /* UI.ViewManager.ViewLocationValues.SOURCES_SIDEBAR_TOP */,
-    category: UI.ViewManager.ViewLocationCategory.SOURCES,
+    category: "SOURCES" /* UI.ViewManager.ViewLocationCategory.SOURCES */,
     async loadResolver() {
         const Sources = await loadSourcesModule();
         return Sources.SourcesPanel.SourcesPanel.instance();
@@ -1647,7 +1676,7 @@ UI.ViewManager.registerLocationResolver({
 });
 UI.ViewManager.registerLocationResolver({
     name: "sources.sidebar-bottom" /* UI.ViewManager.ViewLocationValues.SOURCES_SIDEBAR_BOTTOM */,
-    category: UI.ViewManager.ViewLocationCategory.SOURCES,
+    category: "SOURCES" /* UI.ViewManager.ViewLocationCategory.SOURCES */,
     async loadResolver() {
         const Sources = await loadSourcesModule();
         return Sources.SourcesPanel.SourcesPanel.instance();
@@ -1655,7 +1684,7 @@ UI.ViewManager.registerLocationResolver({
 });
 UI.ViewManager.registerLocationResolver({
     name: "sources.sidebar-tabs" /* UI.ViewManager.ViewLocationValues.SOURCES_SIDEBAR_TABS */,
-    category: UI.ViewManager.ViewLocationCategory.SOURCES,
+    category: "SOURCES" /* UI.ViewManager.ViewLocationCategory.SOURCES */,
     async loadResolver() {
         const Sources = await loadSourcesModule();
         return Sources.SourcesPanel.SourcesPanel.instance();
@@ -1685,31 +1714,10 @@ UI.ContextMenu.registerProvider({
     contextTypes() {
         return [
             ObjectUI.ObjectPropertiesSection.ObjectPropertyTreeElement,
+            ...maybeRetrieveContextTypes(Sources => [Sources.UISourceCodeFrame.UISourceCodeFrame]),
         ];
     },
     experiment: undefined,
-});
-UI.ContextMenu.registerProvider({
-    contextTypes() {
-        return maybeRetrieveContextTypes(Sources => [Sources.UISourceCodeFrame.UISourceCodeFrame]);
-    },
-    async loadProvider() {
-        const Sources = await loadSourcesModule();
-        return Sources.WatchExpressionsSidebarPane.WatchExpressionsSidebarPane.instance();
-    },
-    experiment: undefined,
-});
-UI.ContextMenu.registerProvider({
-    async loadProvider() {
-        const Sources = await loadSourcesModule();
-        return Sources.ScopeChainSidebarPane.OpenLinearMemoryInspector.instance();
-    },
-    experiment: undefined,
-    contextTypes() {
-        return [
-            ObjectUI.ObjectPropertiesSection.ObjectPropertyTreeElement,
-        ];
-    },
 });
 Common.Revealer.registerRevealer({
     contextTypes() {
@@ -1720,7 +1728,7 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.UILocationRevealer.instance();
+        return new Sources.SourcesPanel.UILocationRevealer();
     },
 });
 Common.Revealer.registerRevealer({
@@ -1732,7 +1740,7 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.UILocationRangeRevealer.instance();
+        return new Sources.SourcesPanel.UILocationRangeRevealer();
     },
 });
 Common.Revealer.registerRevealer({
@@ -1744,7 +1752,7 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.DebuggerLocationRevealer.instance();
+        return new Sources.SourcesPanel.DebuggerLocationRevealer();
     },
 });
 Common.Revealer.registerRevealer({
@@ -1756,7 +1764,7 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.UISourceCodeRevealer.instance();
+        return new Sources.SourcesPanel.UISourceCodeRevealer();
     },
 });
 Common.Revealer.registerRevealer({
@@ -1768,7 +1776,7 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.SourcesPanel.DebuggerPausedDetailsRevealer.instance();
+        return new Sources.SourcesPanel.DebuggerPausedDetailsRevealer();
     },
 });
 Common.Revealer.registerRevealer({
@@ -1780,15 +1788,24 @@ Common.Revealer.registerRevealer({
     destination: Common.Revealer.RevealerDestination.SOURCES_PANEL,
     async loadRevealer() {
         const Sources = await loadSourcesModule();
-        return Sources.DebuggerPlugin.BreakpointLocationRevealer.instance();
+        return new Sources.DebuggerPlugin.BreakpointLocationRevealer();
+    },
+});
+Common.Revealer.registerRevealer({
+    contextTypes() {
+        return maybeRetrieveContextTypes(Sources => [Sources.SearchSourcesView.SearchSources]);
+    },
+    destination: undefined,
+    async loadRevealer() {
+        const Sources = await loadSourcesModule();
+        return new Sources.SearchSourcesView.Revealer();
     },
 });
 UI.Toolbar.registerToolbarItem({
     actionId: 'sources.add-folder-to-workspace',
-    location: UI.Toolbar.ToolbarItemLocation.FILES_NAVIGATION_TOOLBAR,
+    location: "files-navigator-toolbar" /* UI.Toolbar.ToolbarItemLocation.FILES_NAVIGATION_TOOLBAR */,
     label: i18nLazyString(UIStrings.addFolder),
     showLabel: true,
-    condition: Root.Runtime.ConditionName.NOT_SOURCES_HIDE_ADD_FOLDER,
     loadItem: undefined,
     order: undefined,
     separator: undefined,
@@ -1821,12 +1838,12 @@ UI.Context.registerListener({
     },
 });
 UI.ContextMenu.registerItem({
-    location: UI.ContextMenu.ItemLocation.NAVIGATOR_MENU_DEFAULT,
-    actionId: 'quickOpen.show',
+    location: "navigatorMenu/default" /* UI.ContextMenu.ItemLocation.NAVIGATOR_MENU_DEFAULT */,
+    actionId: 'quick-open.show',
     order: undefined,
 });
 UI.ContextMenu.registerItem({
-    location: UI.ContextMenu.ItemLocation.MAIN_MENU_DEFAULT,
+    location: "mainMenu/default" /* UI.ContextMenu.ItemLocation.MAIN_MENU_DEFAULT */,
     actionId: 'sources.search',
     order: undefined,
 });

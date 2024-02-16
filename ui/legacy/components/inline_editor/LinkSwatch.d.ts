@@ -16,9 +16,10 @@ declare class BaseLinkSwatch extends HTMLElement {
     private render;
 }
 interface CSSVarSwatchRenderData {
-    text: string;
+    variableName: string;
     computedValue: string | null;
     fromFallback: boolean;
+    fallbackText: string | null;
     onLinkActivate: (linkText: string) => void;
 }
 export declare class CSSVarSwatch extends HTMLElement {
@@ -28,14 +29,13 @@ export declare class CSSVarSwatch extends HTMLElement {
     constructor();
     set data(data: CSSVarSwatchRenderData);
     get link(): BaseLinkSwatch | undefined;
-    private parseVariableFunctionParts;
-    private variableName;
     protected render(data: CSSVarSwatchRenderData): void;
 }
 interface LinkSwatchRenderData {
     isDefined: boolean;
     text: string;
     onLinkActivate: (linkText: string) => void;
+    jslogContext: string;
 }
 export declare class LinkSwatch extends HTMLElement {
     static readonly litTagName: import("../../../lit-html/static.js").Static;

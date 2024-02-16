@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 import * as FrontendHelpers from '../../../../../test/unittests/front_end/helpers/EnvironmentHelpers.js';
 import * as Common from '../../../../core/common/common.js';
+import * as Root from '../../../../core/root/root.js';
 import * as SDK from '../../../../core/sdk/sdk.js';
 import * as Bindings from '../../../../models/bindings/bindings.js';
 import * as Workspace from '../../../../models/workspace/workspace.js';
@@ -33,7 +34,7 @@ SDK.CPUThrottlingManager.CPUThrottlingManager.instance().setHardwareConcurrency(
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.record-reload',
     iconClass: "refresh" /* UI.ActionRegistration.IconClass.REFRESH */,
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     contextTypes() {
         return [Timeline.TimelinePanel.TimelinePanel];
     },
@@ -50,20 +51,23 @@ UI.ActionRegistration.registerActionExtension({
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.show-history',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     contextTypes() {
         return [Timeline.TimelinePanel.TimelinePanel];
+    },
+    async loadActionDelegate() {
+        return new Timeline.TimelinePanel.ActionDelegate();
     },
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'components.collect-garbage',
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
 });
 UI.ActionRegistration.registerActionExtension({
     actionId: 'timeline.toggle-recording',
     title: () => 'Toggle recording',
     toggleable: true,
-    category: UI.ActionRegistration.ActionCategory.PERFORMANCE,
+    category: "PERFORMANCE" /* UI.ActionRegistration.ActionCategory.PERFORMANCE */,
     iconClass: "record-start" /* UI.ActionRegistration.IconClass.START_RECORDING */,
     contextTypes() {
         return [Timeline.TimelinePanel.TimelinePanel];
@@ -81,13 +85,14 @@ UI.ActionRegistration.registerActionExtension({
 });
 const actionRegistry = UI.ActionRegistry.ActionRegistry.instance();
 UI.ShortcutRegistry.ShortcutRegistry.instance({ forceNew: true, actionRegistry: actionRegistry });
-Common.Settings.settingForTest('flamechartMouseWheelAction').set('zoom');
+Common.Settings.settingForTest('flamechart-mouse-wheel-action').set('zoom');
 const params = new URLSearchParams(window.location.search);
 const traceFileName = params.get('trace');
 const cpuprofileName = params.get('cpuprofile');
 const nodeMode = params.get('isNode');
 const isNodeMode = nodeMode === 'true' ? true : false;
-const timeline = Timeline.TimelinePanel.TimelinePanel.instance({ forceNew: true, isNode: isNodeMode, fullTraceEngine: true });
+Root.Runtime.experiments.setEnabled('timelineInvalidationTracking', params.has('invalidations'));
+const timeline = Timeline.TimelinePanel.TimelinePanel.instance({ forceNew: true, isNode: isNodeMode });
 const container = document.getElementById('container');
 if (!container) {
     throw new Error('could not find container');
@@ -103,12 +108,17 @@ else if (cpuprofileName) {
     fileName = `${cpuprofileName}.cpuprofile.gz`;
 }
 if (fileName) {
-    const file = new URL(`../../../../../test/unittests/fixtures/traces/${fileName}`, import.meta.url);
+    await loadFromFile(fileName);
+}
+async function loadFromFile(fileNameWithExtension) {
+    const file = new URL(`../../../../../test/unittests/fixtures/traces/${fileNameWithExtension}`, import.meta.url);
     const response = await fetch(file);
     const asBlob = await response.blob();
-    const asFile = new File([asBlob], `${fileName}`, {
+    const asFile = new File([asBlob], `${fileNameWithExtension}`, {
         type: 'application/gzip',
     });
-    void timeline.loadFromFile(asFile);
+    await timeline.loadFromFile(asFile);
 }
+// @ts-expect-error
+window.loadFromFile = loadFromFile;
 //# sourceMappingURL=basic.js.map

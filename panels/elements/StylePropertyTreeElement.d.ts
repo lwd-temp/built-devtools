@@ -1,17 +1,38 @@
 import * as SDK from '../../core/sdk/sdk.js';
+import type * as CodeMirror from '../../third_party/codemirror.next/codemirror.next.js';
+import * as InlineEditor from '../../ui/legacy/components/inline_editor/inline_editor.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { type Hint } from './CSSRuleValidator.js';
+import { type BottomUpTreeMatching, ColorMatch, ColorMatcher, RenderingContext, VariableMatch, VariableMatcher } from './PropertyParser.js';
 import { type StylePropertiesSection } from './StylePropertiesSection.js';
 import { StylesSidebarPane } from './StylesSidebarPane.js';
 export declare const activeHints: WeakMap<Element, Hint>;
 interface StylePropertyTreeElementParams {
     stylesPane: StylesSidebarPane;
+    section: StylePropertiesSection;
     matchedStyles: SDK.CSSMatchedStyles.CSSMatchedStyles;
     property: SDK.CSSProperty.CSSProperty;
     isShorthand: boolean;
     inherited: boolean;
     overloaded: boolean;
     newProperty: boolean;
+}
+export declare class VariableRenderer extends VariableMatch {
+    #private;
+    constructor(treeElement: StylePropertyTreeElement, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration, text: string, name: string, fallback: CodeMirror.SyntaxNode[], matching: BottomUpTreeMatching);
+    resolveVariable(): SDK.CSSMatchedStyles.CSSVariableValue | null;
+    fallbackValue(): string | null;
+    computedText(): string | null;
+    render(node: CodeMirror.SyntaxNode, context: RenderingContext): Node[];
+    static matcher(treeElement: StylePropertyTreeElement, style: SDK.CSSStyleDeclaration.CSSStyleDeclaration): VariableMatcher;
+}
+export declare class ColorRenderer extends ColorMatch {
+    #private;
+    private readonly treeElement;
+    constructor(treeElement: StylePropertyTreeElement, text: string);
+    static matcher(treeElement: StylePropertyTreeElement): ColorMatcher;
+    render(node: CodeMirror.SyntaxNode, context: RenderingContext): Node[];
+    renderColorSwatch(valueChild?: Node, text?: string): InlineEditor.ColorSwatch.ColorSwatch;
 }
 export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement {
     #private;
@@ -35,9 +56,9 @@ export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement
     private computedStyles;
     private parentsComputedStyles;
     private contextForTest;
-    constructor({ stylesPane, matchedStyles, property, isShorthand, inherited, overloaded, newProperty }: StylePropertyTreeElementParams);
+    constructor({ stylesPane, section, matchedStyles, property, isShorthand, inherited, overloaded, newProperty }: StylePropertyTreeElementParams);
     matchedStyles(): SDK.CSSMatchedStyles.CSSMatchedStyles;
-    private editable;
+    editable(): boolean;
     inherited(): boolean;
     overloaded(): boolean;
     setOverloaded(x: boolean): void;
@@ -46,15 +67,13 @@ export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement
     get name(): string;
     get value(): string;
     updateFilter(): boolean;
-    private renderColorSwatch;
     private processAnimationName;
     private processAnimation;
     private processPositionFallback;
-    private processColor;
+    private processFontPalette;
     private processColorMix;
     private processVar;
     private handleVarDefinitionActivate;
-    private addColorContrastInfo;
     renderedPropertyText(): string;
     private processBezier;
     private processFont;
@@ -65,7 +84,7 @@ export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement
     private updateState;
     node(): SDK.DOMModel.DOMNode | null;
     parentPane(): StylesSidebarPane;
-    section(): StylePropertiesSection | null;
+    section(): StylePropertiesSection;
     private updatePane;
     private toggleDisabled;
     private isPropertyChanged;
@@ -74,6 +93,7 @@ export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement
     onexpand(): void;
     oncollapse(): void;
     private updateExpandElement;
+    getVariablePopoverContents(variableName: string, computedValue: string | null): HTMLElement | undefined;
     updateTitleIfComputedValueChanged(): void;
     updateTitle(): void;
     private innerUpdateTitle;
@@ -86,7 +106,8 @@ export declare class StylePropertyTreeElement extends UI.TreeOutline.TreeElement
     private copyCssDeclarationAsJs;
     private copyAllCssDeclarationAsJs;
     private navigateToSource;
-    startEditing(selectElement?: Element | null): void;
+    startEditingValue(): void;
+    startEditingName(): void;
     private editingNameValueKeyDown;
     private editingNameValueKeyPress;
     private applyFreeFlowStyleTextEdit;

@@ -3,8 +3,9 @@
 // found in the LICENSE file.
 import * as Common from '../../core/common/common.js';
 import * as i18n from '../../core/i18n/i18n.js';
-import throttlingSettingsTabStyles from './throttlingSettingsTab.css.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
+import throttlingSettingsTabStyles from './throttlingSettingsTab.css.js';
 const UIStrings = {
     /**
      *@description Text in Throttling Settings Tab of the Network panel
@@ -74,31 +75,27 @@ const UIStrings = {
 };
 const str_ = i18n.i18n.registerUIStrings('panels/mobile_throttling/ThrottlingSettingsTab.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
-let throttlingSettingsTabInstance;
 export class ThrottlingSettingsTab extends UI.Widget.VBox {
     list;
     customSetting;
     editor;
     constructor() {
         super(true);
+        this.element.setAttribute('jslog', `${VisualLogging.pane('throttling-conditions')}`);
         const header = this.contentElement.createChild('div', 'header');
         header.textContent = i18nString(UIStrings.networkThrottlingProfiles);
         UI.ARIAUtils.markAsHeading(header, 1);
-        const addButton = UI.UIUtils.createTextButton(i18nString(UIStrings.addCustomProfile), this.addButtonClicked.bind(this), 'add-conditions-button');
+        const addButton = UI.UIUtils.createTextButton(i18nString(UIStrings.addCustomProfile), this.addButtonClicked.bind(this), {
+            className: 'add-conditions-button',
+            jslogContext: 'network.add-conditions',
+        });
         this.contentElement.appendChild(addButton);
         this.list = new UI.ListWidget.ListWidget(this);
         this.list.element.classList.add('conditions-list');
         this.list.show(this.contentElement);
-        this.customSetting = Common.Settings.Settings.instance().moduleSetting('customNetworkConditions');
+        this.customSetting = Common.Settings.Settings.instance().moduleSetting('custom-network-conditions');
         this.customSetting.addChangeListener(this.conditionsUpdated, this);
         this.setDefaultFocusedElement(addButton);
-    }
-    static instance(opts = { forceNew: null }) {
-        const { forceNew } = opts;
-        if (!throttlingSettingsTabInstance || forceNew) {
-            throttlingSettingsTabInstance = new ThrottlingSettingsTab();
-        }
-        return throttlingSettingsTabInstance;
     }
     wasShown() {
         super.wasShown();

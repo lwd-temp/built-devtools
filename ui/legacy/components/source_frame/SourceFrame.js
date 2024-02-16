@@ -28,6 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 import * as Common from '../../../../core/common/common.js';
+import * as Host from '../../../../core/host/host.js';
 import * as i18n from '../../../../core/i18n/i18n.js';
 import * as Platform from '../../../../core/platform/platform.js';
 import * as Root from '../../../../core/root/root.js';
@@ -105,10 +106,18 @@ const UIStrings = {
      *@description Input box placeholder which instructs the user to type 'allow pasing' into the input box.
      *@example {allow pasting} PH1
      */
-    typeAllowPasting: 'Type  \'\'{PH1}\'\'',
+    typeAllowPasting: 'Type \'\'{PH1}\'\'',
 };
 const str_ = i18n.i18n.registerUIStrings('ui/legacy/components/source_frame/SourceFrame.ts', UIStrings);
 const i18nString = i18n.i18n.getLocalizedString.bind(undefined, str_);
+export const LINE_NUMBER_FORMATTER = CodeMirror.Facet.define({
+    combine(value) {
+        if (value.length === 0) {
+            return (lineNo) => lineNo.toString();
+        }
+        return value[0];
+    },
+});
 export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.SimpleView) {
     options;
     lazyContent;
@@ -148,8 +157,9 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
         this.prettyInternal = false;
         this.rawContent = null;
         this.formattedMap = null;
-        this.prettyToggle = new UI.Toolbar.ToolbarToggle(i18nString(UIStrings.prettyPrint), 'brackets');
-        this.prettyToggle.addEventListener(UI.Toolbar.ToolbarButton.Events.Click, () => {
+        this.prettyToggle =
+            new UI.Toolbar.ToolbarToggle(i18nString(UIStrings.prettyPrint), 'brackets', undefined, 'pretty-print');
+        this.prettyToggle.addEventListener("Click" /* UI.Toolbar.ToolbarButton.Events.Click */, () => {
             void this.setPretty(!this.prettyToggle.toggled());
         });
         this.shouldAutoPrettyPrint = false;
@@ -181,14 +191,14 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
         this.contentRequested = false;
         this.wasmDisassemblyInternal = null;
         this.contentSet = false;
-        this.selfXssWarningDisabledSetting = Common.Settings.Settings.instance().createSetting('disableSelfXssWarning', false, Common.Settings.SettingStorageType.Synced);
+        this.selfXssWarningDisabledSetting = Common.Settings.Settings.instance().createSetting('disable-self-xss-warning', false, "Synced" /* Common.Settings.SettingStorageType.Synced */);
         Common.Settings.Settings.instance()
-            .moduleSetting('textEditorIndent')
+            .moduleSetting('text-editor-indent')
             .addChangeListener(this.#textEditorIndentChanged, this);
     }
     disposeView() {
         Common.Settings.Settings.instance()
-            .moduleSetting('textEditorIndent')
+            .moduleSetting('text-editor-indent')
             .removeChangeListener(this.#textEditorIndentChanged, this);
     }
     async #textEditorIndentChanged() {
@@ -245,6 +255,16 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
             this.wasmDisassemblyInternal ? markNonBreakableLines(this.wasmDisassemblyInternal) : nonBreakableLines,
             this.options.lineWrapping ? CodeMirror.EditorView.lineWrapping : [],
             this.options.lineNumbers !== false ? CodeMirror.lineNumbers() : [],
+            Root.Runtime.experiments.isEnabled("sourcesFrameIndentationMarkersTemporarilyDisable" /* Root.Runtime.ExperimentName.INDENTATION_MARKERS_TEMP_DISABLE */) ?
+                [] :
+                CodeMirror.indentationMarkers({
+                    colors: {
+                        light: 'var(--sys-color-divider)',
+                        activeLight: 'var(--sys-color-divider-prominent)',
+                        dark: 'var(--sys-color-divider)',
+                        activeDark: 'var(--sys-color-divider-prominent)',
+                    },
+                }),
         ];
     }
     onBlur() {
@@ -253,8 +273,8 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
         this.resetCurrentSearchResultIndex();
     }
     onPaste() {
-        if (Root.Runtime.experiments.isEnabled(Root.Runtime.ExperimentName.SELF_XSS_WARNING) &&
-            !this.selfXssWarningDisabledSetting.get()) {
+        if (Root.Runtime.experiments.isEnabled("selfXssWarning" /* Root.Runtime.ExperimentName.SELF_XSS_WARNING */) &&
+            !Root.Runtime.Runtime.queryParam('isChromeForTesting') && !this.selfXssWarningDisabledSetting.get()) {
             void this.showSelfXssWarning();
             return true;
         }
@@ -267,6 +287,7 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
         const allowPasting = await SelfXssWarningDialog.show();
         if (allowPasting) {
             this.selfXssWarningDisabledSetting.set(true);
+            Host.userMetrics.actionTaken(Host.UserMetrics.Action.SelfXssAllowPastingInDialog);
         }
     }
     get wasmDisassembly() {
@@ -340,7 +361,7 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
         if (this.options.lineNumbers === false) {
             return [];
         }
-        let formatNumber = null;
+        let formatNumber = undefined;
         if (this.wasmDisassemblyInternal) {
             const disassembly = this.wasmDisassemblyInternal;
             const lastBytecodeOffset = disassembly.lineNumberToBytecodeOffset(disassembly.lineNumbers - 1);
@@ -351,18 +372,21 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
             };
         }
         else if (this.prettyInternal) {
-            formatNumber = (lineNumber) => {
-                const line = this.prettyToRawLocation(lineNumber - 1, 0)[0] + 1;
-                if (lineNumber === 1) {
-                    return String(line);
+            formatNumber = (lineNumber, state) => {
+                // @codemirror/view passes a high number here to estimate the
+                // maximum width to allocate for the line number gutter.
+                if (lineNumber < 2 || lineNumber > state.doc.lines) {
+                    return String(lineNumber);
                 }
-                if (line !== this.prettyToRawLocation(lineNumber - 2, 0)[0] + 1) {
-                    return String(line);
+                const [currLine] = this.prettyToRawLocation(lineNumber - 1);
+                const [prevLine] = this.prettyToRawLocation(lineNumber - 2);
+                if (currLine !== prevLine) {
+                    return String(currLine + 1);
                 }
                 return '-';
             };
         }
-        return formatNumber ? CodeMirror.lineNumbers({ formatNumber }) : [];
+        return formatNumber ? [CodeMirror.lineNumbers({ formatNumber }), LINE_NUMBER_FORMATTER.of(formatNumber)] : [];
     }
     updateLineNumberFormatter() {
         this.textEditor.dispatch({ effects: config.lineNumbers.reconfigure(this.getLineNumberFormatter()) });
@@ -860,7 +884,7 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
     }
     onContextMenu(event) {
         event.consume(true); // Consume event now to prevent document from handling the async menu
-        const contextMenu = new UI.ContextMenu.ContextMenu(event);
+        const contextMenu = new UI.ContextMenu.ContextMenu(event, { jsLogContext: 'sources-text-area' });
         const { state } = this.textEditor;
         const pos = state.selection.main.from, line = state.doc.lineAt(pos);
         this.populateTextAreaContextMenu(contextMenu, line.number - 1, pos - line.from);
@@ -872,7 +896,7 @@ export class SourceFrameImpl extends Common.ObjectWrapper.eventMixin(UI.View.Sim
     }
     onLineGutterContextMenu(position, event) {
         event.consume(true); // Consume event now to prevent document from handling the async menu
-        const contextMenu = new UI.ContextMenu.ContextMenu(event);
+        const contextMenu = new UI.ContextMenu.ContextMenu(event, { jsLogContext: 'sources-line-gutter' });
         const lineNumber = this.textEditor.state.doc.lineAt(position).number - 1;
         this.populateLineGutterContextMenu(contextMenu, lineNumber);
         contextMenu.appendApplicableItems(this);
@@ -919,10 +943,12 @@ export class SelfXssWarningDialog {
         const content = shadowRoot.createChild('div', 'widget');
         const result = await new Promise(resolve => {
             const closeButton = content.createChild('div', 'dialog-close-button', 'dt-close-button');
-            closeButton.addEventListener('click', () => {
+            closeButton.setTabbable(true);
+            self.onInvokeElement(closeButton, event => {
                 dialog.hide();
+                event.consume(true);
                 resolve(false);
-            }, false);
+            });
             content.createChild('div', 'title').textContent = i18nString(UIStrings.doYouTrustThisCode);
             content.createChild('div', 'message').textContent =
                 i18nString(UIStrings.doNotPaste, { PH1: i18nString(UIStrings.allowPasting) });
@@ -930,11 +956,11 @@ export class SelfXssWarningDialog {
             input.placeholder = i18nString(UIStrings.typeAllowPasting, { PH1: i18nString(UIStrings.allowPasting) });
             content.appendChild(input);
             const buttonsBar = content.createChild('div', 'button');
-            const cancelButton = UI.UIUtils.createTextButton(i18nString(UIStrings.cancel), () => resolve(false));
+            const cancelButton = UI.UIUtils.createTextButton(i18nString(UIStrings.cancel), () => resolve(false), { jslogContext: 'cancel' });
             buttonsBar.appendChild(cancelButton);
             const allowButton = UI.UIUtils.createTextButton(i18nString(UIStrings.allow), () => {
                 resolve(input.value === i18nString(UIStrings.allowPasting));
-            }, '', true);
+            }, { jslogContext: 'confirm', primary: true });
             allowButton.disabled = true;
             buttonsBar.appendChild(allowButton);
             input.addEventListener('input', () => {
@@ -947,20 +973,12 @@ export class SelfXssWarningDialog {
                 resolve(false);
             });
             dialog.show();
-            input.focus();
+            Host.userMetrics.actionTaken(Host.UserMetrics.Action.SelfXssWarningDialogShown);
         });
         dialog.hide();
         return result;
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var DecoratorType;
-(function (DecoratorType) {
-    DecoratorType["PERFORMANCE"] = "performance";
-    DecoratorType["MEMORY"] = "memory";
-    DecoratorType["COVERAGE"] = "coverage";
-})(DecoratorType || (DecoratorType = {}));
 const config = {
     editable: new CodeMirror.Compartment(),
     language: new CodeMirror.Compartment(),
@@ -1039,7 +1057,7 @@ const searchHighlighter = CodeMirror.ViewPlugin.fromClass(class {
         }
         return builder.finish();
     }
-}, { decorations: (value) => value.decorations });
+}, { decorations: value => value.decorations });
 const nonBreakableLineMark = new (class extends CodeMirror.GutterMarker {
     elementClass = 'cm-nonBreakableLine';
 })();
@@ -1085,22 +1103,22 @@ function markNonBreakableLines(disassembly) {
 const sourceFrameTheme = CodeMirror.EditorView.theme({
     '&.cm-editor': { height: '100%' },
     '.cm-scroller': { overflow: 'auto' },
-    '.cm-lineNumbers .cm-gutterElement.cm-nonBreakableLine': { color: 'var(--color-non-breakable-line) !important' },
+    '.cm-lineNumbers .cm-gutterElement.cm-nonBreakableLine': { color: 'var(--sys-color-state-disabled) !important' },
     '.cm-searchMatch': {
-        border: '1px solid var(--color-search-match-border)',
+        border: '1px solid var(--sys-color-outline)',
         borderRadius: '3px',
         margin: '0 -1px',
         '&.cm-searchMatch-selected': {
             borderRadius: '1px',
-            backgroundColor: 'var(--color-selected-search-match-background)',
-            borderColor: 'var(--color-selected-search-match-background)',
+            backgroundColor: 'var(--sys-color-yellow-container)',
+            borderColor: 'var(--sys-color-yellow-outline)',
             '&, & *': {
-                color: 'var(--color-selected-search-match) !important',
+                color: 'var(--sys-color-on-surface) !important',
             },
         },
     },
     ':host-context(.pretty-printed) & .cm-lineNumbers .cm-gutterElement': {
-        color: 'var(--color-primary-old)',
+        color: 'var(--sys-color-primary)',
     },
 });
 //# sourceMappingURL=SourceFrame.js.map

@@ -37,7 +37,7 @@ export interface CreateCommandOptions {
     deprecationWarning?: Platform.UIString.LocalizedString;
     isPanelOrDrawer?: PanelOrDrawer;
 }
-export declare enum PanelOrDrawer {
+export declare const enum PanelOrDrawer {
     PANEL = "PANEL",
     DRAWER = "DRAWER"
 }
@@ -67,8 +67,5 @@ export declare class Command {
     execute(): unknown;
 }
 export declare class ShowActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ShowActionDelegate;
     handleAction(_context: UI.Context.Context, _actionId: string): boolean;
 }

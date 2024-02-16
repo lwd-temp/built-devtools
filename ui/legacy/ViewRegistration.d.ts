@@ -27,12 +27,12 @@ export interface ViewRegistration {
      */
     experiment?: Root.Runtime.ExperimentName;
     /**
-     * A condition represented as a string the view's availability depends on. Conditions come
-     * from the queryParamsObject defined in Runtime and just as the experiment field, they determine the availability
-     * of the view. A condition can be negated by prepending a ‘!’ to the value of the condition
-     * property and in that case the behaviour of the view's availability will be inverted.
+     * A condition is a function that will make the view available if it
+     * returns true, and not available, otherwise. Make sure that objects you
+     * access from inside the condition function are ready at the time when the
+     * setting conditions are checked.
      */
-    condition?: Root.Runtime.ConditionName;
+    condition?: Root.Runtime.Condition;
     /**
      * The command added to the command menu used to show the view. It usually follows the shape Show <title> as it must
      * not be localized at declaration since it is localized internally when appending the commands to the command menu.
@@ -55,7 +55,7 @@ export interface ViewRegistration {
     /**
      * Unique identifier of the view.
      */
-    id: string;
+    id: Lowercase<string>;
     /**
      * An identifier for the location of the view. The location is resolved by
      * an extension of type '@UI.ViewLocationResolver'.
@@ -110,7 +110,7 @@ export declare function maybeRemoveViewExtension(viewId: string): boolean;
 export declare function registerLocationResolver(registration: LocationResolverRegistration): void;
 export declare function getRegisteredLocationResolvers(): Array<LocationResolverRegistration>;
 export declare function resetViewRegistration(): void;
-export declare enum ViewLocationCategory {
+export declare const enum ViewLocationCategory {
     NONE = "",
     ELEMENTS = "ELEMENTS",
     DRAWER = "DRAWER",

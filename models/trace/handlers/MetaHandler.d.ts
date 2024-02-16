@@ -3,9 +3,11 @@ export declare function reset(): void;
 export declare function initialize(): void;
 export declare function handleEvent(event: Types.TraceEvents.TraceEventData): void;
 export declare function finalize(): Promise<void>;
-type MetaHandlerData = {
-    traceBounds: Types.Timing.TraceWindow;
+export type MetaHandlerData = {
+    traceIsGeneric: boolean;
+    traceBounds: Types.Timing.TraceWindowMicroSeconds;
     browserProcessId: Types.TraceEvents.ProcessID;
+    processNames: Map<Types.TraceEvents.ProcessID, Types.TraceEvents.TraceEventProcessName>;
     browserThreadId: Types.TraceEvents.ThreadID;
     gpuProcessId: Types.TraceEvents.ProcessID;
     gpuThreadId?: Types.TraceEvents.ThreadID;
@@ -30,7 +32,6 @@ type MetaHandlerData = {
 };
 export type FrameProcessData = Map<string, Map<Types.TraceEvents.ProcessID, {
     frame: Types.TraceEvents.TraceFrame;
-    window: Types.Timing.TraceWindow;
+    window: Types.Timing.TraceWindowMicroSeconds;
 }[]>>;
 export declare function data(): MetaHandlerData;
-export {};

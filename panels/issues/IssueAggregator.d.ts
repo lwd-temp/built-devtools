@@ -35,6 +35,7 @@ export declare class AggregatedIssue extends IssuesManager.Issue.Issue {
         hasRequest: boolean;
     }>;
     getHeavyAdIssues(): Iterable<IssuesManager.HeavyAdIssue.HeavyAdIssue>;
+    getMetadataAllowedSites(): Iterable<string>;
     getMixedContentIssues(): Iterable<IssuesManager.MixedContentIssue.MixedContentIssue>;
     getCorsIssues(): Set<IssuesManager.CorsIssue.CorsIssue>;
     getCspIssues(): Iterable<IssuesManager.ContentSecurityPolicyIssue.ContentSecurityPolicyIssue>;

@@ -4,6 +4,6 @@ export declare class RuleSetView {
     constructor(ruleSetId: Protocol.Preload.RuleSetId | null);
 }
 export declare class AttemptViewWithFilter {
-    readonly ruleSetId: Protocol.Preload.RuleSetId;
-    constructor(ruleSetId: Protocol.Preload.RuleSetId);
+    readonly ruleSetId: Protocol.Preload.RuleSetId | null;
+    constructor(ruleSetId: Protocol.Preload.RuleSetId | null);
 }

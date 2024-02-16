@@ -5,6 +5,7 @@ import { type DebuggerWorkspaceBinding } from './DebuggerWorkspaceBinding.js';
 export type IgnoreListGeneralRules = {
     isContentScript?: boolean;
     isKnownThirdParty?: boolean;
+    isCurrentlyIgnoreListed?: boolean;
 };
 export declare class IgnoreListManager implements SDK.TargetManager.SDKModelObserver<SDK.DebuggerModel.DebuggerModel> {
     #private;
@@ -50,6 +51,7 @@ export declare class IgnoreListManager implements SDK.TargetManager.SDKModelObse
     getIgnoreListURLContextMenuItems(uiSourceCode: Workspace.UISourceCode.UISourceCode): Array<{
         text: string;
         callback: () => void;
+        jslogContext: string;
     }>;
     private getIgnoreListGeneralContextMenuItems;
     getIgnoreListFolderContextMenuItems(url: Platform.DevToolsPath.UrlString, options?: IgnoreListGeneralRules): Array<{

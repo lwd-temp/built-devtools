@@ -1,5 +1,5 @@
 import * as Common from '../../core/common/common.js';
-import type * as Platform from '../../core/platform/platform.js';
+import * as Platform from '../../core/platform/platform.js';
 import * as Root from '../../core/root/root.js';
 import { Context } from './Context.js';
 export interface ActionDelegate {
@@ -28,7 +28,8 @@ export declare class Action extends Common.ObjectWrapper.ObjectWrapper<EventType
     canInstantiate(): boolean;
     bindings(): Array<Binding> | undefined;
     experiment(): string | undefined;
-    condition(): string | undefined;
+    setting(): string | undefined;
+    condition(): Root.Runtime.Condition | undefined;
     order(): number | undefined;
 }
 export declare function registerActionExtension(registration: ActionRegistration): void;
@@ -50,7 +51,7 @@ export type EventTypes = {
     [Events.Enabled]: boolean;
     [Events.Toggled]: boolean;
 };
-export declare enum ActionCategory {
+export declare const enum ActionCategory {
     NONE = "",
     ELEMENTS = "ELEMENTS",
     SCREENSHOT = "SCREENSHOT",
@@ -71,7 +72,8 @@ export declare enum ActionCategory {
     DEBUGGER = "DEBUGGER",
     SOURCES = "SOURCES",
     RENDERING = "RENDERING",
-    EXPLAIN = "EXPLAIN"
+    RECORDER = "RECORDER",
+    CHANGES = "CHANGES"
 }
 export declare function getLocalizedActionCategory(category: ActionCategory): Platform.UIString.LocalizedString;
 export declare const enum IconClass {
@@ -86,6 +88,7 @@ export declare const enum IconClass {
     DOWNLOAD = "download",
     LARGEICON_PAUSE = "pause",
     LARGEICON_RESUME = "resume",
+    MOP = "mop",
     BIN = "bin",
     LARGEICON_SETTINGS_GEAR = "gear",
     LARGEICON_STEP_OVER = "step-over",
@@ -94,7 +97,10 @@ export declare const enum IconClass {
     LARGE_ICON_STEP_OUT = "step-out",
     BREAKPOINT_CROSSED_FILLED = "breakpoint-crossed-filled",
     BREAKPOINT_CROSSED = "breakpoint-crossed",
-    PLUS = "plus"
+    PLUS = "plus",
+    UNDO = "undo",
+    COPY = "copy",
+    IMPORT = "import"
 }
 export declare const enum KeybindSet {
     DEVTOOLS_DEFAULT = "devToolsDefault",
@@ -163,7 +169,7 @@ export interface ActionRegistration {
      *   <...>
      *    async loadActionDelegate() {
      *      const Elements = await loadElementsModule();
-     *      return Elements.ElementsPanel.ElementsActionDelegate.instance();
+     *      return new Elements.ElementsPanel.ElementsActionDelegate();
      *    },
      *   <...>
      *  });
@@ -231,12 +237,19 @@ export interface ActionRegistration {
      */
     experiment?: Root.Runtime.ExperimentName;
     /**
-     * A condition represented as a string the action's availability depends on. Conditions come
-     * from the queryParamsObject defined in Runtime and just as the experiment field, they determine the availability
-     * of the setting. A condition can be negated by prepending a ‘!’ to the value of the condition
-     * property and in that case the behaviour of the action's availability will be inverted.
+     * The name of the setting an action is associated with. Enabling and
+     * disabling the declared setting will enable and disable the action
+     * respectively. Note that changing the setting requires a reload for it to
+     * apply to action registration.
      */
-    condition?: Root.Runtime.ConditionName;
+    setting?: string;
+    /**
+     * A condition is a function that will make the action available if it
+     * returns true, and not available, otherwise. Make sure that objects you
+     * access from inside the condition function are ready at the time when the
+     * setting conditions are checked.
+     */
+    condition?: Root.Runtime.Condition;
     /**
      * Used to sort actions when all registered actions are queried.
      */

@@ -16,7 +16,6 @@ export declare const conservativeCompletion: CM.StateField<boolean>;
 export declare const autocompletion: DynamicSetting<boolean>;
 export declare const bracketMatching: DynamicSetting<boolean>;
 export declare const codeFolding: DynamicSetting<boolean>;
-export declare function guessIndent(doc: CM.Text): string;
 export declare const autoDetectIndent: DynamicSetting<boolean>;
 export declare const showWhitespace: DynamicSetting<string>;
 export declare const allowScrollPastEof: DynamicSetting<boolean>;

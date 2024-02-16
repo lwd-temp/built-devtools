@@ -121,7 +121,7 @@ export class SourceMap {
         this.#json = payload;
         this.#compiledURLInternal = compiledURL;
         this.#sourceMappingURL = sourceMappingURL;
-        this.#baseURL = (sourceMappingURL.startsWith('data:') ? compiledURL : sourceMappingURL);
+        this.#baseURL = (Common.ParsedURL.schemeIs(sourceMappingURL, 'data:')) ? compiledURL : sourceMappingURL;
         this.#mappingsInternal = null;
         this.#sourceInfos = new Map();
         if ('sections' in this.#json) {
@@ -315,7 +315,7 @@ export class SourceMap {
     parseSources(sourceMap) {
         const sourcesList = [];
         const sourceRoot = sourceMap.sourceRoot ?? '';
-        const ignoreList = new Set(sourceMap.x_google_ignoreList);
+        const ignoreList = new Set(sourceMap.ignoreList ?? sourceMap.x_google_ignoreList);
         for (let i = 0; i < sourceMap.sources.length; ++i) {
             let href = sourceMap.sources[i];
             // The source map v3 proposal says to prepend the sourceRoot to the source URL
@@ -392,7 +392,7 @@ export class SourceMap {
             nameIndex += this.decodeVLQ(stringCharIterator);
             this.mappings().push(new SourceMapEntry(lineNumber, columnNumber, sourceURL, sourceLineNumber, sourceColumnNumber, names[nameIndex]));
         }
-        if (Root.Runtime.experiments.isEnabled(Root.Runtime.ExperimentName.USE_SOURCE_MAP_SCOPES)) {
+        if (Root.Runtime.experiments.isEnabled("useSourceMapScopes" /* Root.Runtime.ExperimentName.USE_SOURCE_MAP_SCOPES */)) {
             this.parseScopes(map);
         }
     }

@@ -18,7 +18,7 @@ export declare class Runtime {
     static platform(): string;
     static isDescriptorEnabled(descriptor: {
         experiment: ((string | undefined) | null);
-        condition: ((string | undefined) | null);
+        condition?: Condition;
     }): boolean;
     loadLegacyModule(modulePath: string): Promise<void>;
 }
@@ -39,7 +39,6 @@ export declare class ExperimentsSupport {
     enableExperimentsTransiently(experimentNames: string[]): void;
     enableExperimentsByDefault(experimentNames: string[]): void;
     setServerEnabledExperiments(experimentNames: string[]): void;
-    setNonConfigurableExperiments(experimentNames: string[]): void;
     enableForTest(experimentName: string): void;
     disableForTest(experimentName: string): void;
     clearForTest(): void;
@@ -58,27 +57,20 @@ export declare class Experiment {
     setEnabled(enabled: boolean): void;
 }
 export declare const experiments: ExperimentsSupport;
-export declare enum ExperimentName {
+export declare const enum ExperimentName {
     CAPTURE_NODE_CREATION_STACKS = "captureNodeCreationStacks",
     CSS_OVERVIEW = "cssOverview",
     LIVE_HEAP_PROFILE = "liveHeapProfile",
-    DEVELOPER_RESOURCES_VIEW = "developerResourcesView",
-    CSP_VIOLATIONS_VIEW = "cspViolationsView",
-    WASM_DWARF_DEBUGGING = "wasmDWARFDebugging",
     ALL = "*",
     PROTOCOL_MONITOR = "protocolMonitor",
-    WEBAUTHN_PANE = "webauthnPane",
     FULL_ACCESSIBILITY_TREE = "fullAccessibilityTree",
-    PRECISE_CHANGES = "preciseChanges",
     STYLES_PANE_CSS_CHANGES = "stylesPaneCSSChanges",
     HEADER_OVERRIDES = "headerOverrides",
-    EYEDROPPER_COLOR_PICKER = "eyedropperColorPicker",
     INSTRUMENTATION_BREAKPOINTS = "instrumentationBreakpoints",
     AUTHORED_DEPLOYED_GROUPING = "authoredDeployedGrouping",
     IMPORTANT_DOM_PROPERTIES = "importantDOMProperties",
     JUST_MY_CODE = "justMyCode",
     PRELOADING_STATUS_PANEL = "preloadingStatusPanel",
-    DISABLE_COLOR_FORMAT_SETTING = "disableColorFormatSetting",
     TIMELINE_AS_CONSOLE_PROFILE_RESULT_PANEL = "timelineAsConsoleProfileResultPanel",
     OUTERMOST_TARGET_SELECTOR = "outermostTargetSelector",
     JS_PROFILER_TEMP_ENABLE = "jsProfilerTemporarilyEnable",
@@ -87,9 +79,16 @@ export declare enum ExperimentName {
     SELF_XSS_WARNING = "selfXssWarning",
     USE_SOURCE_MAP_SCOPES = "useSourceMapScopes",
     STORAGE_BUCKETS_TREE = "storageBucketsTree",
-    DELETE_OVERRIDES_TEMP_ENABLE = "deleteOverridesTemporarilyEnable"
+    NETWORK_PANEL_FILTER_BAR_REDESIGN = "networkPanelFilterBarRedesign",
+    TRACK_CONTEXT_MENU = "trackContextMenu",
+    AUTOFILL_VIEW = "autofillView",
+    INDENTATION_MARKERS_TEMP_DISABLE = "sourcesFrameIndentationMarkersTemporarilyDisable"
 }
-export declare enum ConditionName {
-    CAN_DOCK = "can_dock",
-    NOT_SOURCES_HIDE_ADD_FOLDER = "!sources.hide_add_folder"
-}
+/**
+ * When defining conditions make sure that objects used by the function have
+ * been instantiated.
+ */
+export type Condition = () => boolean;
+export declare const conditions: {
+    canDock: () => boolean;
+};

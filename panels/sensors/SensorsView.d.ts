@@ -34,7 +34,6 @@ export declare class SensorsView extends UI.Widget.VBox {
     private mouseDownVector?;
     private originalBoxMatrix?;
     constructor();
-    static instance(): SensorsView;
     wasShown(): void;
     private createPanelSeparator;
     private createLocationSection;
@@ -82,8 +81,5 @@ export declare class PresetOrientations {
 }
 export declare class ShowActionDelegate implements UI.ActionRegistration.ActionDelegate {
     handleAction(_context: UI.Context.Context, _actionId: string): boolean;
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ShowActionDelegate;
 }
 export declare const ShiftDragOrientationSpeed = 16;

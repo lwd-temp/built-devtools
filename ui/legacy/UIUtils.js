@@ -36,22 +36,22 @@ import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
 import * as IconButton from '../components/icon_button/icon_button.js';
+import * as VisualLogging from '../visual_logging/visual_logging.js';
 import * as ARIAUtils from './ARIAUtils.js';
-import { Dialog } from './Dialog.js';
-import { Size } from './Geometry.js';
-import { GlassPane } from './GlassPane.js';
-import { Icon } from './Icon.js';
-import { KeyboardShortcut } from './KeyboardShortcut.js';
-import * as Utils from './utils/utils.js';
-import { Toolbar } from './Toolbar.js';
-import { Tooltip } from './Tooltip.js';
 import checkboxTextLabelStyles from './checkboxTextLabel.css.legacy.js';
 import closeButtonStyles from './closeButton.css.legacy.js';
 import confirmDialogStyles from './confirmDialog.css.legacy.js';
+import { Dialog } from './Dialog.js';
+import { Size } from './Geometry.js';
+import { GlassPane } from './GlassPane.js';
 import inlineButtonStyles from './inlineButton.css.legacy.js';
+import { KeyboardShortcut } from './KeyboardShortcut.js';
 import radioButtonStyles from './radioButton.css.legacy.js';
 import sliderStyles from './slider.css.legacy.js';
 import smallBubbleStyles from './smallBubble.css.legacy.js';
+import { Toolbar } from './Toolbar.js';
+import { Tooltip } from './Tooltip.js';
+import * as Utils from './utils/utils.js';
 const UIStrings = {
     /**
      *@description label to open link externally
@@ -462,11 +462,14 @@ export function createReplacementString(wordString, event, customNumberHandler) 
     }
     return replacementString;
 }
-export function handleElementValueModifications(event, element, finishHandler, suggestionHandler, customNumberHandler) {
+export function isElementValueModification(event) {
     const arrowKeyOrWheelEvent = (event.key === 'ArrowUp' || event.key === 'ArrowDown' ||
         event.type === 'wheel');
     const pageKeyPressed = (event.key === 'PageUp' || event.key === 'PageDown');
-    if (!arrowKeyOrWheelEvent && !pageKeyPressed) {
+    return arrowKeyOrWheelEvent || pageKeyPressed;
+}
+export function handleElementValueModifications(event, element, finishHandler, suggestionHandler, customNumberHandler) {
+    if (!isElementValueModification(event)) {
         return false;
     }
     const selection = element.getComponentSelection();
@@ -915,23 +918,26 @@ export const createTextChildren = (element, ...childrenText) => {
         createTextChild(element, child);
     }
 };
-export function createTextButton(text, eventHandler, className, primary, alternativeEvent) {
+export function createTextButton(text, clickHandler, opts) {
     const element = document.createElement('button');
-    if (className) {
-        element.className = className;
+    if (opts?.className) {
+        element.className = opts.className;
     }
     element.textContent = text;
     element.classList.add('text-button');
-    if (primary) {
+    if (opts?.primary) {
         element.classList.add('primary-button');
     }
-    if (eventHandler) {
-        element.addEventListener(alternativeEvent || 'click', eventHandler);
+    if (clickHandler) {
+        element.addEventListener('click', clickHandler);
+    }
+    if (opts?.jslogContext) {
+        element.setAttribute('jslog', `${VisualLogging.action().track({ click: true }).context(opts.jslogContext)}`);
     }
     element.type = 'button';
     return element;
 }
-export function createInput(className, type) {
+export function createInput(className, type, jslogContext) {
     const element = document.createElement('input');
     if (className) {
         element.className = className;
@@ -940,6 +946,9 @@ export function createInput(className, type) {
     element.classList.add('harmony-input');
     if (type) {
         element.type = type;
+    }
+    if (jslogContext) {
+        element.setAttribute('jslog', `${VisualLogging.textField().track({ keydown: true }).context(jslogContext)}`);
     }
     return element;
 }
@@ -976,11 +985,14 @@ export function createLabel(title, className, associatedControl) {
     }
     return element;
 }
-export function createRadioLabel(name, title, checked) {
+export function createRadioLabel(name, title, checked, jslogContext) {
     const element = document.createElement('span', { is: 'dt-radio' });
     element.radioElement.name = name;
     element.radioElement.checked = Boolean(checked);
     createTextChild(element.labelElement, title);
+    if (jslogContext) {
+        element.radioElement.setAttribute('jslog', `${VisualLogging.toggle().track({ change: true }).context(jslogContext)}`);
+    }
     return element;
 }
 export function createIconLabel(options) {
@@ -1025,12 +1037,15 @@ export class CheckboxLabel extends HTMLSpanElement {
         this.textElement.setAttribute('for', id);
         this.shadowRootInternal.createChild('slot');
     }
-    static create(title, checked, subtitle) {
+    static create(title, checked, subtitle, jslogContext) {
         if (!CheckboxLabel.constructorInternal) {
             CheckboxLabel.constructorInternal = Utils.registerCustomElement('span', 'dt-checkbox', CheckboxLabel);
         }
         const element = CheckboxLabel.constructorInternal();
         element.checkboxElement.checked = Boolean(checked);
+        if (jslogContext) {
+            element.checkboxElement.setAttribute('jslog', `${VisualLogging.toggle().track({ change: true }).context(jslogContext)}`);
+        }
         if (title !== undefined) {
             element.textElement.textContent = title;
             element.checkboxElement.title = title;
@@ -1053,6 +1068,7 @@ export class DevToolsIconLabel extends HTMLSpanElement {
         });
         this.#icon = new IconButton.Icon.Icon();
         this.#icon.style.setProperty('margin-right', '4px');
+        this.#icon.style.setProperty('vertical-align', 'baseline');
         root.appendChild(this.#icon);
         root.createChild('slot');
     }
@@ -1132,10 +1148,11 @@ export class DevToolsCloseButton extends HTMLDivElement {
         super();
         const root = Utils.createShadowRootWithCoreStyles(this, { cssFile: closeButtonStyles, delegatesFocus: undefined });
         this.buttonElement = root.createChild('div', 'close-button');
+        this.buttonElement.setAttribute('jslog', `${VisualLogging.close().track({ click: true })}`);
         Tooltip.install(this.buttonElement, i18nString(UIStrings.close));
         ARIAUtils.setLabel(this.buttonElement, i18nString(UIStrings.close));
         ARIAUtils.markAsButton(this.buttonElement);
-        const regularIcon = Icon.create('cross', 'default-icon');
+        const regularIcon = IconButton.Icon.create('cross');
         this.buttonElement.appendChild(regularIcon);
     }
     setAccessibleName(name) {
@@ -1179,13 +1196,14 @@ export function bindInput(input, apply, validate, numeric, modifierMultiplier) {
             return;
         }
         const value = modifiedFloatNumber(parseFloat(input.value), event, modifierMultiplier);
-        const stringValue = value ? String(value) : '';
-        const { valid } = validate(stringValue);
-        if (!valid || !value) {
+        if (value === null) {
             return;
         }
-        input.value = stringValue;
-        apply(input.value);
+        const stringValue = String(value);
+        const { valid } = validate(stringValue);
+        if (valid) {
+            setValue(stringValue);
+        }
         event.preventDefault();
     }
     function setValue(value) {
@@ -1291,9 +1309,6 @@ export function loadImage(url) {
         image.src = url;
     });
 }
-export function loadImageFromData(data) {
-    return data ? loadImage('data:image/jpg;base64,' + data) : Promise.resolve(null);
-}
 export function createFileSelectorElement(callback) {
     const fileSelectorElement = document.createElement('input');
     fileSelectorElement.type = 'file';
@@ -1315,7 +1330,7 @@ export class MessageDialog {
         const shadowRoot = Utils.createShadowRootWithCoreStyles(dialog.contentElement, { cssFile: confirmDialogStyles, delegatesFocus: undefined });
         const content = shadowRoot.createChild('div', 'widget');
         await new Promise(resolve => {
-            const okButton = createTextButton(i18nString(UIStrings.ok), resolve, '', true);
+            const okButton = createTextButton(i18nString(UIStrings.ok), resolve, { jslogContext: 'confirm', primary: true });
             content.createChild('div', 'message').createChild('span').textContent = message;
             content.createChild('div', 'button').appendChild(okButton);
             dialog.setOutsideClickCallback(event => {
@@ -1340,11 +1355,9 @@ export class ConfirmDialog {
         const buttonsBar = content.createChild('div', 'button');
         const result = await new Promise(resolve => {
             const okButton = createTextButton(
-            /* text= */ options?.okButtonLabel || i18nString(UIStrings.ok), /* clickHandler= */ () => resolve(true), 
-            /* className= */ '', 
-            /* primary= */ true);
+            /* text= */ options?.okButtonLabel || i18nString(UIStrings.ok), /* clickHandler= */ () => resolve(true), { jslogContext: 'confirm', primary: true });
             buttonsBar.appendChild(okButton);
-            buttonsBar.appendChild(createTextButton(options?.cancelButtonLabel || i18nString(UIStrings.cancel), () => resolve(false)));
+            buttonsBar.appendChild(createTextButton(options?.cancelButtonLabel || i18nString(UIStrings.cancel), () => resolve(false), { jslogContext: 'cancel' }));
             dialog.setOutsideClickCallback(event => {
                 event.consume();
                 resolve(false);
@@ -1461,4 +1474,5 @@ export function getApplicableRegisteredRenderers(object) {
         return false;
     }
 }
+VisualLogging.registerContextProvider('elementValueModification', e => Promise.resolve(isElementValueModification(e) ? 1 : 0));
 //# sourceMappingURL=UIUtils.js.map

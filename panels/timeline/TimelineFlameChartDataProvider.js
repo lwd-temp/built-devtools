@@ -37,7 +37,10 @@ import * as TraceEngine from '../../models/trace/trace.js';
 import * as PerfUI from '../../ui/legacy/components/perf_ui/perf_ui.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import * as ThemeSupport from '../../ui/legacy/theme_support/theme_support.js';
+import { ActiveFilters } from './ActiveFilters.js';
 import { CompatibilityTracksAppender } from './CompatibilityTracksAppender.js';
+import * as Components from './components/components.js';
+import { eventInitiatorPairsToDraw } from './Initiators.js';
 import { ThreadAppender } from './ThreadAppender.js';
 import timelineFlamechartPopoverStyles from './timelineFlamechartPopover.css.js';
 import { FlameChartStyle, Selection } from './TimelineFlameChartView.js';
@@ -122,6 +125,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
     compatibilityTracksAppender;
     legacyTimelineModel;
     traceEngineData;
+    isCpuProfile = false;
     /**
      * Raster threads are tracked and enumerated with this property. This is also
      * used to group all raster threads together in the same track, instead of
@@ -135,7 +139,6 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
     staticHeader;
     framesHeader;
     screenshotsHeader;
-    flowEventIndexById;
     entryData;
     entryTypeByLevel;
     screenshotImageCache;
@@ -146,8 +149,8 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
     lastSelection;
     colorForEvent;
     #eventToDisallowRoot = new WeakMap();
-    #indexForEvent = new WeakMap();
     #font;
+    #eventIndexByEvent = new WeakMap();
     constructor() {
         super();
         this.reset();
@@ -183,7 +186,14 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                     ThemeSupport.ThemeSupport.instance().getComputedValue('--sys-color-cdt-base-container');
             }
         });
-        this.flowEventIndexById = new Map();
+    }
+    modifyTree(group, node, action) {
+        const entry = this.entryData[node];
+        this.compatibilityTracksAppender?.modifyTree(group, entry, action);
+    }
+    findPossibleContextMenuActions(group, node) {
+        const entry = this.entryData[node];
+        return this.compatibilityTracksAppender?.findPossibleContextMenuActions(group, entry);
     }
     buildGroupStyle(extra) {
         const defaultGroupStyle = {
@@ -197,31 +207,19 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         };
         return Object.assign(defaultGroupStyle, extra);
     }
-    setModel(performanceModel, newTraceEngineData) {
+    setModel(performanceModel, newTraceEngineData, isCpuProfile = false) {
         this.reset();
         this.legacyPerformanceModel = performanceModel;
         this.legacyTimelineModel = performanceModel && performanceModel.timelineModel();
         this.traceEngineData = newTraceEngineData;
-        if (this.legacyTimelineModel) {
-            this.minimumBoundaryInternal = this.legacyTimelineModel.minimumRecordTime();
-            this.timeSpan = this.legacyTimelineModel.isEmpty() ?
-                1000 :
-                this.legacyTimelineModel.maximumRecordTime() - this.minimumBoundaryInternal;
+        this.isCpuProfile = isCpuProfile;
+        if (newTraceEngineData) {
+            const { traceBounds } = newTraceEngineData.Meta;
+            const minTime = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(traceBounds.min);
+            const maxTime = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(traceBounds.max);
+            this.minimumBoundaryInternal = minTime;
+            this.timeSpan = minTime === maxTime ? 1000 : maxTime - this.minimumBoundaryInternal;
         }
-        else if (this.traceEngineData) {
-            this.setTimingBoundsData(this.traceEngineData);
-        }
-    }
-    /**
-     * Sets the minimum time and total time span of a trace using the
-     * new engine data.
-     */
-    setTimingBoundsData(newTraceEngineData) {
-        const { traceBounds } = newTraceEngineData.Meta;
-        const minTime = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(traceBounds.min);
-        const maxTime = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(traceBounds.max);
-        this.minimumBoundaryInternal = minTime;
-        this.timeSpan = minTime === maxTime ? 1000 : maxTime - this.minimumBoundaryInternal;
     }
     /**
      * Instances and caches a CompatibilityTracksAppender using the
@@ -272,8 +270,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         return group.track || null;
     }
     groupTreeEvents(group) {
-        const eventsFromAppenderSystem = this.compatibilityTracksAppender?.groupEventsForTreeView(group);
-        return eventsFromAppenderSystem || group.track?.eventsForTreeView() || null;
+        return this.compatibilityTracksAppender?.groupEventsForTreeView(group) ?? null;
     }
     mainFrameNavigationStartEvents() {
         if (!this.traceEngineData) {
@@ -282,9 +279,8 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         return this.traceEngineData.Meta.mainFrameNavigations;
     }
     entryTitle(entryIndex) {
-        const entryTypes = EntryType;
         const entryType = this.entryType(entryIndex);
-        if (entryType === entryTypes.Event) {
+        if (entryType === "Event" /* EntryType.Event */) {
             const event = this.entryData[entryIndex];
             if (event.phase === "T" /* TraceEngine.Types.TraceEvents.Phase.ASYNC_STEP_INTO */ ||
                 event.phase === "p" /* TraceEngine.Types.TraceEvents.Phase.ASYNC_STEP_PAST */) {
@@ -295,10 +291,10 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             }
             return TimelineUIUtils.eventTitle(event);
         }
-        if (entryType === entryTypes.Screenshot) {
+        if (entryType === "Screenshot" /* EntryType.Screenshot */) {
             return '';
         }
-        if (entryType === entryTypes.TrackAppender) {
+        if (entryType === "TrackAppender" /* EntryType.TrackAppender */) {
             const timelineData = this.timelineDataInternal;
             const eventLevel = timelineData.entryLevels[entryIndex];
             const event = this.entryData[entryIndex];
@@ -321,18 +317,24 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
     entryFont(_index) {
         return this.#font;
     }
-    reset() {
+    // resetCompatibilityTracksAppender boolean set to false does not recreate the thread appenders
+    reset(resetCompatibilityTracksAppender = true) {
         this.currentLevel = 0;
-        this.timelineDataInternal = null;
         this.entryData = [];
         this.entryParent = [];
         this.entryTypeByLevel = [];
         this.entryIndexToTitle = [];
         this.asyncColorByCategory = new Map();
         this.screenshotImageCache = new Map();
-        this.compatibilityTracksAppender = null;
         this.#eventToDisallowRoot = new WeakMap();
-        this.#indexForEvent = new WeakMap();
+        if (resetCompatibilityTracksAppender) {
+            this.compatibilityTracksAppender = null;
+            this.timelineDataInternal = null;
+        }
+        else if (!resetCompatibilityTracksAppender && this.timelineDataInternal) {
+            this.compatibilityTracksAppender?.setFlameChartDataAndEntryData(this.timelineDataInternal, this.entryData, this.entryTypeByLevel);
+            this.compatibilityTracksAppender?.threadAppenders().forEach(threadAppender => threadAppender.setHeaderAppended(false));
+        }
     }
     maxStackDepth() {
         return this.currentLevel;
@@ -342,8 +344,8 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
      * the new trace engine) and the legacy code paths present in this
      * file. The result built data is cached and returned.
      */
-    timelineData() {
-        if (this.timelineDataInternal && this.timelineDataInternal.entryLevels.length !== 0) {
+    timelineData(rebuild = false) {
+        if (this.timelineDataInternal && this.timelineDataInternal.entryLevels.length !== 0 && !rebuild) {
             // The flame chart data is built already, so return the cached
             // data.
             return this.timelineDataInternal;
@@ -352,53 +354,40 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         if (!this.legacyTimelineModel) {
             return this.timelineDataInternal;
         }
-        this.flowEventIndexById.clear();
+        if (rebuild) {
+            this.reset(/* resetCompatibilityTracksAppender= */ false);
+        }
         this.currentLevel = 0;
         if (this.traceEngineData) {
             this.compatibilityTracksAppender = this.compatibilityTracksAppenderInstance();
-        }
-        if (this.legacyTimelineModel.isGenericTrace()) {
-            this.processGenericTrace();
-        }
-        else {
-            this.processInspectorTrace();
+            if (this.traceEngineData.Meta.traceIsGeneric) {
+                this.#processGenericTrace();
+            }
+            else {
+                this.processInspectorTrace();
+            }
         }
         return this.timelineDataInternal;
     }
-    processGenericTrace() {
-        const processGroupStyle = this.buildGroupStyle({ shareHeaderLine: false });
-        const threadGroupStyle = this.buildGroupStyle({ padding: 2, nestingLevel: 1, shareHeaderLine: false });
-        const eventEntryType = EntryType.Event;
-        const tracksByProcess = new Platform.MapUtilities.Multimap();
-        if (!this.legacyTimelineModel) {
+    #processGenericTrace() {
+        if (!this.compatibilityTracksAppender) {
             return;
         }
-        for (const track of this.legacyTimelineModel.tracks()) {
-            if (track.thread !== null) {
-                tracksByProcess.set(track.thread.process(), track);
-            }
-            else {
-                // The Timings track can reach this point, so we should probably do something more useful.
-                console.error('Failed to process track');
-            }
-        }
-        for (const process of tracksByProcess.keysArray()) {
-            if (tracksByProcess.size > 1) {
-                const name = `${process.name()} ${process.id()}`;
-                this.appendHeader(name, processGroupStyle, false /* selectable */);
-            }
-            for (const track of tracksByProcess.get(process)) {
-                const group = this.appendSyncEvents(track, track.events, track.name, threadGroupStyle, eventEntryType, true /* selectable */);
-                if (this.timelineDataInternal &&
-                    (!this.timelineDataInternal.selectedGroup ||
-                        track.name === TimelineModel.TimelineModel.TimelineModelImpl.BrowserMainThreadName)) {
-                    this.timelineDataInternal.selectedGroup = group;
-                }
+        const appendersByProcess = this.compatibilityTracksAppender.allThreadAppendersByProcess();
+        for (const [pid, threadAppenders] of appendersByProcess) {
+            const processGroupStyle = this.buildGroupStyle({ shareHeaderLine: false });
+            const processName = this.traceEngineData?.Meta.processNames.get(pid)?.args.name || 'Process';
+            this.appendHeader(`${processName} (${pid})`, processGroupStyle, true, false);
+            for (const appender of threadAppenders) {
+                appender.setHeaderNestingLevel(1);
+                this.currentLevel = appender.appendTrackAtLevel(this.currentLevel);
             }
         }
     }
     processInspectorTrace() {
-        this.appendFrames();
+        if (!this.isCpuProfile) {
+            this.appendFrames();
+        }
         const weight = (track) => {
             if (track.appenderName !== undefined) {
                 switch (track.appenderName) {
@@ -414,6 +403,8 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                         return 8;
                     case 'Thread':
                         return 4;
+                    case 'Thread_AuctionWorklet':
+                        return 10;
                     default:
                         return -1;
                 }
@@ -426,7 +417,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                 case TimelineModel.TimelineModel.TrackType.Raster:
                     return 9;
                 case TimelineModel.TimelineModel.TrackType.Other:
-                    return 10;
+                    return 11;
                 default:
                     return -1;
             }
@@ -434,29 +425,31 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         if (!this.legacyTimelineModel) {
             return;
         }
-        const trackAppenders = this.compatibilityTracksAppender ? this.compatibilityTracksAppender.allVisibleTrackAppenders() : [];
-        // Due to tracks having a predefined order, we cannot render legacy
-        // and new tracks separately.
-        const tracksAndAppenders = [...this.legacyTimelineModel.tracks(), ...trackAppenders].slice();
-        tracksAndAppenders.sort((a, b) => weight(a) - weight(b));
-        // TODO(crbug.com/1386091) Remove interim state to use only new track
-        // appenders.
-        for (const trackOrAppender of tracksAndAppenders) {
-            if ('type' in trackOrAppender) {
-                // Legacy track
-                this.appendLegacyTrackData(trackOrAppender);
-                continue;
-            }
-            // Track rendered with new engine data.
+        const allTrackAppenders = this.compatibilityTracksAppender ? this.compatibilityTracksAppender.allVisibleTrackAppenders() : [];
+        allTrackAppenders.sort((a, b) => weight(a) - weight(b));
+        for (const appender of allTrackAppenders) {
             if (!this.traceEngineData) {
                 continue;
             }
-            this.currentLevel = trackOrAppender.appendTrackAtLevel(this.currentLevel);
+            this.currentLevel = appender.appendTrackAtLevel(this.currentLevel);
+            // If there is not a selected group, we want to default to selecting the
+            // main thread track. Therefore in this check we look to see if the
+            // current appender is a ThreadAppender and represnets the Main Thread.
+            // If it is, we mark the group as selected.
+            if (this.timelineDataInternal && !this.timelineDataInternal.selectedGroup) {
+                if (appender instanceof ThreadAppender &&
+                    (appender.threadType === "MAIN_THREAD" /* TraceEngine.Handlers.Threads.ThreadType.MAIN_THREAD */ ||
+                        appender.threadType === "CPU_PROFILE" /* TraceEngine.Handlers.Threads.ThreadType.CPU_PROFILE */)) {
+                    const group = this.compatibilityTracksAppender?.groupForAppender(appender);
+                    if (group) {
+                        this.timelineDataInternal.selectedGroup = group;
+                    }
+                }
+            }
         }
         if (this.timelineDataInternal && this.timelineDataInternal.selectedGroup) {
             this.timelineDataInternal.selectedGroup.expanded = true;
         }
-        this.flowEventIndexById.clear();
     }
     #addDecorationToEvent(eventIndex, decoration) {
         if (!this.timelineDataInternal) {
@@ -473,7 +466,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
      */
     appendLegacyTrackData(track, expanded) {
         this.#instantiateTimelineData();
-        const eventEntryType = EntryType.Event;
+        const eventEntryType = "Event" /* EntryType.Event */;
         switch (track.type) {
             case TimelineModel.TimelineModel.TrackType.MainThread: {
                 if (track.forMainFrame) {
@@ -527,31 +520,25 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             if (!TimelineFlameChartDataProvider.isEntryRegularEvent(entry)) {
                 continue;
             }
-            let event;
-            // The search features are implemented for SDK Event types only. Until we haven't fully
-            // transitioned to use the types of the new engine, we need to use legacy representation
-            // for events coming from the new engine.
-            if (entry instanceof TraceEngine.Legacy.Event) {
-                event = entry;
-            }
-            else {
-                if (!this.compatibilityTracksAppender) {
-                    // This should not happen.
-                    console.error('compatibilityTracksAppender was unexpectedly not set.');
-                    continue;
-                }
-                event = this.compatibilityTracksAppender.getLegacyEvent(entry);
-            }
-            if (!event) {
+            if (!entry) {
                 continue;
             }
-            if (event.startTime > endTime) {
+            // Until all the tracks are powered by the new engine, we need to
+            // consider that these entries could be either new engine or legacy
+            // engine.
+            const entryStartTime = TraceEngine.Legacy.eventIsFromNewEngine(entry) ?
+                TraceEngine.Helpers.Timing.eventTimingsMilliSeconds(entry).startTime :
+                entry.startTime;
+            const entryEndTime = TraceEngine.Legacy.eventIsFromNewEngine(entry) ?
+                TraceEngine.Helpers.Timing.eventTimingsMilliSeconds(entry).endTime :
+                entry.endTime;
+            if (entryStartTime > endTime) {
                 continue;
             }
-            if ((event.endTime || event.startTime) < startTime) {
+            if ((entryEndTime || entryStartTime) < startTime) {
                 continue;
             }
-            if (filter.accept(event)) {
+            if (filter.accept(entry, this.traceEngineData || undefined)) {
                 result.push(i);
             }
         }
@@ -610,7 +597,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                 if (TraceEngine.Types.TraceEvents.isAsyncPhase(event.phase)) {
                     continue;
                 }
-                if (!this.legacyPerformanceModel.isVisible(event)) {
+                if (!ActiveFilters.instance().isVisible(event)) {
                     continue;
                 }
             }
@@ -648,14 +635,9 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                 TraceEngine.Helpers.Timing.millisecondsToMicroseconds(eventDuration) >
                     TraceEngine.Handlers.ModelHandlers.Warnings.LONG_MAIN_THREAD_TASK_THRESHOLD) {
                 this.#addDecorationToEvent(index, {
-                    type: 'CANDY',
+                    type: "CANDY" /* PerfUI.FlameChart.FlameChartDecorationType.CANDY */,
                     startAtTime: TraceEngine.Handlers.ModelHandlers.Warnings.LONG_MAIN_THREAD_TASK_THRESHOLD,
                 });
-            }
-            if (entryType === EntryType.Event) {
-                if (TimelineModel.TimelineModel.EventOnTimelineData.forEvent(event).warning) {
-                    this.#addDecorationToEvent(index, { type: 'WARNING_TRIANGLE' });
-                }
             }
             maxStackDepth = Math.max(maxStackDepth, openEvents.length + 1);
             if (event.endTime) {
@@ -671,11 +653,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         if (TraceEngine.Legacy.eventIsFromNewEngine(event) && TraceEngine.Types.TraceEvents.isProfileCall(event)) {
             return this.isIgnoreListedURL(event.callFrame.url);
         }
-        if (!TimelineModel.TimelineModel.TimelineModelImpl.isJsFrameEvent(event)) {
-            return false;
-        }
-        const url = event.args['data']['url'];
-        return url && this.isIgnoreListedURL(url);
+        return false;
     }
     isIgnoreListedURL(url) {
         return Bindings.IgnoreListManager.IgnoreListManager.instance().isUserIgnoreListedURL(url);
@@ -688,7 +666,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         let group = null;
         for (let i = 0; i < events.length; ++i) {
             const asyncEvent = events[i];
-            if (!this.legacyPerformanceModel || !this.legacyPerformanceModel.isVisible(asyncEvent)) {
+            if (!this.legacyPerformanceModel || !ActiveFilters.instance().isVisible(asyncEvent)) {
                 continue;
             }
             if (!group && title) {
@@ -729,9 +707,9 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         this.framesHeader.collapsible = hasScreenshots;
         const expanded = Root.Runtime.Runtime.queryParam('flamechart-force-expand') === 'frames';
         this.appendHeader(i18nString(UIStrings.frames), this.framesHeader, false /* selectable */, expanded);
-        this.entryTypeByLevel[this.currentLevel] = EntryType.Frame;
-        for (const frame of this.legacyPerformanceModel.frames()) {
-            this.appendFrame(frame);
+        this.entryTypeByLevel[this.currentLevel] = "Frame" /* EntryType.Frame */;
+        for (const frame of this.traceEngineData.Frames.frames) {
+            this.#appendNewEngineFrame(frame);
         }
         ++this.currentLevel;
         if (!hasScreenshots) {
@@ -744,7 +722,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             return;
         }
         this.appendHeader('', this.screenshotsHeader, false /* selectable */);
-        this.entryTypeByLevel[this.currentLevel] = EntryType.Screenshot;
+        this.entryTypeByLevel[this.currentLevel] = "Screenshot" /* EntryType.Screenshot */;
         let prevTimestamp = undefined;
         for (const filmStripFrame of filmStrip.frames) {
             const screenshotTimeInMilliSeconds = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(filmStripFrame.screenshotEvent.ts);
@@ -772,8 +750,9 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         let title;
         let warningElements = [];
         let nameSpanTimelineInfoTime = 'timeline-info-time';
+        const additionalContent = [];
         const entryType = this.entryType(entryIndex);
-        if (entryType === EntryType.TrackAppender) {
+        if (entryType === "TrackAppender" /* EntryType.TrackAppender */) {
             if (!this.compatibilityTracksAppender) {
                 return null;
             }
@@ -784,8 +763,13 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             title = highlightedEntryInfo.title;
             time = highlightedEntryInfo.formattedTime;
             warningElements = highlightedEntryInfo.warningElements || warningElements;
+            if (TraceEngine.Types.TraceEvents.isSyntheticInteractionEvent(event)) {
+                const breakdown = new Components.InteractionBreakdown.InteractionBreakdown();
+                breakdown.entry = event;
+                additionalContent.push(breakdown);
+            }
         }
-        else if (entryType === EntryType.Event) {
+        else if (entryType === "Event" /* EntryType.Event */) {
             const event = this.entryData[entryIndex];
             const totalTime = event.duration;
             const selfTime = event.selfTime;
@@ -799,21 +783,10 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                     i18n.TimeUtilities.millisToString(totalTime, true);
             }
             title = this.entryTitle(entryIndex);
-            const warningElement = TimelineUIUtils.legacyBuildEventWarningElement(event);
-            if (warningElement) {
-                warningElements.push(warningElement);
-            }
-            if (this.legacyTimelineModel && this.legacyTimelineModel.isParseHTMLEvent(event)) {
-                const startLine = event.args['beginData']['startLine'];
-                const endLine = event.args['endData'] && event.args['endData']['endLine'];
-                const url = Bindings.ResourceUtils.displayNameForURL(event.args['beginData']['url']);
-                const range = (endLine !== -1 || endLine === startLine) ? `${startLine}...${endLine}` : startLine;
-                title += ` - ${url} [${range}]`;
-            }
         }
-        else if (entryType === EntryType.Frame) {
+        else if (entryType === "Frame" /* EntryType.Frame */) {
             const frame = this.entryData[entryIndex];
-            time = i18n.TimeUtilities.preciseMillisToString(frame.duration, 1);
+            time = i18n.TimeUtilities.preciseMillisToString(TraceEngine.Helpers.Timing.microSecondsToMilliseconds(frame.duration), 1);
             if (frame.idle) {
                 title = i18nString(UIStrings.idleFrame);
             }
@@ -847,6 +820,24 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                 contents.appendChild(warningElement);
             }
         }
+        for (const elem of additionalContent) {
+            contents.appendChild(elem);
+        }
+        return element;
+    }
+    prepareHighlightedHiddenEntriesArrowInfo(group, entryIndex) {
+        const element = document.createElement('div');
+        const root = UI.Utils.createShadowRootWithCoreStyles(element, {
+            cssFile: [timelineFlamechartPopoverStyles],
+            delegatesFocus: undefined,
+        });
+        const entry = this.entryData[entryIndex];
+        const hiddenEntriesAmount = this.compatibilityTracksAppender?.findHiddenDescendantsAmount(group, entry);
+        if (!hiddenEntriesAmount) {
+            return null;
+        }
+        const contents = root.createChild('div', 'timeline-flamechart-popover');
+        contents.createChild('span', 'timeline-info-title').textContent = hiddenEntriesAmount + ' hidden';
         return element;
     }
     entryColor(entryIndex) {
@@ -855,20 +846,19 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             if (color) {
                 return color;
             }
-            const parsedColor = Common.Color.parse(lookupColor(key));
+            const parsedColor = lookupColor(key);
             if (!parsedColor) {
                 throw new Error('Could not parse color from entry');
             }
-            color = parsedColor.setAlpha(0.7).asString("rgba" /* Common.Color.Format.RGBA */) || '';
+            color = parsedColor;
             cache.set(key, color);
-            return color;
+            return (color);
         }
         if (!this.legacyPerformanceModel || !this.legacyTimelineModel) {
             return '';
         }
-        const entryTypes = EntryType;
         const entryType = this.entryType(entryIndex);
-        if (entryType === entryTypes.Event) {
+        if (entryType === "Event" /* EntryType.Event */) {
             const event = this.entryData[entryIndex];
             if (this.legacyTimelineModel.isGenericTrace()) {
                 return this.genericTraceEventColor(event);
@@ -880,12 +870,12 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
                 return this.colorForEvent(event);
             }
             const category = TimelineUIUtils.eventStyle(event).category;
-            return patchColorAndCache(this.asyncColorByCategory, category, () => category.color);
+            return patchColorAndCache(this.asyncColorByCategory, category, () => category.getComputedColorValue());
         }
-        if (entryType === entryTypes.Frame) {
+        if (entryType === "Frame" /* EntryType.Frame */) {
             return 'white';
         }
-        if (entryType === entryTypes.TrackAppender) {
+        if (entryType === "TrackAppender" /* EntryType.TrackAppender */) {
             const timelineData = this.timelineDataInternal;
             const eventLevel = timelineData.entryLevels[entryIndex];
             const event = this.entryData[entryIndex];
@@ -958,7 +948,7 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             context.fillStyle = '#d7f0d1';
         }
         context.fillRect(barX, barY, barWidth, barHeight);
-        const frameDurationText = i18n.TimeUtilities.preciseMillisToString(frame.duration, 1);
+        const frameDurationText = i18n.TimeUtilities.preciseMillisToString(TraceEngine.Helpers.Timing.microSecondsToMilliseconds(frame.duration), 1);
         const textWidth = context.measureText(frameDurationText).width;
         if (textWidth <= barWidth) {
             context.fillStyle = this.textColor(entryIndex);
@@ -969,10 +959,10 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         const screenshot = this.entryData[entryIndex];
         if (!this.screenshotImageCache.has(screenshot)) {
             this.screenshotImageCache.set(screenshot, null);
-            const data = screenshot.args.snapshot;
-            const image = await UI.UIUtils.loadImageFromData(data);
+            const data = screenshot.args.dataUri;
+            const image = await UI.UIUtils.loadImage(data);
             this.screenshotImageCache.set(screenshot, image);
-            this.dispatchEventToListeners(Events.DataChanged);
+            this.dispatchEventToListeners("DataChanged" /* Events.DataChanged */);
             return;
         }
         const image = this.screenshotImageCache.get(screenshot);
@@ -993,32 +983,132 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         context.strokeRect(imageX - 0.5, imageY - 0.5, Math.min(barWidth - 1, imageWidth + 1), imageHeight);
         context.restore();
     }
-    decorateEntry(entryIndex, context, text, barX, barY, barWidth, barHeight, _unclippedBarX, _timeToPixels) {
+    decorateEntry(entryIndex, context, text, barX, barY, barWidth, barHeight, unclippedBarX, timeToPixelRatio) {
         const entryType = this.entryType(entryIndex);
-        if (entryType === EntryType.Frame) {
+        if (entryType === "Frame" /* EntryType.Frame */) {
             this.drawFrame(entryIndex, context, text, barX, barY, barWidth, barHeight);
             return true;
         }
-        if (entryType === EntryType.Screenshot) {
+        if (entryType === "Screenshot" /* EntryType.Screenshot */) {
             void this.drawScreenshot(entryIndex, context, barX, barY, barWidth, barHeight);
             return true;
         }
+        if (entryType === "TrackAppender" /* EntryType.TrackAppender */) {
+            const entry = this.entryData[entryIndex];
+            if (TraceEngine.Types.TraceEvents.isSyntheticInteractionEvent(entry)) {
+                this.#drawInteractionEventWithWhiskers(context, entryIndex, text, entry, barX, barY, unclippedBarX, barWidth, barHeight, timeToPixelRatio);
+                return true;
+            }
+        }
         return false;
     }
+    /**
+     * Draws the left and right whiskers around an interaction in the timeline.
+     * @param context - the canvas that will be drawn onto
+     * @param entryIndex
+     * @param entryTitle - the title of the entry
+     * @param entry - the entry itself
+     * @param barX - the starting X pixel position of the bar representing this event. This is clipped: if the bar is off the left side of the screen, this value will be 0
+     * @param barY - the starting Y pixel position of the bar representing this event.
+     * @param unclippedBarXStartPixel - the starting X pixel position of the bar representing this event, not clipped. This means if the bar is off the left of the screen this will be a negative number.
+     * @param barWidth - the width of the full bar in pixels
+     * @param barHeight - the height of the full bar in pixels
+     * @param timeToPixelRatio - the ratio required to convert a millisecond time to a pixel value.
+     **/
+    #drawInteractionEventWithWhiskers(context, entryIndex, entryTitle, entry, barX, barY, unclippedBarXStartPixel, barWidth, barHeight, timeToPixelRatio) {
+        /**
+         * An interaction is drawn with whiskers as so:
+         * |----------[=======]-------------|
+         * => The left whisker is the event's start time (event.ts)
+         * => The box start is the event's processingStart time
+         * => The box end is the event's processingEnd time
+         * => The right whisker is the event's end time (event.ts + event.dur)
+         *
+         * When we draw the event in the InteractionsAppender, we draw a huge box
+         * that spans the entire of the above. So here we need to draw over the
+         * rectangle that is outside of {processingStart, processingEnd} and
+         * replace it with the whiskers.
+         * TODO(crbug.com/1495248): rework how we draw whiskers to avoid this inefficiency
+         */
+        const beginTime = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(entry.ts);
+        const entireBarEndXPixel = barX + barWidth;
+        function timeToPixel(time) {
+            const timeMilli = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(time);
+            return Math.floor(unclippedBarXStartPixel + (timeMilli - beginTime) * timeToPixelRatio);
+        }
+        context.save();
+        // Clear portions of initial rect to prepare for the ticks.
+        context.fillStyle = ThemeSupport.ThemeSupport.instance().getComputedValue('--sys-color-cdt-base-container');
+        let desiredBoxStartX = timeToPixel(entry.processingStart);
+        const desiredBoxEndX = timeToPixel(entry.processingEnd);
+        // If the entry has no processing time, ensure the box is 1px wide so at least it is visible.
+        if (entry.processingEnd - entry.processingStart === 0) {
+            desiredBoxStartX -= 1;
+        }
+        context.fillRect(barX, barY - 0.5, desiredBoxStartX - barX, barHeight);
+        context.fillRect(desiredBoxEndX, barY - 0.5, entireBarEndXPixel - desiredBoxEndX, barHeight);
+        // Draws left and right whiskers
+        function drawTick(begin, end, y) {
+            const tickHeightPx = 6;
+            context.moveTo(begin, y - tickHeightPx / 2);
+            context.lineTo(begin, y + tickHeightPx / 2);
+            context.moveTo(begin, y);
+            context.lineTo(end, y);
+        }
+        // The left whisker starts at the enty timestamp, and continues until the start of the box (processingStart).
+        const leftWhiskerX = timeToPixel(entry.ts);
+        // The right whisker ends at (entry.ts + entry.dur). We draw the line from the end of the box (processingEnd).
+        const rightWhiskerX = timeToPixel(TraceEngine.Types.Timing.MicroSeconds(entry.ts + entry.dur));
+        context.beginPath();
+        context.lineWidth = 1;
+        context.strokeStyle = '#ccc';
+        const lineY = Math.floor(barY + barHeight / 2) + 0.5;
+        const leftTick = leftWhiskerX + 0.5;
+        const rightTick = rightWhiskerX - 0.5;
+        drawTick(leftTick, desiredBoxStartX, lineY);
+        drawTick(rightTick, desiredBoxEndX, lineY);
+        context.stroke();
+        if (entryTitle) {
+            // BarX will be set to 0 if the start of the box if off the screen to the
+            // left. If this happens, the desiredBoxStartX will be negative. In that
+            // case, we fallback to the BarX. This ensures that even if the box
+            // starts off-screen, we draw the text at the first visible on screen
+            // pixels, so the user can still see the event's title.
+            const textStartX = desiredBoxStartX > 0 ? desiredBoxStartX : barX;
+            context.font = this.#font;
+            const textWidth = UI.UIUtils.measureTextWidth(context, entryTitle);
+            // These numbers are duplicated from FlameChart.ts.
+            const textPadding = 5;
+            const textBaseline = 5;
+            // Only draw the text if it can fit in the amount of box that is visible.
+            if (textWidth <= desiredBoxEndX - textStartX + textPadding) {
+                context.fillStyle = this.textColor(entryIndex);
+                context.fillText(entryTitle, textStartX + textPadding, barY + barHeight - textBaseline);
+            }
+        }
+        context.restore();
+    }
     forceDecoration(entryIndex) {
-        const entryTypes = EntryType;
         const entryType = this.entryType(entryIndex);
-        if (entryType === entryTypes.Frame) {
+        if (entryType === "Frame" /* EntryType.Frame */) {
             return true;
         }
-        if (entryType === entryTypes.Screenshot) {
+        if (entryType === "Screenshot" /* EntryType.Screenshot */) {
             return true;
         }
-        if (entryType === entryTypes.Event) {
-            const event = this.entryData[entryIndex];
-            return Boolean(TimelineModel.TimelineModel.EventOnTimelineData.forEvent(event).warning);
+        if (entryType === "Event" /* EntryType.Event */) {
+            // TODO: this entryType can no longer exist as all tracks are now
+            // migrated to appenders. This can be removed as part of the old engine
+            // removal.
+            return false;
         }
         const event = this.entryData[entryIndex];
+        if (TraceEngine.Types.TraceEvents.isSyntheticInteractionEvent(event)) {
+            // We draw interactions with whiskers, which are done via the
+            // decorateEntry() method, hence we always want to force these to be
+            // decorated.
+            return true;
+        }
         return Boolean(this.traceEngineData?.Warnings.perEvent.get(event));
     }
     appendHeader(title, style, selectable, expanded) {
@@ -1033,7 +1123,6 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         timelineData.entryLevels[index] = level;
         timelineData.entryTotalTimes[index] = event.duration || InstantEventVisibleDurationMs;
         timelineData.entryStartTimes[index] = event.startTime;
-        this.#indexForEvent.set(event, index);
         return index;
     }
     appendAsyncEvent(asyncEvent, level) {
@@ -1050,16 +1139,18 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
             timelineData.entryStartTimes[index] = startTime;
         }
     }
-    appendFrame(frame) {
+    #appendNewEngineFrame(frame) {
         const index = this.entryData.length;
         this.entryData.push(frame);
-        this.entryIndexToTitle[index] = i18n.TimeUtilities.millisToString(frame.duration, true);
+        const durationMilliseconds = TraceEngine.Helpers.Timing.microSecondsToMilliseconds(frame.duration);
+        this.entryIndexToTitle[index] = i18n.TimeUtilities.millisToString(durationMilliseconds, true);
         if (!this.timelineDataInternal) {
             return;
         }
         this.timelineDataInternal.entryLevels[index] = this.currentLevel;
-        this.timelineDataInternal.entryTotalTimes[index] = frame.duration;
-        this.timelineDataInternal.entryStartTimes[index] = frame.startTime;
+        this.timelineDataInternal.entryTotalTimes[index] = durationMilliseconds;
+        this.timelineDataInternal.entryStartTimes[index] =
+            TraceEngine.Helpers.Timing.microSecondsToMilliseconds(frame.startTime);
     }
     createSelection(entryIndex) {
         const entryType = this.entryType(entryIndex);
@@ -1068,9 +1159,8 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         if (entry && TimelineFlameChartDataProvider.isEntryRegularEvent(entry)) {
             timelineSelection = TimelineSelection.fromTraceEvent(entry);
         }
-        else if (entryType === EntryType.Frame) {
-            timelineSelection =
-                TimelineSelection.fromFrame(this.entryData[entryIndex]);
+        else if (entryType === "Frame" /* EntryType.Frame */) {
+            timelineSelection = TimelineSelection.fromFrame(this.entryData[entryIndex]);
         }
         if (timelineSelection) {
             this.lastSelection = new Selection(timelineSelection, entryIndex);
@@ -1097,63 +1187,99 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
         }
         return index;
     }
+    getIndexForEvent(targetEvent) {
+        // Gets the index for the given event by walking through the array of entryData.
+        // This may seem inefficient - but we have seen that by building up large
+        // maps keyed by trace events that this has a significant impact on the
+        // performance of the panel.
+        // Therefore, we strike a middle ground: look up the event the first time,
+        // but then cache the result.
+        const fromCache = this.#eventIndexByEvent.get(targetEvent);
+        if (fromCache) {
+            return fromCache;
+        }
+        const index = this.entryData.indexOf(targetEvent);
+        const result = index > -1 ? index : null;
+        this.#eventIndexByEvent.set(targetEvent, result);
+        return result;
+    }
+    /**
+     * Build the |flowStartTimes|, |flowStartLevels|, |flowEndTimes| and
+     * |flowEndLevels| data for the initiator arrows of given entry.
+     * @param entryIndex
+     * @returns if we should re-render the flame chart (canvas)
+     */
     buildFlowForInitiator(entryIndex) {
         if (this.lastInitiatorEntry === entryIndex) {
             return false;
         }
+        if (!this.traceEngineData) {
+            return false;
+        }
+        if (!this.timelineDataInternal) {
+            return false;
+        }
+        if (!this.compatibilityTracksAppender) {
+            return false;
+        }
+        const previousInitiatorPairsLength = this.timelineDataInternal.flowStartTimes.length;
+        // |entryIndex| equals -1 means there is no entry selected, just clear the
+        // initiator cache if there is any previous arrow and return true to
+        // re-render.
+        if (entryIndex === -1) {
+            this.lastInitiatorEntry = entryIndex;
+            if (previousInitiatorPairsLength === 0) {
+                // This means there is no arrow before, so we don't need to re-render.
+                return false;
+            }
+            // Reset to clear any previous arrows from the last event.
+            this.timelineDataInternal.resetFlowData();
+            return true;
+        }
+        const entryType = this.entryType(entryIndex);
+        if (entryType !== "TrackAppender" /* EntryType.TrackAppender */) {
+            return false;
+        }
+        const event = this.entryData[entryIndex];
+        if (!TraceEngine.Legacy.eventIsFromNewEngine(event)) {
+            // TODO: as part of the old engine removal, we need to redefine the Event
+            // type to teach the code that only new engine events can be selected by
+            // the user.
+            return false;
+        }
+        // Reset to clear any previous arrows from the last event.
+        this.timelineDataInternal.resetFlowData();
         this.lastInitiatorEntry = entryIndex;
-        let event = this.eventByIndex(entryIndex);
-        if (TraceEngine.Legacy.eventIsFromNewEngine(event)) {
-            // TODO(crbug.com/1434596): Add support for this use case in the
-            // new engine.
+        const initiatorPairs = eventInitiatorPairsToDraw(this.traceEngineData, event);
+        // This means there is no change for arrows.
+        if (previousInitiatorPairsLength === 0 && initiatorPairs.length === 0) {
             return false;
         }
-        const td = this.timelineDataInternal;
-        if (!td) {
-            return false;
-        }
-        td.flowStartTimes = [];
-        td.flowStartLevels = [];
-        td.flowEndTimes = [];
-        td.flowEndLevels = [];
-        while (event) {
-            // Find the closest ancestor with an initiator.
-            let initiator;
-            for (; event; event = this.eventParent(event)) {
-                initiator = TimelineModel.TimelineModel.EventOnTimelineData.forEvent(event).initiator();
-                if (initiator) {
-                    break;
-                }
+        for (const pair of initiatorPairs) {
+            const eventIndex = this.getIndexForEvent(pair.event);
+            const initiatorIndex = this.getIndexForEvent(pair.initiator);
+            if (eventIndex === null || initiatorIndex === null) {
+                continue;
             }
-            if (!initiator || !event) {
-                break;
-            }
-            const eventIndex = this.#indexForEvent.get(event);
-            const initiatorIndex = this.#indexForEvent.get(initiator);
-            td.flowStartTimes.push(initiator.endTime || initiator.startTime);
+            const { startTime } = TraceEngine.Legacy.timesForEventInMilliseconds(pair.event);
+            const { endTime: initiatorEndTime, startTime: initiatorStartTime } = TraceEngine.Legacy.timesForEventInMilliseconds(pair.initiator);
+            const td = this.timelineDataInternal;
+            td.flowStartTimes.push(initiatorEndTime || initiatorStartTime);
             td.flowStartLevels.push(td.entryLevels[initiatorIndex]);
-            td.flowEndTimes.push(event.startTime);
+            td.flowEndTimes.push(startTime);
             td.flowEndLevels.push(td.entryLevels[eventIndex]);
-            event = initiator;
         }
         return true;
-    }
-    eventParent(event) {
-        const eventIndex = this.#indexForEvent.get(event);
-        if (eventIndex === undefined) {
-            return null;
-        }
-        return this.entryParent[eventIndex] || null;
     }
     eventByIndex(entryIndex) {
         if (entryIndex < 0) {
             return null;
         }
         const entryType = this.entryType(entryIndex);
-        if (entryType === EntryType.TrackAppender) {
+        if (entryType === "TrackAppender" /* EntryType.TrackAppender */) {
             return this.entryData[entryIndex];
         }
-        if (entryType === EntryType.Event) {
+        if (entryType === "Event" /* EntryType.Event */) {
             return this.entryData[entryIndex];
         }
         return null;
@@ -1168,26 +1294,4 @@ export class TimelineFlameChartDataProvider extends Common.ObjectWrapper.ObjectW
     }
 }
 export const InstantEventVisibleDurationMs = 0.001;
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var Events;
-(function (Events) {
-    Events["DataChanged"] = "DataChanged";
-})(Events || (Events = {}));
-// an entry is a trace event, they are classified into "entry types"
-// because some events are rendered differently. For example, screenshot
-// events are rendered as images. Checks for entry types allow to have
-// different styles, names, etc. for events that look differently.
-// In the future we won't have this checks: instead we will forward
-// the event to the corresponding "track appender" and it will determine
-// how the event shall be rendered.
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var EntryType;
-(function (EntryType) {
-    EntryType["Frame"] = "Frame";
-    EntryType["Event"] = "Event";
-    EntryType["TrackAppender"] = "TrackAppender";
-    EntryType["Screenshot"] = "Screenshot";
-})(EntryType || (EntryType = {}));
 //# sourceMappingURL=TimelineFlameChartDataProvider.js.map

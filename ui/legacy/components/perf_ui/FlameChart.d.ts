@@ -42,6 +42,13 @@ export declare class FlameChartDelegate {
 interface GroupExpansionState {
     [groupName: string]: boolean;
 }
+interface GroupTreeNode {
+    index: number;
+    nestingLevel: number;
+    startLevel: number;
+    endLevel: number;
+    children: GroupTreeNode[];
+}
 declare const FlameChart_base: (new (...args: any[]) => {
     "__#13@#events": Common.ObjectWrapper.ObjectWrapper<EventTypes>;
     addEventListener<T extends keyof EventTypes>(eventType: T, listener: (arg0: Common.EventTarget.EventTargetEvent<EventTypes[T], any>) => void, thisObject?: Object | undefined): Common.EventTarget.EventDescriptor<EventTypes, T>;
@@ -59,14 +66,17 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private chartViewport;
     private dataProvider;
     private candyStripePattern;
+    private contextMenu?;
     private viewportElement;
     private canvas;
     private entryInfo;
     private readonly markerHighlighElement;
     readonly highlightElement: HTMLElement;
+    readonly revealDescendantsArrowHighlightElement: HTMLElement;
     private readonly selectedElement;
     private rulerEnabled;
     private barHeight;
+    private hitMarginPx;
     private textBaseline;
     private textPadding;
     private readonly headerLeftPadding;
@@ -89,7 +99,7 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private rawTimelineDataLength;
     private readonly markerPositions;
     private lastMouseOffsetX;
-    private selectedGroup;
+    private selectedGroupIndex;
     private keyboardFocusedGroup;
     private offsetWidth;
     private offsetHeight;
@@ -101,14 +111,15 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private timelineLevels?;
     private visibleLevelOffsets?;
     private visibleLevels?;
+    private visibleLevelHeights?;
     private groupOffsets?;
     private rawTimelineData?;
     private forceDecorationCache?;
     private entryColorsCache?;
-    private visibleLevelHeights?;
     private totalTime?;
     constructor(dataProvider: FlameChartDataProvider, flameChartDelegate: FlameChartDelegate, groupExpansionSetting?: Common.Settings.Setting<GroupExpansionState>);
     willHide(): void;
+    getBarHeight(): number;
     setBarHeight(value: number): void;
     setTextBaseline(value: number): void;
     setTextPadding(value: number): void;
@@ -125,12 +136,13 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private startDragging;
     private dragging;
     private endDragging;
-    private timelineData;
+    timelineData(rebuid?: boolean): FlameChartTimelineData | null;
     private revealEntry;
     setWindowTimes(startTime: number, endTime: number, animate?: boolean): void;
     private onMouseMove;
     private updateHighlight;
     private onMouseOut;
+    showPopoverForSearchResult(selectedSearchResult: number): void;
     private updatePopover;
     private updatePopoverOffset;
     private onClick;
@@ -141,10 +153,21 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private scrollGroupIntoView;
     private toggleGroupExpand;
     private expandGroup;
+    moveGroupUp(groupIndex: number): void;
+    moveGroupDown(groupIndex: number): void;
     hideGroup(groupIndex: number): void;
     showGroup(groupIndex: number): void;
+    modifyTree(treeAction: TraceEngine.EntriesFilter.FilterAction, index: number): void;
+    getPossibleActions(): TraceEngine.EntriesFilter.PossibleFilterActions | void;
+    onContextMenu(_event: Event): void;
+    private handleFlameChartTransformEvent;
     private onKeyDown;
     bindCanvasEvent(eventName: string, onEvent: (arg0: Event) => void): void;
+    drawTrackOnCanvas(trackName: string, context: CanvasRenderingContext2D, minWidth: number): {
+        top: number;
+        height: number;
+        visibleEntries: Set<number>;
+    } | null;
     private handleKeyboardGroupNavigation;
     private selectFirstEntryInCurrentGroup;
     private selectPreviousGroup;
@@ -152,10 +175,58 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private getGroupIndexToSelect;
     private selectFirstChild;
     private handleSelectionNavigation;
-    private coordinatesToEntryIndex;
-    private coordinatesToGroupIndex;
+    /**
+     * Given offset of the cursor, returns the index of the entry.
+     * This function is public for test purpose.
+     * @param x
+     * @param y
+     * @returns the index of the entry
+     */
+    coordinatesToEntryIndex(x: number, y: number): number;
+    /**
+     * Given an entry's index and an X coordinate of a mouse click, returns
+     * whether the mouse is hovering over the arrow button that reveals hidden children
+     */
+    isMouseOverRevealChildrenArrow(x: number, index: number): boolean;
+    /**
+     * Given an entry's index, returns its coordinates relative to the
+     * viewport.
+     * This function is public for test purpose.
+     */
+    entryIndexToCoordinates(entryIndex: number): {
+        x: number;
+        y: number;
+    } | null;
+    /**
+     * Given an entry's index, retrns its title
+     */
+    entryTitle(entryIndex: number): string | null;
+    /**
+     * Returns the offset of the canvas relative to the viewport.
+     */
+    getCanvasOffset(): {
+        x: number;
+        y: number;
+    };
+    getCanvas(): HTMLCanvasElement;
+    /**
+     * Returns the y scroll of the chart viewport.
+     */
+    getScrollOffset(): number;
+    getContextMenu(): UI.ContextMenu.ContextMenu | undefined;
+    /**
+     * Given offset of the cursor, returns the index of the group.
+     * This function is public for test purpose.
+     * @param x
+     * @param y
+     * @param headerOnly if we only want to check the cursor is inside the header area, This is used for expand/collapse
+     * a track now.
+     * @returns the index of the group
+     */
+    coordinatesToGroupIndex(x: number, y: number, headerOnly: boolean): number;
     private markerIndexBeforeTime;
     private draw;
+    entryWidth(entryIndex: number): number;
     /**
      * Preprocess the data to be drawn to speed the rendering time.
      * Especifically:
@@ -180,6 +251,18 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
      * width, not the width of the event itself.
      */
     private drawEventTitles;
+    /**
+     * @callback GroupCallback
+     * @param groupTop pixels between group top and the top of the flame chart.
+     * @param groupIndex
+     * @param group
+     * @param isFirstGroup if the group is the first one of this nesting level.
+     * @param height pixels of height of this group
+     */
+    /**
+     * Process the pixels of start and end, and other data of each group, which are used in drawing the group.
+     * @param {GroupCallback} callback
+     */
     private forEachGroup;
     private forEachGroupInViewport;
     private labelWidthForGroup;
@@ -192,10 +275,46 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
     private drawMarkerLines;
     private updateMarkerHighlight;
     private processTimelineData;
+    /**
+     * Builds a tree for the given group array, the tree will be builded based on the nesting level.
+     * We will add one fake root to represent the top level parent, and the for each tree node, its children means the
+     * group nested in. The order of the children matters because it represent the order of groups.
+     * So for example if there are Group 0-7, Group 0, 3, 4 have nestingLevel 0, Group 1, 2, 5, 6, 7 have nestingLevel 1.
+     * Then we will get a tree like this.
+     *              -1(fake root to represent the top level parent)
+     *             / | \
+     *            /  |  \
+     *           0   3   4
+     *          / \    / | \
+     *         1   2  5  6  7
+     * This function is public for test purpose.
+     * @param groups the array of all groups, it should be the one from FlameChartTimelineData
+     * @returns the root of the Group tree. The root is the fake one we added, which represent the parent for all groups
+     */
+    buildGroupTree(groups: Group[]): GroupTreeNode;
+    /**
+     * Updates the tree for the given group array.
+     * For a new timeline data, if the groups remains the same (the same here mean the group order inside the |groups|,
+     * the start level, style and other attribute can be changed), but other parts are different.
+     * For example the |entryLevels[]| or |maxStackDepth| is changed, then we should update the group tree instead of
+     * re-build it.
+     * So we can keep the order that user manually set.
+     * To do this, we go through the tree, and update the start and end level of each group.
+     * This function is public for test purpose.
+     * @param groups the array of all groups, it should be the one from FlameChartTimelineData
+     * @returns the root of the Group tree. The root is the fake one we added, which represent the parent for all groups
+     */
+    updateGroupTree(groups: Group[], root: GroupTreeNode): void;
     private updateLevelPositions;
     private isGroupCollapsible;
     setSelectedEntry(entryIndex: number): void;
+    private entryHasDecoration;
+    /**
+     * Update position of an Element. By default, the element is treated as a full entry and it's dimentions are set to the full entry width/length/height.
+     * If isDecoration parameter is set to true, the element will be positioned on the right side of the entry and have a square shape where width == height of the entry.
+     */
     private updateElementPosition;
+    private updateHiddenChildrenArrowHighlighPosition;
     private timeToPositionClipped;
     /**
      * Returns the amount of pixels a group is vertically offset in the.
@@ -231,6 +350,11 @@ export declare class FlameChart extends FlameChart_base implements Calculator, C
 }
 export declare const RulerHeight = 15;
 export declare const MinimalTimeWindowMs = 0.5;
+export declare const enum FlameChartDecorationType {
+    CANDY = "CANDY",
+    WARNING_TRIANGLE = "WARNING_TRIANGLE",
+    HIDDEN_DESCENDANTS_ARROW = "HIDDEN_DESCENDANTS_ARROW"
+}
 /**
  * Represents a decoration that can be added to event. Each event can have as
  * many decorations as required.
@@ -241,10 +365,14 @@ export declare const MinimalTimeWindowMs = 0.5;
  * This work is being tracked in crbug.com/1434297.
  **/
 export type FlameChartDecoration = {
-    type: 'CANDY';
+    type: FlameChartDecorationType.CANDY;
     startAtTime: TraceEngine.Types.Timing.MicroSeconds;
+    endAtTime?: TraceEngine.Types.Timing.MicroSeconds;
 } | {
-    type: 'WARNING_TRIANGLE';
+    type: FlameChartDecorationType.WARNING_TRIANGLE;
+    customEndTime?: TraceEngine.Types.Timing.MicroSeconds;
+} | {
+    type: FlameChartDecorationType.HIDDEN_DESCENDANTS_ARROW;
 };
 export declare function sortDecorationsForRenderingOrder(decorations: FlameChartDecoration[]): void;
 export declare class FlameChartTimelineData {
@@ -272,14 +400,16 @@ export declare class FlameChartTimelineData {
         entryDecorations?: FlameChartDecoration[][];
     }): FlameChartTimelineData;
     static createEmpty(): FlameChartTimelineData;
+    resetFlowData(): void;
 }
 export interface FlameChartDataProvider {
     minimumBoundary(): number;
     totalTime(): number;
     formatValue(value: number, precision?: number): string;
     maxStackDepth(): number;
-    timelineData(): FlameChartTimelineData | null;
+    timelineData(rebuild?: boolean): FlameChartTimelineData | null;
     prepareHighlightedEntryInfo(entryIndex: number): Element | null;
+    prepareHighlightedHiddenEntriesArrowInfo?(group: Group, entryIndex: number): Element | null;
     canJumpToEntry(entryIndex: number): boolean;
     entryTitle(entryIndex: number): string | null;
     entryFont(entryIndex: number): string | null;
@@ -288,6 +418,8 @@ export interface FlameChartDataProvider {
     forceDecoration(entryIndex: number): boolean;
     textColor(entryIndex: number): string;
     mainFrameNavigationStartEvents?(): readonly TraceEngine.Types.TraceEvents.TraceEventNavigationStart[];
+    modifyTree?(group: Group, node: number, action: TraceEngine.EntriesFilter.FilterAction): void;
+    findPossibleContextMenuActions?(group: Group, node: number): TraceEngine.EntriesFilter.PossibleFilterActions | void;
 }
 export interface FlameChartMarker {
     startTime(): number;
@@ -295,7 +427,7 @@ export interface FlameChartMarker {
     title(): string | null;
     draw(context: CanvasRenderingContext2D, x: number, height: number, pixelsPerMillisecond: number): void;
 }
-export declare enum Events {
+export declare const enum Events {
     /**
      * Emitted when the <canvas> element of the FlameChart is focused by the user.
      **/
@@ -325,13 +457,15 @@ export declare enum Events {
      * been hovered on, or -1 if no entry is selected (the user has moved their
      * mouse off the event)
      */
-    EntryHighlighted = "EntryHighlighted"
+    EntryHighlighted = "EntryHighlighted",
+    ChartPlayableStateChange = "ChartPlayableStateChange"
 }
 export type EventTypes = {
     [Events.CanvasFocused]: number | void;
     [Events.EntryInvoked]: number;
     [Events.EntrySelected]: number;
     [Events.EntryHighlighted]: number;
+    [Events.ChartPlayableStateChange]: boolean;
 };
 export interface Group {
     name: Common.UIString.LocalizedString;

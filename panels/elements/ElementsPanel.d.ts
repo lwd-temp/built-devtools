@@ -10,8 +10,8 @@ import { StylesSidebarPane } from './StylesSidebarPane.js';
  * collects usage metrics for the different sidebar tabs.
  */
 export declare const enum SidebarPaneTabId {
-    Computed = "Computed",
-    Styles = "Styles"
+    Computed = "computed",
+    Styles = "styles"
 }
 export declare class ElementsPanel extends UI.Panel.Panel implements UI.SearchableView.Searchable, SDK.TargetManager.SDKModelObserver<SDK.DOMModel.DOMModel>, UI.View.ViewLocationResolver {
     private splitWidget;
@@ -40,6 +40,7 @@ export declare class ElementsPanel extends UI.Panel.Panel implements UI.Searchab
     private notFirstInspectElement?;
     sidebarPaneView?: UI.View.TabbedViewLocation;
     private stylesViewToReveal?;
+    private nodeInsertedTaskRunner;
     private cssStyleTrackerByCSSModel;
     constructor();
     private initializeFullAccessibilityTreeView;
@@ -52,6 +53,7 @@ export declare class ElementsPanel extends UI.Panel.Panel implements UI.Searchab
     resolveLocation(_locationName: string): UI.View.ViewLocation | null;
     showToolbarPane(widget: UI.Widget.Widget | null, toggle: UI.Toolbar.ToolbarToggle | null): void;
     modelAdded(domModel: SDK.DOMModel.DOMModel): void;
+    private handleNodeInserted;
     modelRemoved(domModel: SDK.DOMModel.DOMModel): void;
     private targetNameChanged;
     private updateTreeOutlineVisibleWidth;
@@ -107,27 +109,17 @@ export declare const enum _splitMode {
     Vertical = "Vertical",
     Horizontal = "Horizontal"
 }
-export declare class ContextMenuProvider implements UI.ContextMenu.Provider {
-    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, object: Object): void;
-    static instance(): ContextMenuProvider;
+export declare class ContextMenuProvider implements UI.ContextMenu.Provider<SDK.RemoteObject.RemoteObject | SDK.DOMModel.DOMNode | SDK.DOMModel.DeferredDOMNode> {
+    appendApplicableItems(event: Event, contextMenu: UI.ContextMenu.ContextMenu, object: SDK.RemoteObject.RemoteObject | SDK.DOMModel.DOMNode | SDK.DOMModel.DeferredDOMNode): void;
 }
-export declare class DOMNodeRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): DOMNodeRevealer;
-    reveal(node: Object, omitFocus?: boolean): Promise<void>;
+export declare class DOMNodeRevealer implements Common.Revealer.Revealer<SDK.DOMModel.DOMNode | SDK.DOMModel.DeferredDOMNode | SDK.RemoteObject.RemoteObject> {
+    reveal(node: SDK.DOMModel.DOMNode | SDK.DOMModel.DeferredDOMNode | SDK.RemoteObject.RemoteObject, omitFocus?: boolean): Promise<void>;
 }
-export declare class CSSPropertyRevealer implements Common.Revealer.Revealer {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): CSSPropertyRevealer;
-    reveal(property: Object): Promise<void>;
+export declare class CSSPropertyRevealer implements Common.Revealer.Revealer<SDK.CSSProperty.CSSProperty> {
+    reveal(property: SDK.CSSProperty.CSSProperty): Promise<void>;
 }
 export declare class ElementsActionDelegate implements UI.ActionRegistration.ActionDelegate {
     handleAction(context: UI.Context.Context, actionId: string): boolean;
-    static instance(opts?: {
-        forceNew: boolean | null;
-    } | undefined): ElementsActionDelegate;
 }
 export declare class PseudoStateMarkerDecorator implements MarkerDecorator {
     static instance(opts?: {

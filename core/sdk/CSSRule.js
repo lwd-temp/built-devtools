@@ -143,6 +143,11 @@ export class CSSStyleRule extends CSSRule {
         return this.selectors.map(selector => selector.text).join(', ');
     }
     selectorRange() {
+        // Nested group rules might not contain a selector.
+        // https://www.w3.org/TR/css-nesting-1/#conditionals
+        if (this.selectors.length === 0) {
+            return null;
+        }
         const firstRange = this.selectors[0].range;
         const lastRange = this.selectors[this.selectors.length - 1].range;
         if (!firstRange || !lastRange) {
@@ -203,6 +208,27 @@ export class CSSPropertyRule extends CSSRule {
     }
     inherits() {
         return this.style.getPropertyValue('inherits') === 'true';
+    }
+    setPropertyName(newPropertyName) {
+        const styleSheetId = this.styleSheetId;
+        if (!styleSheetId) {
+            throw new Error('No rule stylesheet id');
+        }
+        const range = this.#name.range;
+        if (!range) {
+            throw new Error('Property name is not editable');
+        }
+        return this.cssModelInternal.setPropertyRulePropertyName(styleSheetId, range, newPropertyName);
+    }
+}
+export class CSSFontPaletteValuesRule extends CSSRule {
+    #paletteName;
+    constructor(cssModel, payload) {
+        super(cssModel, { origin: payload.origin, style: payload.style, styleSheetId: payload.styleSheetId });
+        this.#paletteName = new CSSValue(payload.fontPaletteName);
+    }
+    name() {
+        return this.#paletteName;
     }
 }
 export class CSSKeyframesRule {

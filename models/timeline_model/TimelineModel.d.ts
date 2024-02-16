@@ -1,7 +1,6 @@
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import type * as Protocol from '../../generated/protocol.js';
-import * as CPUProfile from '../cpu_profile/cpu_profile.js';
 import * as TraceEngine from '../trace/trace.js';
 export declare class TimelineModelImpl {
     #private;
@@ -12,20 +11,14 @@ export declare class TimelineModelImpl {
     private sessionId;
     private mainFrameNodeId;
     private pageFrames;
-    private auctionWorklets;
-    private cpuProfilesInternal;
     private workerIdByThread;
     private requestsFromBrowser;
     private mainFrame;
     private minimumRecordTimeInternal;
     private maximumRecordTimeInternal;
-    private asyncEventTracker;
-    private invalidationTracker;
-    private layoutInvalidate;
     private lastScheduleStyleRecalculation;
     private paintImageEventByPixelRefId;
     private lastPaintForLayer;
-    private lastRecalculateStylesEvent;
     private currentScriptEvent;
     private eventStack;
     private browserFrameTracking;
@@ -72,14 +65,8 @@ export declare class TimelineModelImpl {
     isMarkerEvent(event: TraceEngine.Legacy.CompatibleTraceEvent): boolean;
     isInteractiveTimeEvent(event: TraceEngine.Legacy.Event): boolean;
     isLayoutShiftEvent(event: TraceEngine.Legacy.Event): boolean;
-    isParseHTMLEvent(event: TraceEngine.Legacy.Event): boolean;
-    static isJsFrameEvent(event: TraceEngine.Legacy.CompatibleTraceEvent): boolean;
     static globalEventId(event: TraceEngine.Legacy.Event, field: string): string;
     static eventFrameId(event: TraceEngine.Legacy.Event): Protocol.Page.FrameId | null;
-    cpuProfiles(): {
-        cpuProfileData: CPUProfile.CPUProfileDataModel.CPUProfileDataModel;
-        target: SDK.Target.Target | null;
-    }[];
     targetByEvent(event: TraceEngine.Legacy.CompatibleTraceEvent): SDK.Target.Target | null;
     isFreshRecording(): boolean;
     setEvents(tracingModel: TraceEngine.Legacy.TracingModel, isFreshRecording?: boolean): void;
@@ -90,11 +77,7 @@ export declare class TimelineModelImpl {
     private processSyncBrowserEvents;
     private processAsyncBrowserEvents;
     private resetProcessingState;
-    private extractCpuProfileDataModel;
-    private injectJSFrameEvents;
-    private static nameAuctionWorklet;
     private processThreadEvents;
-    private fixNegativeDuration;
     private processAsyncEvents;
     private processEvent;
     private processBrowserEvent;
@@ -108,7 +91,6 @@ export declare class TimelineModelImpl {
     maximumRecordTime(): number;
     inspectedTargetEvents(): TraceEngine.Legacy.Event[];
     tracks(): Track[];
-    isEmpty(): boolean;
     rootFrames(): PageFrame[];
     pageURL(): Platform.DevToolsPath.UrlString;
     pageFrameById(frameId: Protocol.Page.FrameId): PageFrame | null;
@@ -147,10 +129,6 @@ export declare enum RecordType {
     CompositeLayers = "CompositeLayers",
     ComputeIntersections = "IntersectionObserverController::computeIntersections",
     InteractiveTime = "InteractiveTime",
-    ScheduleStyleInvalidationTracking = "ScheduleStyleInvalidationTracking",
-    StyleRecalcInvalidationTracking = "StyleRecalcInvalidationTracking",
-    StyleInvalidatorInvalidationTracking = "StyleInvalidatorInvalidationTracking",
-    LayoutInvalidationTracking = "LayoutInvalidationTracking",
     ParseHTML = "ParseHTML",
     ParseAuthorStyleSheet = "ParseAuthorStyleSheet",
     TimerInstall = "TimerInstall",
@@ -259,22 +237,11 @@ export declare namespace TimelineModelImpl {
         UserTiming: string;
         Loading: string;
     };
-    enum WarningType {
-        LongTask = "LongTask",
-        ForcedStyle = "ForcedStyle",
-        ForcedLayout = "ForcedLayout",
-        IdleDeadlineExceeded = "IdleDeadlineExceeded",
-        LongHandler = "LongHandler",
-        LongRecurringHandler = "LongRecurringHandler",
-        V8Deopt = "V8Deopt",
-        LongInteraction = "LongInteraction"
-    }
     const WorkerThreadName = "DedicatedWorker thread";
     const WorkerThreadNameLegacy = "DedicatedWorker Thread";
     const RendererMainThreadName = "CrRendererMain";
     const BrowserMainThreadName = "CrBrowserMain";
     const UtilityMainThreadNameSuffix = "CrUtilityMain";
-    const AuctionWorkletThreadName = "AuctionV8HelperThread";
     const DevToolsMetadataEvent: {
         TracingStartedInBrowser: string;
         TracingStartedInPage: string;
@@ -282,8 +249,6 @@ export declare namespace TimelineModelImpl {
         FrameCommittedInBrowser: string;
         ProcessReadyInBrowser: string;
         FrameDeletedInBrowser: string;
-        AuctionWorkletRunningInProcess: string;
-        AuctionWorkletDoneWithProcess: string;
     };
     const Thresholds: {
         LongTask: number;
@@ -348,12 +313,6 @@ export declare enum TrackType {
     Experience = "Experience",
     Other = "Other"
 }
-declare const enum WorkletType {
-    NotWorklet = 0,
-    BidderWorklet = 1,
-    SellerWorklet = 2,
-    UnknownWorklet = 3
-}
 export declare class PageFrame {
     frameId: any;
     url: any;
@@ -373,77 +332,13 @@ export declare class PageFrame {
     processReady(processPseudoId: string, processId: number): void;
     addChild(child: PageFrame): void;
 }
-export declare class AuctionWorklet {
-    targetId: string;
-    processId: number;
-    host?: string;
-    startTime: number;
-    endTime: number;
-    workletType: WorkletType;
-    constructor(event: TraceEngine.Legacy.Event, data: any);
-}
-export declare class InvalidationTrackingEvent {
-    type: string;
-    startTime: number;
-    readonly tracingEvent: TraceEngine.Legacy.Event;
-    frame: number;
-    nodeId: number | null;
-    nodeName: string | null;
-    invalidationSet: number | null;
-    invalidatedSelectorId: string | null;
-    changedId: string | null;
-    changedClass: string | null;
-    changedAttribute: string | null;
-    changedPseudo: string | null;
-    selectorPart: string | null;
-    extraData: string | null;
-    invalidationList: {
-        [x: string]: number;
-    }[] | null;
-    cause: InvalidationCause;
-    linkedRecalcStyleEvent: boolean;
-    linkedLayoutEvent: boolean;
-    constructor(event: TraceEngine.Legacy.Event, timelineData: EventOnTimelineData);
-}
-export declare class InvalidationTracker {
-    private lastRecalcStyle;
-    didPaint: boolean;
-    private invalidations;
-    private invalidationsByNodeId;
-    constructor();
-    static invalidationEventsFor(event: TraceEngine.Legacy.Event | TraceEngine.Types.TraceEvents.TraceEventData): InvalidationTrackingEvent[] | null;
-    addInvalidation(invalidation: InvalidationTrackingEvent): void;
-    didRecalcStyle(recalcStyleEvent: TraceEngine.Legacy.Event): void;
-    private associateWithLastRecalcStyleEvent;
-    private addSyntheticStyleRecalcInvalidations;
-    private addSyntheticStyleRecalcInvalidation;
-    didLayout(layoutEvent: TraceEngine.Legacy.Event): void;
-    private addInvalidationToEvent;
-    private invalidationsOfTypes;
-    private startNewFrameIfNeeded;
-    private initializePerFrameState;
-}
-export declare class TimelineAsyncEventTracker {
-    private readonly initiatorByType;
-    constructor();
-    private static initialize;
-    processEvent(event: TraceEngine.Legacy.Event): void;
-    private static asyncEvents;
-    private static typeToInitiator;
-}
 export declare class EventOnTimelineData {
-    warning: string | null;
     url: Platform.DevToolsPath.UrlString | null;
     backendNodeIds: Protocol.DOM.BackendNodeId[];
     stackTrace: Protocol.Runtime.CallFrame[] | null;
-    picture: TraceEngine.Legacy.ObjectSnapshot | null;
-    private initiatorInternal;
     frameId: Protocol.Page.FrameId | null;
     constructor();
-    setInitiator(initiator: TraceEngine.Legacy.Event | null): void;
-    initiator(): TraceEngine.Legacy.Event | null;
     topFrame(): Protocol.Runtime.CallFrame | null;
-    stackTraceForSelfOrInitiator(): Protocol.Runtime.CallFrame[] | null;
     static forEvent(event: TraceEngine.Legacy.CompatibleTraceEvent): EventOnTimelineData;
     static forTraceEventData(event: TraceEngine.Types.TraceEvents.TraceEventData): EventOnTimelineData;
     static reset(): void;
@@ -456,4 +351,3 @@ export interface MetadataEvents {
     page: TraceEngine.Legacy.Event[];
     workers: TraceEngine.Legacy.Event[];
 }
-export {};

@@ -21,11 +21,23 @@ export declare const reverse: (inputString: string) => string;
 export declare const replaceControlCharacters: (inputString: string) => string;
 export declare const countWtf8Bytes: (inputString: string) => number;
 export declare const stripLineBreaks: (inputStr: string) => string;
+/**
+ * Tests if the `inputStr` is following the extended Kebab Case naming convetion,
+ * where words are separated with either a dash (`-`) or a dot (`.`), and all
+ * characters must be lower-case alphanumeric.
+ *
+ * For example, it will yield `true` for `'my.amazing-string.literal'`, but `false`
+ * for `'Another.AmazingLiteral'` or '`another_amazing_literal'`.
+ *
+ * @param inputStr the input string to test.
+ * @return `true` if the `inputStr` follows the extended Kebab Case convention.
+ */
+export declare const isExtendedKebabCase: (inputStr: string) => boolean;
 export declare const toTitleCase: (inputStr: string) => string;
 export declare const removeURLFragment: (inputStr: string) => string;
 export declare const regexSpecialCharacters: () => string;
 export declare const filterRegex: (query: string) => RegExp;
-export declare const createSearchRegex: (query: string, caseSensitive: boolean, isRegex: boolean) => RegExp;
+export declare const createSearchRegex: (query: string, caseSensitive: boolean, isRegex: boolean, matchWholeWord?: boolean) => RegExp;
 export declare const caseInsensetiveComparator: (a: string, b: string) => number;
 export declare const hashCode: (string?: string) => number;
 export declare const compare: (a: string, b: string) => number;
@@ -37,12 +49,23 @@ export declare const base64ToSize: (content: string | null) => number;
 export declare const SINGLE_QUOTE = "'";
 export declare const DOUBLE_QUOTE = "\"";
 export declare const findUnclosedCssQuote: (str: string) => string;
+export declare const countUnmatchedLeftParentheses: (str: string) => number;
 export declare const createPlainTextSearchRegex: (query: string, flags?: string) => RegExp;
 declare class LowerCaseStringTag {
     private lowerCaseStringTag;
 }
 export type LowerCaseString = string & LowerCaseStringTag;
 export declare const toLowerCaseString: (input: string) => LowerCaseString;
+export declare const toKebabCase: (input: string) => Lowercase<string>;
+export declare function toKebabCaseKeys(settingValue: {
+    [x: string]: any;
+}): {
+    [x: string]: any;
+};
 export declare const replaceLast: (input: string, search: string, replacement: string) => string;
 export declare const stringifyWithPrecision: (s: number, precision?: number) => string;
+/**
+ * Somewhat efficiently concatenates 2 base64 encoded strings.
+ */
+export declare const concatBase64: (lhs: string, rhs: string) => string;
 export {};

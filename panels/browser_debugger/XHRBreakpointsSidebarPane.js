@@ -4,6 +4,7 @@
 import * as i18n from '../../core/i18n/i18n.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import xhrBreakpointsSidebarPaneStyles from './xhrBreakpointsSidebarPane.css.js';
 const UIStrings = {
     /**
@@ -70,6 +71,7 @@ export class XHRBreakpointsSidebarPane extends UI.Widget.VBox {
         super(true);
         this.#breakpoints = new UI.ListModel.ListModel();
         this.#list = new UI.ListControl.ListControl(this.#breakpoints, this, UI.ListControl.ListMode.NonViewport);
+        this.contentElement.setAttribute('jslog', `${VisualLogging.section('source.xhr-breakpoints')}`);
         this.contentElement.appendChild(this.#list.element);
         this.#list.element.classList.add('breakpoint-list', 'hidden');
         UI.ARIAUtils.markAsList(this.#list.element);
@@ -77,8 +79,8 @@ export class XHRBreakpointsSidebarPane extends UI.Widget.VBox {
         this.#emptyElement = this.contentElement.createChild('div', 'gray-info-message');
         this.#emptyElement.textContent = i18nString(UIStrings.noBreakpoints);
         this.#breakpointElements = new Map();
-        this.#addButton = new UI.Toolbar.ToolbarButton(i18nString(UIStrings.addXhrfetchBreakpoint), 'plus');
-        this.#addButton.addEventListener(UI.Toolbar.ToolbarButton.Events.Click, () => {
+        this.#addButton = new UI.Toolbar.ToolbarButton(i18nString(UIStrings.addXhrfetchBreakpoint), 'plus', undefined, 'sources.add-xhr-fetch-breakpoint');
+        this.#addButton.addEventListener("Click" /* UI.Toolbar.ToolbarButton.Events.Click */, () => {
             void this.addButtonClicked();
         });
         this.#emptyElement.addEventListener('contextmenu', this.emptyElementContextMenu.bind(this), true);
@@ -97,11 +99,11 @@ export class XHRBreakpointsSidebarPane extends UI.Widget.VBox {
     }
     emptyElementContextMenu(event) {
         const contextMenu = new UI.ContextMenu.ContextMenu(event);
-        contextMenu.defaultSection().appendItem(i18nString(UIStrings.addBreakpoint), this.addButtonClicked.bind(this));
+        contextMenu.defaultSection().appendItem(i18nString(UIStrings.addBreakpoint), this.addButtonClicked.bind(this), { jslogContext: 'sources.add-xhr-fetch-breakpoint' });
         void contextMenu.show();
     }
     async addButtonClicked() {
-        await UI.ViewManager.ViewManager.instance().showView('sources.xhrBreakpoints');
+        await UI.ViewManager.ViewManager.instance().showView('sources.xhr-breakpoints');
         const inputElementContainer = document.createElement('p');
         inputElementContainer.classList.add('breakpoint-condition');
         inputElementContainer.textContent = i18nString(UIStrings.breakWhenUrlContains);
@@ -253,9 +255,10 @@ export class XHRBreakpointsSidebarPane extends UI.Widget.VBox {
             this.update();
         }
         const removeAllTitle = i18nString(UIStrings.removeAllBreakpoints);
-        contextMenu.defaultSection().appendItem(i18nString(UIStrings.addBreakpoint), this.addButtonClicked.bind(this));
-        contextMenu.defaultSection().appendItem(i18nString(UIStrings.removeBreakpoint), removeBreakpoint.bind(this));
-        contextMenu.defaultSection().appendItem(removeAllTitle, removeAllBreakpoints.bind(this));
+        contextMenu.defaultSection().appendItem(i18nString(UIStrings.addBreakpoint), this.addButtonClicked.bind(this), { jslogContext: 'sources.add-xhr-fetch-breakpoint' });
+        contextMenu.defaultSection().appendItem(i18nString(UIStrings.removeBreakpoint), removeBreakpoint.bind(this)),
+            { jslogContext: 'sources.remove-xhr-fetch-breakpoint' };
+        contextMenu.defaultSection().appendItem(removeAllTitle, removeAllBreakpoints.bind(this), { jslogContext: 'sources.remove-all-xhr-fetch-breakpoints' });
         void contextMenu.show();
     }
     checkboxClicked(breakKeyword, checked) {
@@ -327,7 +330,7 @@ export class XHRBreakpointsSidebarPane extends UI.Widget.VBox {
             return;
         }
         this.#list.refreshItem(url);
-        void UI.ViewManager.ViewManager.instance().showView('sources.xhrBreakpoints');
+        void UI.ViewManager.ViewManager.instance().showView('sources.xhr-breakpoints');
     }
     restoreBreakpoints() {
         const breakpoints = SDK.DOMDebuggerModel.DOMDebuggerManager.instance().xhrBreakpoints();

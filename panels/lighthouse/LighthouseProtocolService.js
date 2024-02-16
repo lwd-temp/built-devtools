@@ -44,9 +44,7 @@ let lastId = 1;
  */
 export class ProtocolService {
     mainSessionId;
-    mainFrameId;
-    mainTargetId;
-    targetInfos;
+    rootTargetId;
     parallelConnection;
     lighthouseWorkerPromise;
     lighthouseMessageUpdateCallback;
@@ -58,6 +56,10 @@ export class ProtocolService {
         if (!mainTarget) {
             throw new Error('Unable to find main target required for Lighthouse');
         }
+        const rootTarget = SDK.TargetManager.TargetManager.instance().rootTarget();
+        if (!rootTarget) {
+            throw new Error('Could not find the root target');
+        }
         const childTargetManager = mainTarget.model(SDK.ChildTargetManager.ChildTargetManager);
         if (!childTargetManager) {
             throw new Error('Unable to find child target manager required for Lighthouse');
@@ -66,11 +68,11 @@ export class ProtocolService {
         if (!resourceTreeModel) {
             throw new Error('Unable to find resource tree model required for Lighthouse');
         }
-        const mainFrame = resourceTreeModel.mainFrame;
-        if (!mainFrame) {
-            throw new Error('Unable to find main frame required for Lighthouse');
+        const rootChildTargetManager = rootTarget.model(SDK.ChildTargetManager.ChildTargetManager);
+        if (!rootChildTargetManager) {
+            throw new Error('Could not find the child target manager class for the root target');
         }
-        const { connection, sessionId } = await childTargetManager.createParallelConnection(message => {
+        const { connection, sessionId } = await rootChildTargetManager.createParallelConnection(message => {
             if (typeof message === 'string') {
                 message = JSON.parse(message);
             }
@@ -91,9 +93,7 @@ export class ProtocolService {
         resourceTreeModel.addEventListener(SDK.ResourceTreeModel.Events.JavaScriptDialogOpening, dialogHandler);
         this.removeDialogHandler = () => resourceTreeModel.removeEventListener(SDK.ResourceTreeModel.Events.JavaScriptDialogOpening, dialogHandler);
         this.parallelConnection = connection;
-        this.targetInfos = childTargetManager.targetInfos();
-        this.mainFrameId = mainFrame.id;
-        this.mainTargetId = await childTargetManager.getParentTargetId();
+        this.rootTargetId = await rootChildTargetManager.getParentTargetId();
         this.mainSessionId = sessionId;
     }
     getLocales() {
@@ -101,7 +101,7 @@ export class ProtocolService {
     }
     async startTimespan(currentLighthouseRun) {
         const { inspectedURL, categoryIDs, flags } = currentLighthouseRun;
-        if (!this.mainFrameId || !this.mainSessionId || !this.mainTargetId || !this.targetInfos) {
+        if (!this.mainSessionId || !this.rootTargetId) {
             throw new Error('Unable to get target info required for Lighthouse');
         }
         await this.sendWithResponse('startTimespan', {
@@ -111,14 +111,12 @@ export class ProtocolService {
             config: this.configForTesting,
             locales: this.getLocales(),
             mainSessionId: this.mainSessionId,
-            mainFrameId: this.mainFrameId,
-            mainTargetId: this.mainTargetId,
-            targetInfos: this.targetInfos,
+            rootTargetId: this.rootTargetId,
         });
     }
     async collectLighthouseResults(currentLighthouseRun) {
         const { inspectedURL, categoryIDs, flags } = currentLighthouseRun;
-        if (!this.mainFrameId || !this.mainSessionId || !this.mainTargetId || !this.targetInfos) {
+        if (!this.mainSessionId || !this.rootTargetId) {
             throw new Error('Unable to get target info required for Lighthouse');
         }
         let mode = flags.mode;
@@ -132,9 +130,7 @@ export class ProtocolService {
             config: this.configForTesting,
             locales: this.getLocales(),
             mainSessionId: this.mainSessionId,
-            mainFrameId: this.mainFrameId,
-            mainTargetId: this.mainTargetId,
-            targetInfos: this.targetInfos,
+            rootTargetId: this.rootTargetId,
         });
     }
     async detach() {

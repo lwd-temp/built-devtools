@@ -1,9 +1,9 @@
-import type * as Bindings from '../../models/bindings/bindings.js';
 import * as Common from '../../core/common/common.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
-import * as TextUtils from '../../models/text_utils/text_utils.js';
 import type * as Protocol from '../../generated/protocol.js';
+import type * as Bindings from '../../models/bindings/bindings.js';
+import * as TextUtils from '../../models/text_utils/text_utils.js';
 export declare const enum CoverageType {
     CSS = 1,
     JavaScript = 2,
@@ -16,11 +16,13 @@ export declare const enum SuspensionState {
 }
 export declare enum Events {
     CoverageUpdated = "CoverageUpdated",
-    CoverageReset = "CoverageReset"
+    CoverageReset = "CoverageReset",
+    SourceMapResolved = "SourceMapResolved"
 }
 export type EventTypes = {
     [Events.CoverageUpdated]: CoverageInfo[];
     [Events.CoverageReset]: void;
+    [Events.SourceMapResolved]: void;
 };
 export declare class CoverageModel extends SDK.SDKModel.SDKModel<EventTypes> {
     private cpuProfilerModel;
@@ -36,9 +38,15 @@ export declare class CoverageModel extends SDK.SDKModel.SDKModel<EventTypes> {
     private jsBacklog;
     private cssBacklog;
     private performanceTraceRecording;
+    private sourceMapManager;
+    private willResolveSourceMaps;
+    private processSourceMapBacklog;
     constructor(target: SDK.Target.Target);
     start(jsCoveragePerBlock: boolean): Promise<boolean>;
-    preciseCoverageDeltaUpdate(timestamp: number, occasion: string, coverageData: Protocol.Profiler.ScriptCoverage[]): void;
+    private sourceMapAttached;
+    private resolveSourceMapsAndUpdate;
+    private resolveSourceMap;
+    preciseCoverageDeltaUpdate(timestamp: number, occasion: string, coverageData: Protocol.Profiler.ScriptCoverage[]): Promise<void>;
     stop(): Promise<void>;
     reset(): void;
     startPolling(): Promise<void>;
@@ -74,7 +82,9 @@ export declare class CoverageModel extends SDK.SDKModel.SDKModel<EventTypes> {
     private processCSSCoverage;
     private static convertToDisjointSegments;
     private addStyleSheetToCSSCoverage;
+    private calculateSizeForSources;
     private addCoverage;
+    private addCoverageForSource;
     exportReport(fos: Bindings.FileUtils.FileOutputStream): Promise<void>;
 }
 export interface EntryForExport {
@@ -92,6 +102,8 @@ export declare class URLCoverageInfo extends Common.ObjectWrapper.ObjectWrapper<
     private usedSizeInternal;
     private typeInternal;
     private isContentScriptInternal;
+    sourcesURLCoverageInfo: Map<Platform.DevToolsPath.UrlString, SourceURLCoverageInfo>;
+    sourceSegments: SourceSegment[] | undefined;
     constructor(url: Platform.DevToolsPath.UrlString);
     url(): Platform.DevToolsPath.UrlString;
     type(): CoverageType;
@@ -105,11 +117,17 @@ export declare class URLCoverageInfo extends Common.ObjectWrapper.ObjectWrapper<
     numberOfEntries(): number;
     removeCoverageEntry(key: string, entry: CoverageInfo): void;
     addToSizes(usedSize: number, size: number): void;
+    setSourceSegments(segments: SourceSegment[]): void;
     ensureEntry(contentProvider: TextUtils.ContentProvider.ContentProvider, contentLength: number, lineOffset: number, columnOffset: number, type: CoverageType): CoverageInfo;
     getFullText(): Promise<TextUtils.Text.Text | null>;
     entriesForExportBasedOnFullText(fullText: TextUtils.Text.Text): EntryForExport;
     entriesForExportBasedOnContent(): Promise<EntryForExport[]>;
     entriesForExport(): Promise<EntryForExport[]>;
+}
+export declare class SourceURLCoverageInfo extends URLCoverageInfo {
+    generatedURLCoverageInfo: URLCoverageInfo;
+    lastSourceUsedRange: RangeOffset[];
+    constructor(sourceUrl: Platform.DevToolsPath.UrlString, generatedUrlCoverage: URLCoverageInfo);
 }
 export declare namespace URLCoverageInfo {
     enum Events {
@@ -129,7 +147,11 @@ export declare class CoverageInfo {
     private columnOffset;
     private coverageType;
     private segments;
-    constructor(contentProvider: TextUtils.ContentProvider.ContentProvider, size: number, lineOffset: number, columnOffset: number, type: CoverageType);
+    private generatedUrlCoverageInfo;
+    sourceUsedSizeMap: Map<Platform.DevToolsPath.UrlString, number>;
+    sourceDeltaMap: Map<Platform.DevToolsPath.UrlString, number>;
+    sourceUsedRangeMap: Map<Platform.DevToolsPath.UrlString, RangeOffset[]>;
+    constructor(contentProvider: TextUtils.ContentProvider.ContentProvider, size: number, lineOffset: number, columnOffset: number, type: CoverageType, generatedUrlCoverageInfo: URLCoverageInfo);
     getContentProvider(): TextUtils.ContentProvider.ContentProvider;
     url(): Platform.DevToolsPath.UrlString;
     type(): CoverageType;
@@ -147,6 +169,7 @@ export declare class CoverageInfo {
     getUsedSize(): number;
     usageForRange(start: number, end: number): boolean;
     private updateStats;
+    private updateSourceCoverage;
     rangesForExport(offset?: number): {
         start: number;
         end: number;
@@ -161,4 +184,21 @@ export interface CoverageSegment {
     end: number;
     count: number;
     stamp: number;
+}
+export interface SourceSegment {
+    end: number;
+    sourceUrl: Platform.DevToolsPath.UrlString;
+}
+export interface EntryRange {
+    range: TextUtils.TextRange.TextRange;
+    sourceRange: TextUtils.TextRange.TextRange;
+    sourceURL: Platform.DevToolsPath.UrlString;
+}
+export interface RangeOffset {
+    start: number;
+    end: number;
+}
+export interface SourceMapObject {
+    script: SDK.Script.Script;
+    sourceMap: SDK.SourceMap.SourceMap;
 }

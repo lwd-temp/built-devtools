@@ -4,7 +4,7 @@ import { TimelineSelection } from './TimelineSelection.js';
 export declare class TimelineFlameChartNetworkDataProvider implements PerfUI.FlameChart.FlameChartDataProvider {
     #private;
     constructor();
-    setModel(traceEngineData: TraceEngine.Handlers.Migration.PartialTraceData | null): void;
+    setModel(traceEngineData: TraceEngine.Handlers.Types.TraceParseData | null): void;
     isEmpty(): boolean;
     maxStackDepth(): number;
     timelineData(): PerfUI.FlameChart.FlameChartTimelineData;
@@ -30,7 +30,7 @@ export declare class TimelineFlameChartNetworkDataProvider implements PerfUI.Fla
      * @param timeToPixelRatio
      * @returns the pixels to draw waiting time and left and right whiskers and url text
      */
-    getDecorationPixels(event: TraceEngine.Types.TraceEvents.TraceEventSyntheticNetworkRequest, unclippedBarX: number, timeToPixelRatio: number): {
+    getDecorationPixels(event: TraceEngine.Types.TraceEvents.SyntheticNetworkRequest, unclippedBarX: number, timeToPixelRatio: number): {
         sendStart: number;
         headersEnd: number;
         finish: number;

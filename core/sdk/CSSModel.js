@@ -15,7 +15,6 @@ import { DOMModel } from './DOMModel.js';
 import { Events as ResourceTreeModelEvents, ResourceTreeModel, } from './ResourceTreeModel.js';
 import { SDKModel } from './SDKModel.js';
 import { SourceMapManager } from './SourceMapManager.js';
-import { Capability } from './Target.js';
 export class CSSModel extends SDKModel {
     agent;
     #domModel;
@@ -60,9 +59,9 @@ export class CSSModel extends SDKModel {
         this.#isCSSPropertyTrackingEnabled = false;
         this.#isTrackingRequestPending = false;
         this.#stylePollingThrottler = new Common.Throttler.Throttler(StylePollingInterval);
-        this.#sourceMapManager.setEnabled(Common.Settings.Settings.instance().moduleSetting('cssSourceMapsEnabled').get());
+        this.#sourceMapManager.setEnabled(Common.Settings.Settings.instance().moduleSetting('css-source-maps-enabled').get());
         Common.Settings.Settings.instance()
-            .moduleSetting('cssSourceMapsEnabled')
+            .moduleSetting('css-source-maps-enabled')
             .addChangeListener(event => this.#sourceMapManager.setEnabled(event.data));
     }
     headersForSourceURL(sourceURL) {
@@ -135,6 +134,7 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -152,6 +152,25 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+    async setPropertyRulePropertyName(styleSheetId, range, text) {
+        Host.userMetrics.actionTaken(Host.UserMetrics.Action.StyleRuleEdited);
+        try {
+            await this.ensureOriginalStyleSheetText(styleSheetId);
+            const { propertyName } = await this.agent.invoke_setPropertyRulePropertyName({ styleSheetId, range, propertyName: text });
+            if (!propertyName) {
+                return false;
+            }
+            this.#domModel.markUndoableState();
+            const edit = new Edit(styleSheetId, range, text, propertyName);
+            this.fireStyleSheetChanged(styleSheetId, edit);
+            return true;
+        }
+        catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -169,6 +188,7 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -219,7 +239,7 @@ export class CSSModel extends SDKModel {
         if (!node) {
             return null;
         }
-        return new CSSMatchedStyles({
+        return await CSSMatchedStyles.create({
             cssModel: this,
             node: node,
             inlinePayload: response.inlineStyle || null,
@@ -233,6 +253,7 @@ export class CSSModel extends SDKModel {
             positionFallbackRules: response.cssPositionFallbackRules || [],
             propertyRules: response.cssPropertyRules ?? [],
             cssPropertyRegistrations: response.cssPropertyRegistrations ?? [],
+            fontPaletteValuesRule: response.cssFontPaletteValuesRule,
         });
     }
     async getClassNames(styleSheetId) {
@@ -331,6 +352,7 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -348,6 +370,7 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -365,6 +388,7 @@ export class CSSModel extends SDKModel {
             return true;
         }
         catch (e) {
+            console.error(e);
             return false;
         }
     }
@@ -399,6 +423,7 @@ export class CSSModel extends SDKModel {
             return new CSSStyleRule(this, rule);
         }
         catch (e) {
+            console.error(e);
             return null;
         }
     }
@@ -421,6 +446,7 @@ export class CSSModel extends SDKModel {
             return this.#styleSheetIdToHeader.get(styleSheetId) || null;
         }
         catch (e) {
+            console.error(e);
             return null;
         }
     }
@@ -581,7 +607,7 @@ export class CSSModel extends SDKModel {
             await this.suspendModel();
             await this.resumeModel();
         }
-        else {
+        else if (event.data.type !== "Activation" /* PrimaryPageChangeType.Activation */) {
             this.resetStyleSheets();
             this.resetFontFaces();
         }
@@ -663,7 +689,7 @@ export class CSSModel extends SDKModel {
                 return;
             }
             if (this.#cssPropertyTracker) {
-                this.#cssPropertyTracker.dispatchEventToListeners(CSSPropertyTrackerEvents.TrackedCSSPropertiesUpdated, result.nodeIds.map(nodeId => this.#domModel.nodeForId(nodeId)));
+                this.#cssPropertyTracker.dispatchEventToListeners("TrackedCSSPropertiesUpdated" /* CSSPropertyTrackerEvents.TrackedCSSPropertiesUpdated */, result.nodeIds.map(nodeId => this.#domModel.nodeForId(nodeId)));
             }
         }
         if (this.#isCSSPropertyTrackingEnabled) {
@@ -679,8 +705,6 @@ export class CSSModel extends SDKModel {
         return this.agent;
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
 export var Events;
 (function (Events) {
     Events["FontsUpdated"] = "FontsUpdated";
@@ -801,11 +825,5 @@ export class CSSPropertyTracker extends Common.ObjectWrapper.ObjectWrapper {
     }
 }
 const StylePollingInterval = 1000; // throttling interval for style polling, in milliseconds
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var CSSPropertyTrackerEvents;
-(function (CSSPropertyTrackerEvents) {
-    CSSPropertyTrackerEvents["TrackedCSSPropertiesUpdated"] = "TrackedCSSPropertiesUpdated";
-})(CSSPropertyTrackerEvents || (CSSPropertyTrackerEvents = {}));
-SDKModel.register(CSSModel, { capabilities: Capability.DOM, autostart: true });
+SDKModel.register(CSSModel, { capabilities: 2 /* Capability.DOM */, autostart: true });
 //# sourceMappingURL=CSSModel.js.map

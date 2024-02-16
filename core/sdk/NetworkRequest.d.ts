@@ -2,21 +2,9 @@ import * as Protocol from '../../generated/protocol.js';
 import * as TextUtils from '../../models/text_utils/text_utils.js';
 import * as Common from '../common/common.js';
 import * as Platform from '../platform/platform.js';
-import { Attributes, type Cookie } from './Cookie.js';
+import { Attribute, type Cookie } from './Cookie.js';
 import { ServerTiming } from './ServerTiming.js';
-export declare enum MIME_TYPE {
-    HTML = "text/html",
-    XML = "text/xml",
-    PLAIN = "text/plain",
-    XHTML = "application/xhtml+xml",
-    SVG = "image/svg+xml",
-    CSS = "text/css",
-    XSL = "text/xsl",
-    VTT = "text/vtt",
-    PDF = "application/pdf",
-    EVENTSTREAM = "text/event-stream"
-}
-export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<EventTypes> implements TextUtils.ContentProvider.ContentProvider {
+export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<EventTypes> implements TextUtils.ContentProvider.StreamingContentProvider {
     #private;
     statusCode: number;
     statusText: string;
@@ -29,7 +17,7 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
     connectionReused: boolean;
     hasNetworkData: boolean;
     localizedFailDescription: string | null;
-    private constructor();
+    constructor(requestId: string, backendRequestId: Protocol.Network.RequestId | undefined, url: Platform.DevToolsPath.UrlString, documentURL: Platform.DevToolsPath.UrlString, frameId: Protocol.Page.FrameId | null, loaderId: Protocol.Network.LoaderId | null, initiator: Protocol.Network.Initiator | null, hasUserGesture?: boolean);
     static create(backendRequestId: Protocol.Network.RequestId, url: Platform.DevToolsPath.UrlString, documentURL: Platform.DevToolsPath.UrlString, frameId: Protocol.Page.FrameId | null, loaderId: Protocol.Network.LoaderId | null, initiator: Protocol.Network.Initiator | null, hasUserGesture?: boolean): NetworkRequest;
     static createForWebSocket(backendRequestId: Protocol.Network.RequestId, requestURL: Platform.DevToolsPath.UrlString, initiator?: Protocol.Network.Initiator): NetworkRequest;
     static createWithoutBackendRequest(requestId: string, url: Platform.DevToolsPath.UrlString, documentURL: Platform.DevToolsPath.UrlString, initiator: Protocol.Network.Initiator | null): NetworkRequest;
@@ -108,6 +96,8 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
      */
     get fetchedViaServiceWorker(): boolean;
     set fetchedViaServiceWorker(x: boolean);
+    get serviceWorkerRouterInfo(): Protocol.Network.ServiceWorkerRouterInfo | undefined;
+    set serviceWorkerRouterInfo(x: Protocol.Network.ServiceWorkerRouterInfo);
     /**
      * Returns true if the request was sent by a service worker.
      */
@@ -115,8 +105,8 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
     get timing(): Protocol.Network.ResourceTiming | undefined;
     set timing(timingInfo: Protocol.Network.ResourceTiming | undefined);
     private setConnectTimingFromExtraInfo;
-    get mimeType(): MIME_TYPE;
-    set mimeType(x: MIME_TYPE);
+    get mimeType(): string;
+    set mimeType(x: string);
     get displayName(): string;
     name(): string;
     path(): string;
@@ -188,8 +178,9 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
      */
     private parseMultipartFormDataParameters;
     private computeHeaderValue;
-    contentData(): Promise<ContentData>;
-    setContentDataProvider(dataProvider: () => Promise<ContentData>): void;
+    contentData(): Promise<TextUtils.ContentData.ContentDataOrError>;
+    setContentDataProvider(dataProvider: () => Promise<TextUtils.ContentData.ContentDataOrError>): void;
+    requestStreamingContent(): Promise<TextUtils.StreamingContentData.StreamingContentDataOrError>;
     contentURL(): Platform.DevToolsPath.UrlString;
     contentType(): Common.ResourceType.ResourceType;
     requestContent(): Promise<TextUtils.ContentProvider.DeferredContent>;
@@ -214,12 +205,13 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
     addProtocolFrameError(errorMessage: string, time: number): void;
     addProtocolFrame(response: Protocol.Network.WebSocketFrame, time: number, sent: boolean): void;
     addFrame(frame: WebSocketFrame): void;
-    eventSourceMessages(): EventSourceMessage[];
+    eventSourceMessages(): readonly EventSourceMessage[];
     addEventSourceMessage(time: number, eventName: string, eventId: string, data: string): void;
     markAsRedirect(redirectCount: number): void;
     isRedirect(): boolean;
     setRequestIdForTest(requestId: Protocol.Network.RequestId): void;
     charset(): string | null;
+    setCharset(charset: string): void;
     addExtraRequestInfo(extraRequestInfo: ExtraRequestInfo): void;
     hasExtraRequestInfo(): boolean;
     blockedRequestCookies(): BlockedCookieWithReason[];
@@ -228,8 +220,10 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
     siteHasCookieInOtherPartition(): boolean;
     static parseStatusTextFromResponseHeadersText(responseHeadersText: string): string;
     addExtraResponseInfo(extraResponseInfo: ExtraResponseInfo): void;
+    addBlockedRequestCookiesToModel(): void;
     hasExtraResponseInfo(): boolean;
     blockedResponseCookies(): BlockedSetCookieWithReason[];
+    nonBlockedResponseCookies(): Cookie[];
     responseCookiesPartitionKey(): string | null;
     responseCookiesPartitionKeyOpaque(): boolean | null;
     redirectSourceSignedExchangeInfoHasNoErrors(): boolean;
@@ -243,6 +237,8 @@ export declare class NetworkRequest extends Common.ObjectWrapper.ObjectWrapper<E
     getAssociatedData(key: string): object | null;
     setAssociatedData(key: string, data: object): void;
     deleteAssociatedData(key: string): void;
+    hasThirdPartyCookiePhaseoutIssue(): boolean;
+    addDataReceivedEvent({ timestamp, dataLength, encodedDataLength, data }: Protocol.Network.DataReceivedEvent): void;
 }
 export declare enum Events {
     FinishedLoading = "FinishedLoading",
@@ -264,7 +260,7 @@ export type EventTypes = {
     [Events.EventSourceMessageAdded]: EventSourceMessage;
     [Events.TrustTokenResultAdded]: void;
 };
-export declare enum InitiatorType {
+export declare const enum InitiatorType {
     Other = "other",
     Parser = "parser",
     Redirect = "redirect",
@@ -280,8 +276,8 @@ export declare enum WebSocketFrameType {
 }
 export declare const cookieBlockedReasonToUiString: (blockedReason: Protocol.Network.CookieBlockedReason) => string;
 export declare const setCookieBlockedReasonToUiString: (blockedReason: Protocol.Network.SetCookieBlockedReason) => string;
-export declare const cookieBlockedReasonToAttribute: (blockedReason: Protocol.Network.CookieBlockedReason) => Attributes | null;
-export declare const setCookieBlockedReasonToAttribute: (blockedReason: Protocol.Network.SetCookieBlockedReason) => Attributes | null;
+export declare const cookieBlockedReasonToAttribute: (blockedReason: Protocol.Network.CookieBlockedReason) => Attribute | null;
+export declare const setCookieBlockedReasonToAttribute: (blockedReason: Protocol.Network.SetCookieBlockedReason) => Attribute | null;
 export interface NameValue {
     name: string;
     value: string;
@@ -301,11 +297,6 @@ export interface BlockedSetCookieWithReason {
 export interface BlockedCookieWithReason {
     blockedReasons: Protocol.Network.CookieBlockedReason[];
     cookie: Cookie;
-}
-export interface ContentData {
-    error: string | null;
-    content: string | null;
-    encoded: boolean;
 }
 export interface EventSourceMessage {
     time: number;

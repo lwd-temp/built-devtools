@@ -18,7 +18,7 @@ export declare function buildGroupStyle(extra?: Object): PerfUI.FlameChart.Group
  * @param track this is set only when `selectable` is true, and it is used for selecting a track in the details panel.
  * @returns the group that built from the give data
  */
-export declare function buildTrackHeader(startLevel: number, name: string, style: PerfUI.FlameChart.GroupStyle, selectable: boolean, expanded?: boolean, track?: TimelineModel.TimelineModel.Track | null): PerfUI.FlameChart.Group;
+export declare function buildTrackHeader(startLevel: number, name: string, style: PerfUI.FlameChart.GroupStyle, selectable: boolean, expanded?: boolean, track?: TimelineModel.TimelineModel.Track | null, showStackContextMenu?: boolean): PerfUI.FlameChart.Group;
 /**
  * Returns the time info shown when an event is hovered in the timeline.
  * @param totalTime the total time of the hovered event.

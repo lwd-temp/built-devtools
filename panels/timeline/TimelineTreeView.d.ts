@@ -27,10 +27,13 @@ export declare class TimelineTreeView extends UI.Widget.VBox implements UI.Searc
     private root?;
     private currentResult?;
     textFilterUI?: UI.Toolbar.ToolbarInput;
+    private caseSensitiveButton;
+    private regexButton;
+    private matchWholeWord;
     constructor();
     static eventNameForSorting(event: TraceEngine.Legacy.Event): string;
     setSearchableView(searchableView: UI.SearchableView.SearchableView): void;
-    setModelWithEvents(model: PerformanceModel | null, selectedEvents: TraceEngine.Legacy.CompatibleTraceEvent[] | null, traceParseData?: TraceEngine.Handlers.Migration.PartialTraceData | null): void;
+    setModelWithEvents(model: PerformanceModel | null, selectedEvents: TraceEngine.Legacy.CompatibleTraceEvent[] | null, traceParseData?: TraceEngine.Handlers.Types.TraceParseData | null): void;
     /**
      * This method is included only for preventing layout test failures.
      * TODO(crbug.com/1433692): Port problematic layout tests to unit
@@ -39,7 +42,7 @@ export declare class TimelineTreeView extends UI.Widget.VBox implements UI.Searc
     setModel(model: PerformanceModel | null, track: TimelineModel.TimelineModel.Track | null): void;
     getToolbarInputAccessiblePlaceHolder(): string;
     model(): PerformanceModel | null;
-    traceParseData(): TraceEngine.Handlers.Migration.PartialTraceData | null;
+    traceParseData(): TraceEngine.Handlers.Types.TraceParseData | null;
     init(): void;
     lastSelectedNode(): TimelineModel.TimelineProfileTree.Node | null | undefined;
     updateContents(selection: TimelineSelection): void;
@@ -94,7 +97,7 @@ export declare class AggregatedTimelineTreeView extends TimelineTreeView {
     private executionContextNamesByOrigin;
     constructor();
     setGroupBySettingForTests(groupBy: AggregatedTimelineTreeView.GroupBy): void;
-    setModelWithEvents(model: PerformanceModel | null, selectedEvents: TraceEngine.Legacy.CompatibleTraceEvent[] | null, traceParseData?: TraceEngine.Handlers.Migration.PartialTraceData | null): void;
+    setModelWithEvents(model: PerformanceModel | null, selectedEvents: TraceEngine.Legacy.CompatibleTraceEvent[] | null, traceParseData?: TraceEngine.Handlers.Types.TraceParseData | null): void;
     /**
      * This method is included only for preventing layout test failures.
      * TODO(crbug.com/1433692): Port problematic layout tests to unit
@@ -160,7 +163,7 @@ export declare class TimelineStackView extends TimelineStackView_base {
     private onSelectionChanged;
 }
 export declare namespace TimelineStackView {
-    enum Events {
+    const enum Events {
         SelectionChanged = "SelectionChanged"
     }
     type EventTypes = {

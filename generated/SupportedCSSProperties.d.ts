@@ -5,29 +5,29 @@ export const generatedProperties: ({
     keywords?: undefined;
 } | {
     inherited: boolean;
+    name: string;
+    longhands?: undefined;
+    keywords?: undefined;
+} | {
+    name: string;
+    longhands?: undefined;
+    inherited?: undefined;
+    keywords?: undefined;
+} | {
+    keywords: string[];
+    name: string;
+    longhands?: undefined;
+    inherited?: undefined;
+} | {
+    inherited: boolean;
+    keywords: string[];
+    name: string;
+    longhands?: undefined;
+} | {
+    inherited: boolean;
     longhands: string[];
     name: string;
     keywords?: undefined;
-} | {
-    inherited: boolean;
-    name: string;
-    longhands?: undefined;
-    keywords?: undefined;
-} | {
-    name: string;
-    longhands?: undefined;
-    inherited?: undefined;
-    keywords?: undefined;
-} | {
-    keywords: string[];
-    name: string;
-    longhands?: undefined;
-    inherited?: undefined;
-} | {
-    inherited: boolean;
-    keywords: string[];
-    name: string;
-    longhands?: undefined;
 } | {
     keywords: string[];
     longhands: string[];
@@ -317,7 +317,13 @@ export const generatedPropertyValues: {
     "dominant-baseline": {
         values: string[];
     };
+    "dynamic-range-limit": {
+        values: string[];
+    };
     "empty-cells": {
+        values: string[];
+    };
+    "field-sizing": {
         values: string[];
     };
     "fill-rule": {
@@ -447,6 +453,9 @@ export const generatedPropertyValues: {
         values: string[];
     };
     "inline-size": {
+        values: string[];
+    };
+    "inset-area": {
         values: string[];
     };
     isolation: {
@@ -608,6 +617,12 @@ export const generatedPropertyValues: {
     "position-fallback-bounds": {
         values: string[];
     };
+    "position-try-options": {
+        values: string[];
+    };
+    "position-try-order": {
+        values: string[];
+    };
     quotes: {
         values: string[];
     };
@@ -767,6 +782,9 @@ export const generatedPropertyValues: {
     "text-size-adjust": {
         values: string[];
     };
+    "text-spacing-trim": {
+        values: string[];
+    };
     "text-transform": {
         values: string[];
     };
@@ -777,18 +795,6 @@ export const generatedPropertyValues: {
         values: string[];
     };
     "text-wrap": {
-        values: string[];
-    };
-    "toggle-group": {
-        values: string[];
-    };
-    "toggle-root": {
-        values: string[];
-    };
-    "toggle-trigger": {
-        values: string[];
-    };
-    "toggle-visibility": {
         values: string[];
     };
     top: {
@@ -824,13 +830,13 @@ export const generatedPropertyValues: {
     "vertical-align": {
         values: string[];
     };
+    "view-transition-class": {
+        values: string[];
+    };
     "view-transition-name": {
         values: string[];
     };
     visibility: {
-        values: string[];
-    };
-    "white-space": {
         values: string[];
     };
     "white-space-collapse": {

@@ -122,7 +122,7 @@ export declare class DataGridImpl<T> extends Common.ObjectWrapper.ObjectWrapper<
     revealNode(element: HTMLElement): void;
 }
 export declare const CornerWidth = 14;
-export declare enum Events {
+export declare const enum Events {
     SelectedNode = "SelectedNode",
     DeselectedNode = "DeselectedNode",
     OpenedNode = "OpenedNode",
@@ -140,17 +140,17 @@ export declare enum Order {
     Ascending = "sort-ascending",
     Descending = "sort-descending"
 }
-export declare enum Align {
+export declare const enum Align {
     Center = "center",
     Right = "right"
 }
-export declare enum DataType {
+export declare const enum DataType {
     String = "String",
     Boolean = "Boolean"
 }
-export declare const ColumnResizePadding = 24;
+export declare const ColumnResizePadding = 34;
 export declare const CenterResizerOverBorderAdjustment = 3;
-export declare enum ResizeMethod {
+export declare const enum ResizeMethod {
     Nearest = "nearest",
     First = "first",
     Last = "last"
@@ -262,7 +262,7 @@ export interface Parameters {
     refreshCallback?: (() => void);
 }
 export interface ColumnDescriptor {
-    id: string;
+    id: Lowercase<string>;
     title?: Common.UIString.LocalizedString;
     titleDOMFragment?: DocumentFragment | null;
     sortable: boolean;

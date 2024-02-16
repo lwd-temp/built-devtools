@@ -1,3 +1,4 @@
+import * as Helpers from '../helpers/helpers.js';
 import * as Types from '../types/types.js';
 import { type FrameProcessData } from './MetaHandler.js';
 import { type TraceEventHandlerName } from './types.js';
@@ -68,28 +69,7 @@ export declare function buildHierarchy(processes: Map<Types.TraceEvents.ProcessI
         has: (name: Types.TraceEvents.KnownEventName) => boolean;
     };
 }): void;
-/**
- * Builds a hierarchy of the entries (trace events and profile calls) in
- * a particular thread of a particular process, assuming that they're
- * sorted, by iterating through all of the events in order.
- *
- * The approach is analogous to how a parser would be implemented. A
- * stack maintains local context. A scanner peeks and pops from the data
- * stream. Various "tokens" (events) are treated as "whitespace"
- * (ignored).
- *
- * The tree starts out empty and is populated as the hierarchy is built.
- * The nodes are also assumed to be created empty, with no known parent
- * or children.
- *
- * Complexity: O(n), where n = number of events
- */
-export declare function treify(entries: Types.TraceEvents.RendererEntry[], options?: {
-    filter: {
-        has: (name: Types.TraceEvents.KnownEventName) => boolean;
-    };
-}): RendererTree;
-export declare function makeCompleteEvent(event: Types.TraceEvents.TraceEventBegin | Types.TraceEvents.TraceEventEnd): Types.TraceEvents.TraceEventSyntheticCompleteEvent | null;
+export declare function makeCompleteEvent(event: Types.TraceEvents.TraceEventBegin | Types.TraceEvents.TraceEventEnd): Types.TraceEvents.SyntheticCompleteEvent | null;
 export declare function deps(): TraceEventHandlerName[];
 export interface RendererHandlerData {
     processes: Map<Types.TraceEvents.ProcessID, RendererProcess>;
@@ -98,12 +78,12 @@ export interface RendererHandlerData {
      * by the process ID.
      */
     compositorTileWorkers: Map<Types.TraceEvents.ProcessID, Types.TraceEvents.ThreadID[]>;
-    entryToNode: Map<Types.TraceEvents.RendererEntry, RendererEntryNode>;
+    entryToNode: Map<Types.TraceEvents.SyntheticTraceEntry, Helpers.TreeHelpers.TraceEntryNode>;
     /**
      * All trace events and synthetic profile calls made from
      * samples.
      */
-    allRendererEvents: Types.TraceEvents.TraceEventRendererEvent[];
+    allTraceEntries: Types.TraceEvents.SyntheticTraceEntry[];
 }
 export interface RendererProcess {
     url: string | null;
@@ -116,23 +96,6 @@ export interface RendererThread {
      * Contains trace events and synthetic profile calls made from
      * samples.
      */
-    entries: Types.TraceEvents.RendererEntry[];
-    tree?: RendererTree;
+    entries: Types.TraceEvents.SyntheticTraceEntry[];
+    tree?: Helpers.TreeHelpers.TraceEntryTree;
 }
-export interface RendererTree {
-    nodes: Map<RendererEntryNodeId, RendererEntryNode>;
-    roots: Set<RendererEntryNode>;
-    maxDepth: number;
-}
-export interface RendererEntryNode {
-    entry: Types.TraceEvents.RendererEntry;
-    depth: number;
-    id: RendererEntryNodeId;
-    parentId?: RendererEntryNodeId | null;
-    children: Set<RendererEntryNode>;
-}
-declare class RendererEventNodeIdTag {
-    #private;
-}
-export type RendererEntryNodeId = number & RendererEventNodeIdTag;
-export {};

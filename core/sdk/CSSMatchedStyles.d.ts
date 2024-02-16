@@ -1,14 +1,14 @@
 import * as Protocol from '../../generated/protocol.js';
 import { type CSSModel } from './CSSModel.js';
 import { type CSSProperty } from './CSSProperty.js';
-import { CSSKeyframesRule, CSSPositionFallbackRule, CSSPropertyRule, CSSStyleRule } from './CSSRule.js';
+import { CSSFontPaletteValuesRule, CSSKeyframesRule, CSSPositionFallbackRule, CSSPropertyRule, CSSStyleRule } from './CSSRule.js';
 import { CSSStyleDeclaration } from './CSSStyleDeclaration.js';
 import { type DOMNode } from './DOMModel.js';
 export declare function parseCSSVariableNameAndFallback(cssVariableValue: string): {
     variableName: string | null;
     fallback: string | null;
 };
-interface CSSMatchedStylesPayload {
+export interface CSSMatchedStylesPayload {
     cssModel: CSSModel;
     node: DOMNode;
     inlinePayload: Protocol.CSS.CSSStyle | null;
@@ -22,6 +22,7 @@ interface CSSMatchedStylesPayload {
     positionFallbackRules: Protocol.CSS.CSSPositionFallbackRule[];
     propertyRules: Protocol.CSS.CSSPropertyRule[];
     cssPropertyRegistrations: Protocol.CSS.CSSPropertyRegistration[];
+    fontPaletteValuesRule: Protocol.CSS.CSSFontPaletteValuesRule | undefined;
 }
 export declare class CSSRegisteredProperty {
     #private;
@@ -35,7 +36,9 @@ export declare class CSSRegisteredProperty {
 }
 export declare class CSSMatchedStyles {
     #private;
-    constructor({ cssModel, node, inlinePayload, attributesPayload, matchedPayload, pseudoPayload, inheritedPayload, inheritedPseudoPayload, animationsPayload, parentLayoutNodeId, positionFallbackRules, propertyRules, cssPropertyRegistrations, }: CSSMatchedStylesPayload);
+    static create(payload: CSSMatchedStylesPayload): Promise<CSSMatchedStyles>;
+    private constructor();
+    private init;
     private buildMainCascade;
     /**
      * Pseudo rule matches received via the inspector protocol are grouped by pseudo type.
@@ -47,31 +50,6 @@ export declare class CSSMatchedStyles {
      * for each custom highlight name that was matched.
      */
     private buildSplitCustomHighlightCascades;
-    /**
-     * Return a mapping of the highlight names in the specified RuleMatch to
-     * the indices of selectors in that selector list with that highlight name.
-     *
-     * For example, consider the following ruleset:
-     * span::highlight(foo), div, #mySpan::highlight(bar), .highlighted::highlight(foo) {
-     *   color: blue;
-     * }
-     *
-     * For a <span id="mySpan" class="highlighted"></span>, a RuleMatch for that span
-     * would have matchingSelectors [0, 2, 3] indicating that the span
-     * matches all of the highlight selectors.
-     *
-     * For that RuleMatch, this function would produce the following map:
-     * {
-     *  "foo": [0, 3],
-     *  "bar": [2]
-     * }
-     *
-     * @param ruleMatch
-     * @returns A mapping of highlight names to lists of indices into the selector
-     * list associated with ruleMatch. The indices correspond to the selectors in the rule
-     * associated with the key's highlight name.
-     */
-    private customHighlightNamesToMatchingSelectorIndices;
     private buildPseudoCascades;
     private addMatchingSelectors;
     node(): DOMNode;
@@ -82,20 +60,19 @@ export declare class CSSMatchedStyles {
     recomputeMatchingSelectors(rule: CSSStyleRule): Promise<void>;
     addNewRule(rule: CSSStyleRule, node: DOMNode): Promise<void>;
     private setSelectorMatches;
-    queryMatches(style: CSSStyleDeclaration): boolean;
     nodeStyles(): CSSStyleDeclaration[];
     registeredProperties(): CSSRegisteredProperty[];
     getRegisteredProperty(name: string): CSSRegisteredProperty | undefined;
+    fontPaletteValuesRule(): CSSFontPaletteValuesRule | undefined;
     keyframes(): CSSKeyframesRule[];
     positionFallbackRules(): CSSPositionFallbackRule[];
     pseudoStyles(pseudoType: Protocol.DOM.PseudoType): CSSStyleDeclaration[];
     pseudoTypes(): Set<Protocol.DOM.PseudoType>;
     customHighlightPseudoStyles(highlightName: string): CSSStyleDeclaration[];
     customHighlightPseudoNames(): Set<string>;
-    private containsInherited;
     nodeForStyle(style: CSSStyleDeclaration): DOMNode | null;
     availableCSSVariables(style: CSSStyleDeclaration): string[];
-    computeCSSVariable(style: CSSStyleDeclaration, variableName: string): string | null;
+    computeCSSVariable(style: CSSStyleDeclaration, variableName: string): CSSVariableValue | null;
     computeValue(style: CSSStyleDeclaration, value: string): string | null;
     /**
      * Same as computeValue, but to be used for `var(--#name [,...])` values only
@@ -108,8 +85,11 @@ export declare class CSSMatchedStyles {
     propertyState(property: CSSProperty): PropertyState | null;
     resetActiveProperties(): void;
 }
-export declare enum PropertyState {
+export interface CSSVariableValue {
+    value: string;
+    declaration: CSSProperty | CSSRegisteredProperty | null;
+}
+export declare const enum PropertyState {
     Active = "Active",
     Overloaded = "Overloaded"
 }
-export {};

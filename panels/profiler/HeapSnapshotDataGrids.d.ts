@@ -1,10 +1,10 @@
 import * as Common from '../../core/common/common.js';
+import type * as SDK from '../../core/sdk/sdk.js';
 import * as HeapSnapshotModel from '../../models/heap_snapshot_model/heap_snapshot_model.js';
 import * as DataGrid from '../../ui/legacy/components/data_grid/data_grid.js';
 import * as Components from '../../ui/legacy/components/utils/utils.js';
-import type * as SDK from '../../core/sdk/sdk.js';
 import * as UI from '../../ui/legacy/legacy.js';
-import { HeapSnapshotRetainingObjectNode, HeapSnapshotObjectNode, type HeapSnapshotGridNode } from './HeapSnapshotGridNodes.js';
+import { type HeapSnapshotGridNode, HeapSnapshotObjectNode, HeapSnapshotRetainingObjectNode } from './HeapSnapshotGridNodes.js';
 import { type HeapSnapshotProxy } from './HeapSnapshotProxy.js';
 import { type HeapProfileHeader } from './HeapSnapshotView.js';
 import { type DataDisplayDelegate } from './ProfileHeader.js';
@@ -95,7 +95,7 @@ export declare class HeapSnapshotViewportDataGrid extends HeapSnapshotSortableDa
 }
 export declare class HeapSnapshotContainmentDataGrid extends HeapSnapshotSortableDataGrid {
     constructor(heapProfilerModel: SDK.HeapProfilerModel.HeapProfilerModel | null, dataDisplayDelegate: DataDisplayDelegate, displayName: string, columns?: DataGrid.DataGrid.ColumnDescriptor[]);
-    setDataSource(snapshot: HeapSnapshotProxy, nodeIndex: number): Promise<void>;
+    setDataSource(snapshot: HeapSnapshotProxy, nodeIndex: number, nodeId?: number): Promise<void>;
     createRootNode(snapshot: HeapSnapshotProxy, node: HeapSnapshotModel.HeapSnapshotModel.Node): HeapSnapshotObjectNode;
     sortingChanged(): void;
 }
@@ -104,7 +104,7 @@ export declare class HeapSnapshotRetainmentDataGrid extends HeapSnapshotContainm
     createRootNode(snapshot: HeapSnapshotProxy, node: HeapSnapshotModel.HeapSnapshotModel.Node): HeapSnapshotRetainingObjectNode;
     sortFields(sortColumn: string, sortAscending: boolean): HeapSnapshotModel.HeapSnapshotModel.ComparatorConfig;
     reset(): void;
-    setDataSource(snapshot: HeapSnapshotProxy, nodeIndex: number): Promise<void>;
+    setDataSource(snapshot: HeapSnapshotProxy, nodeIndex: number, nodeId?: number): Promise<void>;
 }
 export declare enum HeapSnapshotRetainmentDataGridEvents {
     ExpandRetainersComplete = "ExpandRetainersComplete"

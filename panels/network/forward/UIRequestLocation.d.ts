@@ -1,6 +1,6 @@
 import type * as SDK from '../../../core/sdk/sdk.js';
 import type * as TextUtils from '../../../models/text_utils/text_utils.js';
-export declare enum UIHeaderSection {
+export declare const enum UIHeaderSection {
     General = "General",
     Request = "Request",
     Response = "Response"
@@ -9,10 +9,9 @@ interface UIHeaderLocation {
     section: UIHeaderSection;
     header: SDK.NetworkRequest.NameValue | null;
 }
-export declare enum UIRequestTabs {
+export declare const enum UIRequestTabs {
     Cookies = "cookies",
     EventSource = "eventSource",
-    Headers = "headers",
     HeadersComponent = "headersComponent",
     Payload = "payload",
     Initiator = "initiator",
@@ -32,7 +31,7 @@ export declare class UIRequestLocation {
     readonly isUrlMatch: boolean;
     readonly tab: UIRequestTabs | undefined;
     readonly filterOptions: FilterOptions | undefined;
-    private constructor();
+    constructor(request: SDK.NetworkRequest.NetworkRequest, header: UIHeaderLocation | null, searchMatch: TextUtils.ContentProvider.SearchMatch | null, urlMatch: boolean, tab: UIRequestTabs | undefined, filterOptions: FilterOptions | undefined);
     static requestHeaderMatch(request: SDK.NetworkRequest.NetworkRequest, header: SDK.NetworkRequest.NameValue | null): UIRequestLocation;
     static responseHeaderMatch(request: SDK.NetworkRequest.NetworkRequest, header: SDK.NetworkRequest.NameValue | null): UIRequestLocation;
     static bodyMatch(request: SDK.NetworkRequest.NetworkRequest, searchMatch: TextUtils.ContentProvider.SearchMatch | null): UIRequestLocation;

@@ -32,6 +32,7 @@ import * as i18n from '../../core/i18n/i18n.js';
 import * as Platform from '../../core/platform/platform.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import layerDetailsViewStyles from './layerDetailsView.css.js';
 import { ScrollRectSelection, } from './LayerViewHost.js';
 const UIStrings = {
@@ -165,6 +166,7 @@ export class LayerDetailsView extends Common.ObjectWrapper.eventMixin(UI.Widget.
     selection;
     constructor(layerViewHost) {
         super(true);
+        this.element.setAttribute('jslog', `${VisualLogging.pane('layers-details')}`);
         this.layerViewHost = layerViewHost;
         this.layerViewHost.registerView(this);
         this.emptyWidget = new UI.EmptyWidget.EmptyWidget(i18nString(UIStrings.selectALayerToSeeItsDetails));
@@ -202,7 +204,7 @@ export class LayerDetailsView extends Common.ObjectWrapper.eventMixin(UI.Widget.
         }
         const snapshotSelection = this.selection.type() === "Snapshot" /* Type.Snapshot */ ? this.selection : this.layerSnapshotMap.get(this.selection.layer());
         if (snapshotSelection) {
-            this.dispatchEventToListeners(Events.PaintProfilerRequested, snapshotSelection);
+            this.dispatchEventToListeners("PaintProfilerRequested" /* Events.PaintProfilerRequested */, snapshotSelection);
         }
     }
     createScrollRectElement(scrollRect, index) {
@@ -221,6 +223,7 @@ export class LayerDetailsView extends Common.ObjectWrapper.eventMixin(UI.Widget.
             PH5: scrollRect.rect.y,
         });
         element.addEventListener('click', this.onScrollRectClicked.bind(this, index), false);
+        element.setAttribute('jslog', `${VisualLogging.action('layers.select-object').track({ click: true })}`);
     }
     formatStickyAncestorLayer(title, layer) {
         if (!layer) {
@@ -307,6 +310,7 @@ export class LayerDetailsView extends Common.ObjectWrapper.eventMixin(UI.Widget.
                 this.invokeProfilerLink();
             }
         });
+        this.paintProfilerLink.setAttribute('jslog', `${VisualLogging.action('layers.paint-profiler').track({ click: true, keydown: 'Enter' })}`);
     }
     createRow(title) {
         const tr = this.tbodyElement.createChild('tr');
@@ -326,19 +330,13 @@ export class LayerDetailsView extends Common.ObjectWrapper.eventMixin(UI.Widget.
         }
     }
 }
-// TODO(crbug.com/1167717): Make this a const enum again
-// eslint-disable-next-line rulesdir/const_enum
-export var Events;
-(function (Events) {
-    Events["PaintProfilerRequested"] = "PaintProfilerRequested";
-})(Events || (Events = {}));
 export const slowScrollRectNames = new Map([
-    [SDK.LayerTreeBase.Layer.ScrollRectType.NonFastScrollable, i18nLazyString(UIStrings.nonFastScrollable)],
-    [SDK.LayerTreeBase.Layer.ScrollRectType.TouchEventHandler, i18nLazyString(UIStrings.touchEventHandler)],
-    [SDK.LayerTreeBase.Layer.ScrollRectType.WheelEventHandler, i18nLazyString(UIStrings.wheelEventHandler)],
-    [SDK.LayerTreeBase.Layer.ScrollRectType.RepaintsOnScroll, i18nLazyString(UIStrings.repaintsOnScroll)],
+    ["NonFastScrollable" /* SDK.LayerTreeBase.Layer.ScrollRectType.NonFastScrollable */, i18nLazyString(UIStrings.nonFastScrollable)],
+    ["TouchEventHandler" /* SDK.LayerTreeBase.Layer.ScrollRectType.TouchEventHandler */, i18nLazyString(UIStrings.touchEventHandler)],
+    ["WheelEventHandler" /* SDK.LayerTreeBase.Layer.ScrollRectType.WheelEventHandler */, i18nLazyString(UIStrings.wheelEventHandler)],
+    ["RepaintsOnScroll" /* SDK.LayerTreeBase.Layer.ScrollRectType.RepaintsOnScroll */, i18nLazyString(UIStrings.repaintsOnScroll)],
     [
-        SDK.LayerTreeBase.Layer.ScrollRectType.MainThreadScrollingReason,
+        "MainThreadScrollingReason" /* SDK.LayerTreeBase.Layer.ScrollRectType.MainThreadScrollingReason */,
         i18nLazyString(UIStrings.mainThreadScrollingReason),
     ],
 ]);

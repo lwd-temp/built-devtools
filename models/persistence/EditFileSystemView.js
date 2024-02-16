@@ -85,7 +85,8 @@ export class EditFileSystemView extends UI.Widget.VBox {
         const excludedFoldersHeader = this.contentElement.createChild('div', 'file-system-header');
         excludedFoldersHeader.createChild('div', 'file-system-header-text').textContent =
             i18nString(UIStrings.excludedFolders);
-        excludedFoldersHeader.appendChild(UI.UIUtils.createTextButton(i18nString(UIStrings.add), this.addExcludedFolderButtonClicked.bind(this), 'add-button'));
+        const addButton = UI.UIUtils.createTextButton(i18nString(UIStrings.add), this.addExcludedFolderButtonClicked.bind(this), { className: 'add-button', jslogContext: 'settings.add-excluded-folder' });
+        excludedFoldersHeader.appendChild(addButton);
         this.excludedFoldersList = new UI.ListWidget.ListWidget(this);
         this.excludedFoldersList.element.classList.add('file-system-list');
         const excludedFoldersPlaceholder = document.createElement('div');

@@ -5,8 +5,9 @@ import * as i18n from '../../../core/i18n/i18n.js';
 import * as ComponentHelpers from '../../../ui/components/helpers/helpers.js';
 import * as IconButton from '../../../ui/components/icon_button/icon_button.js';
 import * as LitHtml from '../../../ui/lit-html/lit-html.js';
-import stylePropertyEditorStyles from './stylePropertyEditor.css.js';
+import * as VisualLogging from '../../../ui/visual_logging/visual_logging.js';
 import { findFlexContainerIcon, findGridContainerIcon } from './CSSPropertyIconResolver.js';
+import stylePropertyEditorStyles from './stylePropertyEditor.css.js';
 const UIStrings = {
     /**
      * @description Title of the button that selects a flex property.
@@ -46,6 +47,7 @@ export class StylePropertyEditor extends HTMLElement {
     #authoredProperties = new Map();
     #computedProperties = new Map();
     editableProperties = [];
+    jslog = '';
     constructor() {
         super();
     }
@@ -64,7 +66,7 @@ export class StylePropertyEditor extends HTMLElement {
         // Disabled until https://crbug.com/1079231 is fixed.
         // clang-format off
         render(html `
-      <div class="container">
+      <div class="container" jslog=${this.jslog}>
         ${this.editableProperties.map(prop => this.#renderProperty(prop))}
       </div>
     `, this.#shadow, {
@@ -102,9 +104,15 @@ export class StylePropertyEditor extends HTMLElement {
         });
         const values = { propertyName, propertyValue };
         const title = selected ? i18nString(UIStrings.deselectButton, values) : i18nString(UIStrings.selectButton, values);
-        return html `<button title=${title} class=${classes} @click=${() => this.#onButtonClick(propertyName, propertyValue, selected)}>
-       <${IconButton.Icon.Icon.litTagName} style=${transform} .data=${{ iconName: iconInfo.iconName, color: 'var(--icon-color)', width: '20px', height: '20px' }}></${IconButton.Icon.Icon.litTagName}>
-    </button>`;
+        return html `
+      <button title=${title}
+              class=${classes}
+              jslog=${VisualLogging.item().track({ click: true }).context(`${propertyName}-${propertyValue}`)}
+              @click=${() => this.#onButtonClick(propertyName, propertyValue, selected)}>
+        <${IconButton.Icon.Icon.litTagName} style=${transform} name=${iconInfo.iconName}>
+        </${IconButton.Icon.Icon.litTagName}>
+      </button>
+    `;
     }
     #onButtonClick(propertyName, propertyValue, selected) {
         if (selected) {
@@ -119,6 +127,7 @@ export class StylePropertyEditor extends HTMLElement {
     }
 }
 export class FlexboxEditor extends StylePropertyEditor {
+    jslog = `${VisualLogging.cssFlexboxEditor()}`;
     editableProperties = FlexboxEditableProperties;
     findIcon(query, computedProperties) {
         return findFlexContainerIcon(query, computedProperties);
@@ -126,6 +135,7 @@ export class FlexboxEditor extends StylePropertyEditor {
 }
 ComponentHelpers.CustomElements.defineComponent('devtools-flexbox-editor', FlexboxEditor);
 export class GridEditor extends StylePropertyEditor {
+    jslog = `${VisualLogging.cssGridEditor()}`;
     editableProperties = GridEditableProperties;
     findIcon(query, computedProperties) {
         return findGridContainerIcon(query, computedProperties);

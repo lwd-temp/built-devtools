@@ -1,5 +1,5 @@
-import type * as puppeteer from '../../../third_party/puppeteer/puppeteer.js';
 import * as Common from '../../../core/common/common.js';
+import type * as puppeteer from '../../../third_party/puppeteer/puppeteer.js';
 import { type Step, type UserFlow } from './Schema.js';
 export declare const enum PlayRecordingSpeed {
     Normal = "normal",

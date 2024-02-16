@@ -8,15 +8,9 @@ export declare class InspectorMainImpl implements Common.Runnable.Runnable {
     run(): Promise<void>;
 }
 export declare class ReloadActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ReloadActionDelegate;
-    handleAction(context: UI.Context.Context, actionId: string): boolean;
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
 }
 export declare class FocusDebuggeeActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): FocusDebuggeeActionDelegate;
     handleAction(_context: UI.Context.Context, _actionId: string): boolean;
 }
 export declare class NodeIndicator implements UI.Toolbar.Provider {

@@ -33,6 +33,7 @@ import * as SDK from '../../core/sdk/sdk.js';
 import * as IconButton from '../../ui/components/icon_button/icon_button.js';
 import * as CookieTable from '../../ui/legacy/components/cookie_table/cookie_table.js';
 import * as UI from '../../ui/legacy/legacy.js';
+import * as VisualLogging from '../../ui/visual_logging/visual_logging.js';
 import requestCookiesViewStyles from './requestCookiesView.css.js';
 const UIStrings = {
     /**
@@ -102,6 +103,7 @@ export class RequestCookiesView extends UI.Widget.Widget {
     constructor(request) {
         super();
         this.element.classList.add('request-cookies-view');
+        this.element.setAttribute('jslog', `${VisualLogging.pane('cookies')}`);
         this.request = request;
         this.showFilteredOutCookiesSetting = Common.Settings.Settings.instance().createSetting('show-filtered-out-request-cookies', /* defaultValue */ false);
         this.emptyWidget = new UI.EmptyWidget.EmptyWidget(i18nString(UIStrings.thisRequestHasNoCookies));
@@ -123,7 +125,7 @@ export class RequestCookiesView extends UI.Widget.Widget {
         this.siteHasCookieInOtherPartition =
             this.element.createChild('div', 'cookies-panel-item site-has-cookies-in-other-partition');
         this.siteHasCookieInOtherPartition.appendChild(i18n.i18n.getFormatLocalizedString(str_, UIStrings.siteHasCookieInOtherPartition, {
-            PH1: UI.XLink.XLink.create('https://developer.chrome.com/en/docs/privacy-sandbox/chips/', i18nString(UIStrings.learnMore)),
+            PH1: UI.XLink.XLink.create('https://developer.chrome.com/en/docs/privacy-sandbox/chips/', i18nString(UIStrings.learnMore), undefined, undefined, 'learn-more'),
         }));
         this.responseCookiesTitle = this.element.createChild('div', 'request-cookies-title');
         this.responseCookiesTitle.textContent = i18nString(UIStrings.responseCookies);
@@ -157,16 +159,7 @@ export class RequestCookiesView extends UI.Widget.Widget {
         const responseCookieToBlockedReasons = new Map();
         const malformedResponseCookies = [];
         if (this.request.responseCookies.length) {
-            const blockedCookieLines = this.request.blockedResponseCookies().map(blockedCookie => blockedCookie.cookieLine);
-            responseCookies = this.request.responseCookies.filter(cookie => {
-                // remove the regular cookies that would overlap with blocked cookies
-                const index = blockedCookieLines.indexOf(cookie.getCookieLine());
-                if (index !== -1) {
-                    blockedCookieLines[index] = null;
-                    return false;
-                }
-                return true;
-            });
+            responseCookies = this.request.nonBlockedResponseCookies();
             for (const blockedCookie of this.request.blockedResponseCookies()) {
                 const parsedCookies = SDK.CookieParser.CookieParser.parseSetCookie(blockedCookie.cookieLine);
                 if ((parsedCookies && !parsedCookies.length) ||

@@ -4,7 +4,7 @@ export declare class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWid
     private computedStyleModel;
     private readonly showInheritedComputedStylePropertiesSetting;
     private readonly groupComputedStylesSetting;
-    input: Element;
+    input: UI.Toolbar.ToolbarInput;
     private filterRegex;
     private readonly noMatchesElement;
     private readonly linkifier;
@@ -22,7 +22,8 @@ export declare class ComputedStyleWidget extends UI.ThrottledWidget.ThrottledWid
     private handleContextMenuEvent;
     private computePropertyTraces;
     private computeNonInheritedProperties;
-    filterComputedStyles(this: ComputedStyleWidget, regex: RegExp | null): Promise<void>;
+    private onFilterChanged;
+    filterComputedStyles(regex: RegExp | null): Promise<void>;
     private nodeFilter;
     private filterAlphabeticalList;
     private filterGroupLists;

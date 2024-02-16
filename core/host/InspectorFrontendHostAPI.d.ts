@@ -2,6 +2,7 @@ import type * as Platform from '../../core/platform/platform.js';
 export declare enum Events {
     AppendedToURL = "appendedToURL",
     CanceledSaveURL = "canceledSaveURL",
+    ColorThemeChanged = "colorThemeChanged",
     ContextMenuCleared = "contextMenuCleared",
     ContextMenuItemSelected = "contextMenuItemSelected",
     DeviceCountUpdated = "deviceCountUpdated",
@@ -87,9 +88,49 @@ export interface SearchCompletedEvent {
 export interface DoAidaConversationResult {
     response: string;
 }
+export interface VisualElementImpression {
+    id: number;
+    type: number;
+    parent?: number;
+    context?: number;
+    width?: number;
+    height?: number;
+}
+export interface ImpressionEvent {
+    impressions: VisualElementImpression[];
+}
+export interface ResizeEvent {
+    veid: number;
+    width?: number;
+    height?: number;
+}
+export interface ClickEvent {
+    veid: number;
+    mouseButton: number;
+    context?: number;
+    doubleClick: boolean;
+}
+export interface HoverEvent {
+    veid: number;
+    time?: number;
+    context?: number;
+}
+export interface DragEvent {
+    veid: number;
+    context?: number;
+}
+export interface ChangeEvent {
+    veid: number;
+    context?: number;
+}
+export interface KeyDownEvent {
+    veid: number;
+    context?: number;
+}
 export type EventTypes = {
     [Events.AppendedToURL]: Platform.DevToolsPath.RawPathString | Platform.DevToolsPath.UrlString;
     [Events.CanceledSaveURL]: Platform.DevToolsPath.UrlString;
+    [Events.ColorThemeChanged]: void;
     [Events.ContextMenuCleared]: void;
     [Events.ContextMenuItemSelected]: number;
     [Events.DeviceCountUpdated]: number;
@@ -189,6 +230,12 @@ export interface InspectorFrontendHostAPI {
     setAddExtensionCallback(callback: (arg0: ExtensionDescriptor) => void): void;
     initialTargetId(): Promise<string | null>;
     doAidaConversation: (request: string, cb: (result: DoAidaConversationResult) => void) => void;
+    recordImpression(event: ImpressionEvent): void;
+    recordClick(event: ClickEvent): void;
+    recordHover(event: HoverEvent): void;
+    recordDrag(event: DragEvent): void;
+    recordChange(event: ChangeEvent): void;
+    recordKeyDown(event: KeyDownEvent): void;
 }
 export interface ContextMenuDescriptor {
     type: 'checkbox' | 'item' | 'separator' | 'subMenu';
@@ -197,6 +244,7 @@ export interface ContextMenuDescriptor {
     enabled?: boolean;
     checked?: boolean;
     subItems?: ContextMenuDescriptor[];
+    jslogContext?: string;
 }
 export interface LoadNetworkResourceResult {
     statusCode: number;
@@ -242,12 +290,13 @@ export interface SyncInformation {
  * front_end/devtools_compatibility.js
  * @readonly
  */
-export declare enum EnumeratedHistogram {
+export declare const enum EnumeratedHistogram {
     ActionTaken = "DevTools.ActionTaken",
     BreakpointWithConditionAdded = "DevTools.BreakpointWithConditionAdded",
     BreakpointEditDialogRevealedFrom = "DevTools.BreakpointEditDialogRevealedFrom",
     PanelClosed = "DevTools.PanelClosed",
     PanelShown = "DevTools.PanelShown",
+    PanelShownInLocation = "DevTools.PanelShownInLocation",
     SidebarPaneShown = "DevTools.SidebarPaneShown",
     KeyboardShortcutFired = "DevTools.KeyboardShortcutFired",
     IssueCreated = "DevTools.IssueCreated",
@@ -262,8 +311,6 @@ export declare enum EnumeratedHistogram {
     ExperimentDisabled = "DevTools.ExperimentDisabled",
     DeveloperResourceLoaded = "DevTools.DeveloperResourceLoaded",
     DeveloperResourceScheme = "DevTools.DeveloperResourceScheme",
-    LinearMemoryInspectorRevealedFrom = "DevTools.LinearMemoryInspector.RevealedFrom",
-    LinearMemoryInspectorTarget = "DevTools.LinearMemoryInspector.Target",
     Language = "DevTools.Language",
     SyncSetting = "DevTools.SyncSetting",
     RecordingAssertion = "DevTools.RecordingAssertion",
@@ -283,6 +330,7 @@ export declare enum EnumeratedHistogram {
     ManifestSectionSelected = "DevTools.ManifestSectionSelected",
     CSSHintShown = "DevTools.CSSHintShown",
     LighthouseModeRun = "DevTools.LighthouseModeRun",
+    LighthouseCategoryUsed = "DevTools.LighthouseCategoryUsed",
     ColorConvertedFrom = "DevTools.ColorConvertedFrom",
     ColorPickerOpenedFrom = "DevTools.ColorPickerOpenedFrom",
     CSSPropertyDocumentation = "DevTools.CSSPropertyDocumentation",
@@ -292,5 +340,11 @@ export declare enum EnumeratedHistogram {
     SwatchActivated = "DevTools.SwatchActivated",
     BadgeActivated = "DevTools.BadgeActivated",
     AnimationPlaybackRateChanged = "DevTools.AnimationPlaybackRateChanged",
-    AnimationPointDragged = "DevTools.AnimationPointDragged"
+    AnimationPointDragged = "DevTools.AnimationPointDragged",
+    LegacyResourceTypeFilterNumberOfSelectedChanged = "DevTools.LegacyResourceTypeFilterNumberOfSelectedChanged",
+    LegacyResourceTypeFilterItemSelected = "DevTools.LegacyResourceTypeFilterItemSelected",
+    ResourceTypeFilterNumberOfSelectedChanged = "DevTools.ResourceTypeFilterNumberOfSelectedChanged",
+    ResourceTypeFilterItemSelected = "DevTools.ResourceTypeFilterItemSelected",
+    NetworkPanelMoreFiltersNumberOfSelectedChanged = "DevTools.NetworkPanelMoreFiltersNumberOfSelectedChanged",
+    NetworkPanelMoreFiltersItemSelected = "DevTools.NetworkPanelMoreFiltersItemSelected"
 }

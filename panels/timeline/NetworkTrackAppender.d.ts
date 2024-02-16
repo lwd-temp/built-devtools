@@ -4,7 +4,7 @@ import { type HighlightedEntryInfo, type TrackAppender, type TrackAppenderName }
 export declare class NetworkTrackAppender implements TrackAppender {
     #private;
     readonly appenderName: TrackAppenderName;
-    constructor(traceParsedData: TraceEngine.Handlers.Migration.PartialTraceData, flameChartData: PerfUI.FlameChart.FlameChartTimelineData);
+    constructor(traceParsedData: TraceEngine.Handlers.Types.TraceParseData, flameChartData: PerfUI.FlameChart.FlameChartTimelineData);
     group(): PerfUI.FlameChart.Group | undefined;
     font(): string;
     /**

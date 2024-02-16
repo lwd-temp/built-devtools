@@ -33,24 +33,17 @@ import * as Types from '../types/types.js';
 export declare class SamplesIntegrator {
     #private;
     constructor(profileModel: CPUProfile.CPUProfileDataModel.CPUProfileDataModel, pid: Types.TraceEvents.ProcessID, tid: Types.TraceEvents.ThreadID, configuration?: Types.Configuration.Configuration);
-    buildProfileCalls(traceEvents: Types.TraceEvents.TraceEventData[]): Types.TraceEvents.TraceEventSyntheticProfileCall[];
+    buildProfileCalls(traceEvents: Types.TraceEvents.TraceEventData[]): Types.TraceEvents.SyntheticProfileCall[];
     /**
      * Builds the initial calls with no duration from samples. Their
      * purpose is to be merged with the trace event array being parsed so
      * that they can be traversed in order with them and their duration
      * can be updated as the SampleIntegrator callbacks are invoked.
      */
-    callsFromProfileSamples(): Types.TraceEvents.TraceEventSyntheticProfileCall[];
-    /**
-     * Generally, before JS is executed, a trace event is dispatched that
-     * parents the JS calls. These we call "invocation" events. This
-     * function determines if an event is one of such.
-     */
-    static isJSInvocationEvent(event: Types.TraceEvents.TraceEventData): boolean;
+    callsFromProfileSamples(): Types.TraceEvents.SyntheticProfileCall[];
     static framesAreEqual(frame1: Protocol.Runtime.CallFrame, frame2: Protocol.Runtime.CallFrame): boolean;
     static showNativeName(name: string, runtimeCallStatsEnabled: boolean): boolean;
     static nativeGroup(nativeName: string): 'Parse' | 'Compile' | null;
     static isNativeRuntimeFrame(frame: Protocol.Runtime.CallFrame): boolean;
-    static filterStackFrames(stack: Types.TraceEvents.TraceEventSyntheticProfileCall[], engineConfig: Types.Configuration.Configuration): void;
-    static makeProfileCall(node: CPUProfile.ProfileTreeModel.ProfileNode, ts: Types.Timing.MicroSeconds, pid: Types.TraceEvents.ProcessID, tid: Types.TraceEvents.ThreadID): Types.TraceEvents.TraceEventSyntheticProfileCall;
+    static filterStackFrames(stack: Types.TraceEvents.SyntheticProfileCall[], engineConfig: Types.Configuration.Configuration): void;
 }

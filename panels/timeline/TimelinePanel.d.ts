@@ -5,19 +5,8 @@ import * as TraceEngine from '../../models/trace/trace.js';
 import * as UI from '../../ui/legacy/legacy.js';
 import { PerformanceModel } from './PerformanceModel.js';
 import { type Client } from './TimelineController.js';
+import { TimelineFlameChartView } from './TimelineFlameChartView.js';
 import { TimelineSelection } from './TimelineSelection.js';
-declare global {
-    interface FileSystemWritableFileStream extends WritableStream {
-        write(data: unknown): Promise<void>;
-        close(): Promise<void>;
-    }
-    interface FileSystemHandle {
-        createWritable(): Promise<FileSystemWritableFileStream>;
-    }
-    interface Window {
-        showSaveFilePicker(opts: unknown): Promise<FileSystemHandle>;
-    }
-}
 export declare class TimelinePanel extends UI.Panel.Panel implements Client, TimelineModeViewDelegate {
     #private;
     private readonly dropTarget;
@@ -44,6 +33,8 @@ export declare class TimelinePanel extends UI.Panel.Panel implements Client, Tim
     private controller;
     private cpuProfiler;
     private clearButton;
+    private fixMeButton;
+    private fixMeButtonAdded;
     private loadButton;
     private saveButton;
     private statusPane;
@@ -58,19 +49,17 @@ export declare class TimelinePanel extends UI.Panel.Panel implements Client, Tim
     private traceLoadStart;
     private primaryPageTargetPromiseCallback;
     private primaryPageTargetPromise;
-    constructor(fullTraceEngine?: boolean);
+    constructor();
     static instance(opts?: {
         forceNew: boolean | null;
         isNode: boolean;
-        fullTraceEngine?: boolean;
     } | undefined): TimelinePanel;
     searchableView(): UI.SearchableView.SearchableView | null;
     wasShown(): void;
     willHide(): void;
     loadFromEvents(events: TraceEngine.TracingManager.EventPayload[]): void;
+    getFlameChart(): TimelineFlameChartView;
     private loadFromCpuProfile;
-    private onOverviewWindowChanged;
-    private onModelWindowChanged;
     private setState;
     private createSettingCheckbox;
     private populateToolbar;
@@ -99,9 +88,10 @@ export declare class TimelinePanel extends UI.Panel.Panel implements Client, Tim
     toggleRecording(): Promise<void>;
     recordReload(): void;
     private onClearButton;
+    private onFixMe;
     private clear;
     private reset;
-    private applyFilters;
+    applyFilters(_perfModel: PerformanceModel | null, exclusiveFilter?: TimelineModel.TimelineModelFilter.TimelineModelFilter | null): void;
     setModel(model: PerformanceModel | null, exclusiveFilter?: TimelineModel.TimelineModelFilter.TimelineModelFilter | null, traceEngineIndex?: number): void;
     private recordingStarted;
     recordingProgress(usage: number): void;
@@ -110,8 +100,7 @@ export declare class TimelinePanel extends UI.Panel.Panel implements Client, Tim
     loadingStarted(): Promise<void>;
     loadingProgress(progress?: number): Promise<void>;
     processingStarted(): Promise<void>;
-    updateModelAndFlameChart(): void;
-    loadingComplete(tracingModel: TraceEngine.Legacy.TracingModel | null, exclusiveFilter: TimelineModel.TimelineModelFilter.TimelineModelFilter | null | undefined, isCpuProfile: boolean): Promise<void>;
+    loadingComplete(collectedEvents: TraceEngine.Types.TraceEvents.TraceEventData[], tracingModel: TraceEngine.Legacy.TracingModel | null, exclusiveFilter: TimelineModel.TimelineModelFilter.TimelineModelFilter | null | undefined, isCpuProfile: boolean, recordingStartTime: number | null): Promise<void>;
     recordTraceLoadMetric(): void;
     loadingCompleteForTest(): void;
     private showRecordingStarted;
@@ -120,12 +109,11 @@ export declare class TimelinePanel extends UI.Panel.Panel implements Client, Tim
     private frameForSelection;
     jumpToFrame(offset: number): true | undefined;
     select(selection: TimelineSelection | null): void;
-    selectEntryAtTime(events: TraceEngine.Legacy.Event[] | null, time: number): void;
+    selectEntryAtTime(events: TraceEngine.Types.TraceEvents.TraceEventData[] | null, time: number): void;
     highlightEvent(event: TraceEngine.Legacy.Event | null): void;
-    private revealTimeRange;
     private handleDrop;
 }
-export declare enum State {
+export declare const enum State {
     Idle = "Idle",
     StartPending = "StartPending",
     Recording = "Recording",
@@ -137,16 +125,18 @@ export declare const rowHeight = 18;
 export declare const headerHeight = 20;
 export interface TimelineModeViewDelegate {
     select(selection: TimelineSelection | null): void;
-    selectEntryAtTime(events: TraceEngine.Legacy.CompatibleTraceEvent[] | null, time: number): void;
+    selectEntryAtTime(events: TraceEngine.Types.TraceEvents.TraceEventData[] | null, time: number): void;
     highlightEvent(event: TraceEngine.Legacy.CompatibleTraceEvent | null): void;
 }
 export declare class StatusPane extends UI.Widget.VBox {
+    #private;
     private status;
     private time;
     private progressLabel;
     private progressBar;
     private readonly description;
     private button;
+    private downloadTraceButton;
     private startTime;
     private timeUpdateTimer?;
     constructor(options: {
@@ -157,6 +147,7 @@ export declare class StatusPane extends UI.Widget.VBox {
         buttonDisabled?: boolean;
     }, buttonCallback: () => (Promise<void> | void));
     finish(): void;
+    enableDownloadOfEvents(rawEvents: TraceEngine.Types.TraceEvents.TraceEventData[]): void;
     remove(): void;
     showPane(parent: Element): void;
     enableAndFocusButton(): void;
@@ -175,8 +166,5 @@ export declare class LoadTimelineHandler implements Common.QueryParamHandler.Que
     handleQueryParam(value: string): void;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    } | undefined): ActionDelegate;
-    handleAction(_context: UI.Context.Context, actionId: string): boolean;
+    handleAction(context: UI.Context.Context, actionId: string): boolean;
 }

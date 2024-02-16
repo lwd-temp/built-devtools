@@ -64,6 +64,12 @@ export declare class CSSPropertyRule extends CSSRule {
     initialValue(): string | null;
     syntax(): string;
     inherits(): boolean;
+    setPropertyName(newPropertyName: string): Promise<boolean>;
+}
+export declare class CSSFontPaletteValuesRule extends CSSRule {
+    #private;
+    constructor(cssModel: CSSModel, payload: Protocol.CSS.CSSFontPaletteValuesRule);
+    name(): CSSValue;
 }
 export declare class CSSKeyframesRule {
     #private;

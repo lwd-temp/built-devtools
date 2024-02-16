@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 import * as Common from '../../../core/common/common.js';
 import * as i18n from '../../../core/i18n/i18n.js';
+import * as TextUtils from '../../../models/text_utils/text_utils.js';
 import * as WindowBoundsService from '../../../services/window_bounds/window_bounds.js';
 import * as CM from '../../../third_party/codemirror.next/codemirror.next.js';
 import * as UI from '../../legacy/legacy.js';
@@ -59,7 +60,7 @@ export class DynamicSetting {
     }
     static none = [];
 }
-export const tabMovesFocus = DynamicSetting.bool('textEditorTabMovesFocus', [], CM.keymap.of([{
+export const tabMovesFocus = DynamicSetting.bool('text-editor-tab-moves-focus', [], CM.keymap.of([{
         key: 'Tab',
         run: (view) => view.state.doc.length ? CM.indentMore(view) : false,
         shift: (view) => view.state.doc.length ? CM.indentLess(view) : false,
@@ -134,7 +135,7 @@ function announceSelectedCompletionInfo(view) {
     });
     UI.ARIAUtils.alert(ariaMessage);
 }
-export const autocompletion = new DynamicSetting('textEditorAutocompletion', (activateOnTyping) => [CM.autocompletion({
+export const autocompletion = new DynamicSetting('text-editor-autocompletion', (activateOnTyping) => [CM.autocompletion({
         activateOnTyping,
         icons: false,
         optionClass: (option) => option.type === 'secondary' ? 'cm-secondaryCompletion' : '',
@@ -142,6 +143,7 @@ export const autocompletion = new DynamicSetting('textEditorAutocompletion', (ac
             return state.field(conservativeCompletion, false) ? 'cm-conservativeCompletion' : '';
         },
         defaultKeymap: false,
+        updateSyncTime: 100,
     }),
     CM.Prec.highest(CM.keymap.of([
         { key: 'End', run: acceptCompletionIfAtEndOfLine },
@@ -156,8 +158,8 @@ export const autocompletion = new DynamicSetting('textEditorAutocompletion', (ac
         { key: 'PageUp', run: CM.moveCompletionSelection(false, 'page') },
         { key: 'Enter', run: acceptCompletionIfNotConservative },
     ]))]);
-export const bracketMatching = DynamicSetting.bool('textEditorBracketMatching', CM.bracketMatching());
-export const codeFolding = DynamicSetting.bool('textEditorCodeFolding', [
+export const bracketMatching = DynamicSetting.bool('text-editor-bracket-matching', CM.bracketMatching());
+export const codeFolding = DynamicSetting.bool('text-editor-code-folding', [
     CM.foldGutter({
         markerDOM(open) {
             const iconName = open ? 'triangle-down' : 'triangle-right';
@@ -174,31 +176,12 @@ export const codeFolding = DynamicSetting.bool('textEditorCodeFolding', [
     }),
     CM.keymap.of(CM.foldKeymap),
 ]);
-export function guessIndent(doc) {
-    const values = Object.create(null);
-    let scanned = 0;
-    for (let cur = doc.iterLines(1, Math.min(doc.lines + 1, LINES_TO_SCAN_FOR_INDENTATION_GUESSING)); !cur.next().done;) {
-        let space = /^\s*/.exec(cur.value)[0];
-        if (space.length === cur.value.length || !space.length || cur.value[space.length] === '*') {
-            continue;
-        }
-        if (space[0] === '\t') {
-            space = '\t';
-        }
-        else if (/[^ ]/.test(space)) {
-            continue;
-        }
-        scanned++;
-        values[space] = (values[space] || 0) + 1;
-    }
-    const minOccurrence = scanned * 0.05;
-    const shortest = Object.entries(values).reduce((shortest, [string, count]) => {
-        return count < minOccurrence || shortest && shortest.length < string.length ? shortest : string;
-    }, null);
-    return shortest ?? Common.Settings.Settings.instance().moduleSetting('textEditorIndent').get();
-}
-const deriveIndentUnit = CM.Prec.highest(CM.indentUnit.compute([], (state) => guessIndent(state.doc)));
-export const autoDetectIndent = DynamicSetting.bool('textEditorAutoDetectIndent', deriveIndentUnit);
+const deriveIndentUnit = CM.Prec.highest(CM.indentUnit.compute([], (state) => {
+    const lines = state.doc.iterLines(1, Math.min(state.doc.lines + 1, LINES_TO_SCAN_FOR_INDENTATION_GUESSING));
+    const indentUnit = TextUtils.TextUtils.detectIndentation(lines);
+    return indentUnit ?? Common.Settings.Settings.instance().moduleSetting('text-editor-indent').get();
+}));
+export const autoDetectIndent = DynamicSetting.bool('text-editor-auto-detect-indent', deriveIndentUnit);
 function matcher(decorator) {
     return CM.ViewPlugin.define(view => ({
         decorations: decorator.createDeco(view),
@@ -234,7 +217,7 @@ const showTrailingWhitespace = matcher(new CM.MatchDecorator({
     decoration: CM.Decoration.mark({ class: 'cm-trailingWhitespace' }),
     boundary: /\S/,
 }));
-export const showWhitespace = new DynamicSetting('showWhitespacesInEditor', value => {
+export const showWhitespace = new DynamicSetting('show-whitespaces-in-editor', value => {
     if (value === 'all') {
         return showAllWhitespace;
     }
@@ -243,7 +226,7 @@ export const showWhitespace = new DynamicSetting('showWhitespacesInEditor', valu
     }
     return empty;
 });
-export const allowScrollPastEof = DynamicSetting.bool('allowScrollPastEof', CM.scrollPastEnd());
+export const allowScrollPastEof = DynamicSetting.bool('allow-scroll-past-eof', CM.scrollPastEnd());
 const cachedIndentUnit = Object.create(null);
 function getIndentUnit(indent) {
     let value = cachedIndentUnit[indent];
@@ -252,8 +235,8 @@ function getIndentUnit(indent) {
     }
     return value;
 }
-export const indentUnit = new DynamicSetting('textEditorIndent', getIndentUnit);
-export const domWordWrap = DynamicSetting.bool('domWordWrap', CM.EditorView.lineWrapping);
+export const indentUnit = new DynamicSetting('text-editor-indent', getIndentUnit);
+export const domWordWrap = DynamicSetting.bool('dom-word-wrap', CM.EditorView.lineWrapping);
 function detectLineSeparator(text) {
     if (/\r\n/.test(text) && !/(^|[^\r])\n/.test(text)) {
         return CM.EditorState.lineSeparator.of('\r\n');
@@ -273,7 +256,7 @@ const baseKeymap = CM.keymap.of([
     ...CM.historyKeymap,
 ]);
 function themeIsDark() {
-    const setting = Common.Settings.Settings.instance().moduleSetting('uiTheme').get();
+    const setting = Common.Settings.Settings.instance().moduleSetting('ui-theme').get();
     return setting === 'systemPreferred' ? window.matchMedia('(prefers-color-scheme: dark)').matches : setting === 'dark';
 }
 export const dummyDarkTheme = CM.EditorView.theme({}, { dark: true });
@@ -310,6 +293,7 @@ export function baseConfiguration(text) {
             parent: getTooltipHost(),
             tooltipSpace: getTooltipSpace,
         }),
+        CM.bidiIsolates(),
     ];
 }
 export const closeBrackets = [

@@ -29,9 +29,6 @@ export declare class ThrottlingManager {
     private isDirty;
 }
 export declare class ActionDelegate implements UI.ActionRegistration.ActionDelegate {
-    static instance(opts?: {
-        forceNew: boolean | null;
-    }): ActionDelegate;
-    handleAction(context: UI.Context.Context, actionId: string): boolean;
+    handleAction(_context: UI.Context.Context, actionId: string): boolean;
 }
 export declare function throttlingManager(): ThrottlingManager;
